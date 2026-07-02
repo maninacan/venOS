@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@apollo/client/react';
 import { gql } from '@apollo/client/core';
@@ -85,6 +86,17 @@ export function PostEventReportPage() {
   const laborEntries = report?.laborEntries ?? [];
   const supplies = report?.supplies ?? [];
   const inventorySales = report?.inventorySales ?? [];
+
+  const [exportOpen, setExportOpen] = useState(false);
+  const exportRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!exportOpen) return;
+    const onDoc = (e: MouseEvent) => {
+      if (exportRef.current && !exportRef.current.contains(e.target as Node)) setExportOpen(false);
+    };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [exportOpen]);
 
   async function downloadPDF() {
     if (!report) return;
@@ -235,6 +247,69 @@ export function PostEventReportPage() {
     }
   }
 
+  function downloadCSV() {
+    if (!report) return;
+    try {
+      const n = (v: unknown) => Number(v ?? 0);
+      const rows: (string | number)[][] = [['Section', 'Item', 'Amount']];
+      const add = (section: string, item: string, amount: string | number) => rows.push([section, item, amount]);
+
+      add('Event', 'Name', event?.eventName ?? '');
+      add('Event', 'Date', formatDateRange(event?.eventDate, event?.numDays));
+      if (event?.status) add('Event', 'Status', event.status);
+      if (event?.eventHost) add('Event', 'Host', event.eventHost);
+      if (event?.eventLocation) add('Event', 'Location', event.eventLocation);
+
+      add('Sales Summary', 'Gross Sales', n(sales.grossSales).toFixed(2));
+      add('Sales Summary', 'Returns', (-n(sales.refunds)).toFixed(2));
+      add('Sales Summary', 'Discounts', (-n(sales.discounts)).toFixed(2));
+      add('Sales Summary', 'Net Sales', n(sales.netSales).toFixed(2));
+
+      add('Cost of Goods Sold', 'Ingredient Costs (COGS)', (-n(summary.cogs)).toFixed(2));
+      add('Cost of Goods Sold', 'Gross Profit', n(summary.grossProfit).toFixed(2));
+
+      for (const r of laborEntries as Array<Record<string, unknown>>) {
+        add('Labor', `${String(r['name'] ?? '')} (${n(r['hours']).toFixed(2)}h @ ${n(r['wage']).toFixed(2)}/hr)`, n(r['total']).toFixed(2));
+      }
+      add('Labor', 'Total Labor', n(summary.laborFees).toFixed(2));
+
+      for (const r of supplies as Array<Record<string, unknown>>) {
+        add('Supplies', `${String(r['name'] ?? '')} (${n(r['quantity']).toFixed(2)} @ ${n(r['unitCost']).toFixed(2)})`, n(r['total']).toFixed(2));
+      }
+
+      add('Operating Expenses', 'Health Dept Fee', (-n(expenses.healthDeptFee)).toFixed(2));
+      add('Operating Expenses', 'Event Fee', (-n(expenses.eventFee)).toFixed(2));
+      add('Operating Expenses', 'Mileage Reimbursement', (-n(summary.mileageReimbursement)).toFixed(2));
+      add('Operating Expenses', 'Employee Bonus', (-n(expenses.employeeBonus)).toFixed(2));
+      add('Operating Expenses', 'Event Runner Fees', (-n(expenses.eventRunnerFees)).toFixed(2));
+      add('Operating Expenses', 'Labor Fees', (-n(summary.laborFees)).toFixed(2));
+      add('Operating Expenses', 'Coordinator Fee', (-n(expenses.coordinatorFee)).toFixed(2));
+      add('Operating Expenses', 'POS Fees', (-n(summary.posFees)).toFixed(2));
+      add('Operating Expenses', 'Additional Fees', (-n(summary.additionalFeesTotal)).toFixed(2));
+      add('Operating Expenses', 'Total Operating Expenses', (-n(summary.totalExpenses)).toFixed(2));
+
+      add('Net Profit', 'Net Profit', n(summary.netProfit).toFixed(2));
+
+      add('For Your Records', 'Tips (pass-through to staff)', n(summary.tips).toFixed(2));
+      add('For Your Records', 'State sales tax', n(taxes.stateTax).toFixed(2));
+      add('For Your Records', 'Local sales tax', n(taxes.localTax).toFixed(2));
+      add('For Your Records', 'Total sales tax collected (to remit)', n(taxes.taxCollected).toFixed(2));
+
+      const esc = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
+      const csv = rows.map(r => r.map(esc).join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `PostEventReport_${(event?.eventName ?? 'Event').replace(/[^a-z0-9]/gi, '_')}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+      showToast(t('toast.csvDownloaded', 'CSV downloaded!'), 'success');
+    } catch (err) {
+      showToast(t('toast.csvFailed', 'CSV export failed: {{error}}', { error: err instanceof Error ? err.message : t('toast.unknownError', 'unknown error') }), 'error');
+    }
+  }
+
   if (loading) {
     return <div style={{ padding: 40, textAlign: 'center' }}><span className="spinner spinner-dark" style={{ width: 28, height: 28, borderWidth: 3 }} /></div>;
   }
@@ -255,7 +330,30 @@ export function PostEventReportPage() {
     <>
       {/* Controls */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
-        <button className="btn-primary" onClick={downloadPDF}>{t('report.downloadPdf', '📄 Download PDF')}</button>
+        <div ref={exportRef} style={{ position: 'relative' }}>
+          <button className="btn-primary" onClick={() => setExportOpen(o => !o)} aria-haspopup="menu" aria-expanded={exportOpen}>
+            {t('report.export', '⬇ Export')} <span style={{ fontSize: '0.7em' }}>▾</span>
+          </button>
+          {exportOpen && (
+            <div
+              role="menu"
+              style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, zIndex: 20, minWidth: 180, background: '#fff', border: '1px solid var(--vv-border)', borderRadius: 10, boxShadow: '0 8px 24px rgba(11,42,74,0.12)', padding: 4 }}
+            >
+              <button
+                role="menuitem"
+                className="dropdown-item"
+                style={{ display: 'block', width: '100%', textAlign: 'left', background: 'none', border: 0, padding: '9px 12px', borderRadius: 6, cursor: 'pointer', fontSize: '0.88rem', color: 'var(--vv-navy)' }}
+                onClick={() => { setExportOpen(false); downloadPDF(); }}
+              >{t('report.exportPdf', '📄 Export to PDF')}</button>
+              <button
+                role="menuitem"
+                className="dropdown-item"
+                style={{ display: 'block', width: '100%', textAlign: 'left', background: 'none', border: 0, padding: '9px 12px', borderRadius: 6, cursor: 'pointer', fontSize: '0.88rem', color: 'var(--vv-navy)' }}
+                onClick={() => { setExportOpen(false); downloadCSV(); }}
+              >{t('report.exportCsv', '📊 Export to CSV')}</button>
+            </div>
+          )}
+        </div>
         <button className="btn-secondary" onClick={() => window.print()}>{t('report.print', '🖨 Print')}</button>
         <Link to={`/companies/${companyId}/events/${eventId}`} className="btn-secondary" style={{ textDecoration: 'none' }}>{t('report.backToDashboard', '⬅ Back to Dashboard')}</Link>
       </div>
