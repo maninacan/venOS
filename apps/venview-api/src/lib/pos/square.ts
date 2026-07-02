@@ -118,11 +118,10 @@ export const squareProvider: PosProvider = {
   async pullSales(companyId, event: PosEvent): Promise<PosSalesPull> {
     const locationId = event.posLocationId;
     if (!locationId) throw new Error('Event has no POS location linked. Edit the event and select a location first.');
-    const client = await getSquareClient(companyId);
     const token = await getSquareToken(companyId);
     const timeZone = await getLocationTimeZone(companyId, locationId);
     const { startAt, endAt } = buildDateWindow(event, timeZone);
-    logger.info('pullSales.orders', { build: 'SQUARE_RAWHTTP_v3', locationId, startAt, endAt });
+    logger.info('pullSales', { build: 'SQUARE_RAWHTTP_v4', locationId, startAt, endAt });
 
     // Orders via raw HTTP: the SDK intermittently serializes an empty sort_field
     // on orders.search (Square then 400s). Build the request explicitly, as the
@@ -146,9 +145,24 @@ export const squareProvider: PosProvider = {
       cursor = data.cursor;
     } while (cursor);
 
+    // Payments via raw HTTP too: the SDK's payments.list serializes an empty
+    // sort_field the same way orders.search does, which Square 400s.
     const allPayments: Array<Record<string, unknown>> = [];
-    const paymentsPage = await client.payments.list({ locationId, beginTime: startAt, endTime: endAt });
-    for await (const payment of paymentsPage) allPayments.push(payment as unknown as Record<string, unknown>);
+    let payCursor: string | undefined;
+    do {
+      const url = new URL(`${getSquareBaseUrl()}/v2/payments`);
+      url.searchParams.set('location_id', locationId);
+      url.searchParams.set('begin_time', startAt);
+      url.searchParams.set('end_time', endAt);
+      url.searchParams.set('limit', '100');
+      if (payCursor) url.searchParams.set('cursor', payCursor);
+      const res = await axios.get(url.toString(), {
+        headers: { Authorization: `Bearer ${token}`, 'Square-Version': '2025-01-15' },
+      });
+      const data = res.data as { payments?: Array<Record<string, unknown>>; cursor?: string };
+      for (const payment of data.payments ?? []) allPayments.push(payment);
+      payCursor = data.cursor;
+    } while (payCursor);
 
     const amt = (m: unknown): number => Number((m as { amount?: number | bigint } | null)?.amount ?? 0);
 
@@ -182,9 +196,10 @@ export const squareProvider: PosProvider = {
 
     let processingFees = 0, totalCollected = 0;
     for (const payment of allPayments) {
-      totalCollected += amt(payment['amountMoney']) / 100;
-      for (const fee of (payment['processingFee'] as Array<{ amountMoney?: { amount?: bigint } }> | null) ?? []) {
-        processingFees += Math.abs(Number(fee.amountMoney?.amount ?? 0)) / 100;
+      // Raw HTTP payments are snake_case with integer-cent amounts.
+      totalCollected += amt(payment['amount_money']) / 100;
+      for (const fee of (payment['processing_fee'] as Array<{ amount_money?: { amount?: number } }> | null) ?? []) {
+        processingFees += Math.abs(Number(fee.amount_money?.amount ?? 0)) / 100;
       }
     }
 
