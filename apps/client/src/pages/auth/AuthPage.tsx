@@ -26,26 +26,41 @@ export function AuthPage() {
   const [resetError, setResetError] = useState('');
 
   // Set new password modal (after clicking email link)
-  const [showSetPassword, setShowSetPassword] = useState(false);
+  // Detect the password-recovery redirect from the URL on first render, before
+  // Supabase asynchronously parses and clears the hash. This must be captured
+  // synchronously — otherwise getSession() below sees the (valid) recovery
+  // session and navigates into the app before we can show the reset form.
+  const [isRecovery] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    return hash.get('type') === 'recovery';
+  });
+  const [showSetPassword, setShowSetPassword] = useState(isRecovery);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [setPasswordError, setSetPasswordError] = useState('');
 
   useEffect(() => {
-    // Check if this is a password recovery redirect
-    supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
         setShowSetPassword(true);
-      } else if (event === 'SIGNED_IN' && session) {
+      } else if (event === 'SIGNED_IN' && session && !isRecovery) {
+        // Don't follow the auto sign-in that a recovery link produces — the
+        // user must set a new password first.
         navigate('/companies');
       }
     });
 
-    // Already signed in?
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) navigate('/companies');
-    });
-  }, [navigate]);
+    // A recovery redirect creates a valid session; skip the auto-navigate so the
+    // set-password form stays up. Otherwise, send already-signed-in users in.
+    if (!isRecovery) {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) navigate('/companies');
+      });
+    }
+
+    return () => subscription.unsubscribe();
+  }, [navigate, isRecovery]);
 
   // Handle sq=connected param after Square OAuth
   const returnTo = searchParams.get('returnTo');
