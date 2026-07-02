@@ -623,6 +623,8 @@ export const typeDefs = `#graphql
     # Events
     createEvent(companyId: ID!, input: CreateEventInput!): Event!
     updateEvent(id: ID!, input: UpdateEventInput!): Event!
+    "Clone an event's setup into a fresh, non-finalized event."
+    duplicateEvent(id: ID!): Event!
     deleteEvent(id: ID!): Boolean!
     finalizeEvent(id: ID!): Event!
     claimUnownedEvents(companyId: ID!): Int!

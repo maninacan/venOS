@@ -257,7 +257,8 @@
       "employeeBonus": "Employee Bonus",
       "eventRunnerFees": "Event Runner Fees",
       "save": "Save Expenses"
-    }
+    },
+    "duplicateEvent": "Duplicate Event"
   },
   "report": {
     "dateRange": "{{start}} – {{end}}",

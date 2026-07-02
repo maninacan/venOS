@@ -234,18 +234,6 @@ export function AddEventPage() {
     } finally { setLoading(false); }
   }
 
-  async function handleDuplicate() {
-    if (!validate()) return;
-    setLoading(true);
-    try {
-      const { data } = await createEvent({ variables: { companyId, input: buildInput() } });
-      const newId = data.createEvent.id;
-      showToast(t('toast.duplicated', 'Duplicated as a new event!'), 'success');
-      navigate(`/companies/${companyId}/events/${newId}/edit`);
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : t('toast.duplicateFailed', 'Failed to duplicate event'), 'error');
-    } finally { setLoading(false); }
-  }
 
   // ════════════════════════ CREATE — Step 1 essentials ════════════════════════
   if (!isEdit) {
@@ -433,9 +421,6 @@ export function AddEventPage() {
         <div style={{ display: 'flex', gap: 10, marginTop: 8, flexWrap: 'wrap' }}>
           <button type="submit" className="btn-primary" disabled={loading}>
             {loading && <span className="spinner" />} <span>{t('form.updateEvent', '💾 Update Event')}</span>
-          </button>
-          <button type="button" className="btn-secondary" onClick={handleDuplicate} disabled={loading}>
-            {t('form.duplicateEvent', '📋 Duplicate as New Event')}
           </button>
           <button type="button" className="btn-secondary" onClick={() => navigate(`/companies/${companyId}/events/${eventId}`)}>
             {t('form.cancelEdit', '↩ Cancel')}

@@ -41,6 +41,9 @@ const GET_REPORT = gql`
   }
 `;
 
+const DUPLICATE_EVENT = gql`
+  mutation DuplicateEvent($id: ID!) { duplicateEvent(id: $id) { id } }
+`;
 const DELETE_EVENT = gql`
   mutation DeleteEvent($id: ID!) { deleteEvent(id: $id) }
 `;
@@ -78,6 +81,7 @@ export function EventDashboardPage() {
   });
 
   const [deleteEvent] = useMutation(DELETE_EVENT);
+  const [duplicateEvent, { loading: duplicating }] = useMutation(DUPLICATE_EVENT);
   const [syncSalesMut] = useMutation(gql`mutation AutoSyncSales($eventId: ID!) { syncSales(eventId: $eventId) { success } }`);
   const [syncLaborMut] = useMutation(gql`mutation AutoSyncLabor($eventId: ID!) { syncLabor(eventId: $eventId) { success } }`);
   const [activeTab, setActiveTab] = useState(0);
@@ -124,6 +128,17 @@ export function EventDashboardPage() {
       navigate(`/companies/${companyId}/events`);
     } catch (err) {
       showToast(err instanceof Error ? err.message : t('toast.deleteFailed', 'Failed to delete'), 'error');
+    }
+  }
+
+  async function handleDuplicate() {
+    try {
+      const { data } = await duplicateEvent({ variables: { id: eventId } });
+      const newId = data?.duplicateEvent?.id;
+      showToast(t('toast.duplicated', 'Duplicated as a new event!'), 'success');
+      navigate(`/companies/${companyId}/events/${newId}/edit`);
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : t('toast.duplicateFailed', 'Failed to duplicate event'), 'error');
     }
   }
 
@@ -292,6 +307,9 @@ export function EventDashboardPage() {
             {salesSourceButtons}
             <Link to={`/companies/${companyId}/events/${eventId}/edit`} className="btn-secondary"><i className="fa-solid fa-pen-to-square" /> {t('dashboard.editEvent', 'Edit Event')}</Link>
             <Link to={`/companies/${companyId}/events/${eventId}/report`} className="btn-secondary"><i className="fa-solid fa-chart-bar" /> {t('dashboard.postEventReport', 'Post-Event Report')}</Link>
+            <button className="btn-secondary" onClick={handleDuplicate} disabled={duplicating}>
+              {duplicating ? <span className="spinner" /> : <i className="fa-solid fa-copy" />} {t('dashboard.duplicateEvent', 'Duplicate Event')}
+            </button>
             <button className="btn-danger-subtle" onClick={handleDelete}><i className="fa-solid fa-trash" /> {t('dashboard.deleteEvent', 'Delete Event')}</button>
           </div>
         </div>

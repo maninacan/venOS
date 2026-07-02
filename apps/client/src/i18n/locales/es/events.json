@@ -257,7 +257,8 @@
       "employeeBonus": "Bono para empleados",
       "eventRunnerFees": "Cuotas del organizador del evento",
       "save": "Guardar gastos"
-    }
+    },
+    "duplicateEvent": "Duplicar evento"
   },
   "report": {
     "dateRange": "{{start}} – {{end}}",

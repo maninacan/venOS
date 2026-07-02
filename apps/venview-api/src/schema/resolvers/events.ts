@@ -313,6 +313,56 @@ export const eventResolvers = {
       return rowToEvent(event as Record<string, unknown>);
     },
 
+    // Clone an event's setup (fields + days) into a fresh, non-finalized event.
+    // Does not copy sales/labor/expenses — a duplicate is a clean starting point.
+    duplicateEvent: async (_: unknown, { id }: { id: string }, ctx: AppContext) => {
+      requireAuth(ctx);
+      await assertEventAccess(id, ctx);
+
+      const { data: source } = await supabase
+        .from('EventInfo')
+        .select('*, EventDays(*)')
+        .eq('eventID', id)
+        .single();
+      if (!source) throw new Error('Event not found');
+
+      const s = source as Record<string, unknown>;
+      const srcDays = (s['EventDays'] as Array<Record<string, unknown>> | null) ?? [];
+      // Strip identity/finalization/derived columns; keep the rest of the setup.
+      const {
+        eventID: _e, createdAt: _c, isFinalized: _f, finalizedDate: _fd, EventDays: _d,
+        ...fields
+      } = s;
+
+      const { data: event, error } = await supabase
+        .from('EventInfo')
+        .insert({
+          ...fields,
+          eventName: `${(s['eventName'] as string) ?? 'Event'} (Copy)`,
+          isFinalized: false,
+          finalizedDate: null,
+          userId: ctx.user!.id,
+        })
+        .select()
+        .single();
+      if (error || !event) throw new Error(error?.message ?? 'Failed to duplicate event');
+
+      const newId = (event as Record<string, unknown>)['eventID'] as string;
+      await supabase.from('EventExpenses').insert({ eventID: newId });
+
+      if (srcDays.length > 0) {
+        await supabase.from('EventDays').insert(
+          srcDays.map(d => {
+            const { id: _di, eventID: _de, ...dd } = d;
+            return { ...dd, eventID: newId };
+          })
+        );
+      }
+
+      await applyTaxRates(newId).catch(() => undefined);
+      return rowToEvent(event as Record<string, unknown>);
+    },
+
     updateEvent: async (
       _: unknown,
       { id, input }: { id: string; input: Record<string, unknown> },
