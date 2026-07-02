@@ -7,8 +7,7 @@ import { useCurrentCompany } from '../../hooks/useCurrentCompany';
 import { BackToSetupButton } from '../../components/guidance/BackToSetupButton';
 import { showToast, useAuth } from '@org/data';
 import { PosMappingModal } from '../../components/modals/PosMappingModal';
-// Temporarily hidden — defaults to English + USD. Re-enable with the render below.
-// import { LanguageRegionCard } from '../../components/settings/LanguageRegionCard';
+import { LanguageRegionCard } from '../../components/settings/LanguageRegionCard';
 
 const GET_SETTINGS = gql`
   query GetSettings($companyId: ID!) {
@@ -424,9 +423,7 @@ export function SettingsPage() {
   return (
     <>
       <BackToSetupButton />
-      {/* Language & currency selection temporarily hidden — defaults to English + USD.
-          Re-enable by uncommenting the line below (and the LanguageRegionCard import).
-      {companyId && <LanguageRegionCard companyId={companyId} />} */}
+      {companyId && <LanguageRegionCard companyId={companyId} />}
       {/* POS Integration */}
       <div className="card">
         <div style={{ marginBottom: 16 }}>

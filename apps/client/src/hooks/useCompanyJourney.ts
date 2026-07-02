@@ -103,16 +103,9 @@ export function useCompanyJourney(companyId: string | null) {
     },
   ];
 
-  // Language/currency selection is temporarily hidden — the app defaults to
-  // English + USD. Flip this to false to bring the setup step back.
-  const HIDE_LANGUAGE_STEP = true;
-
   // Personalize from onboarding answers: a manual-POS company doesn't need the
   // POS connection step at all.
-  const filtered = base.filter(s =>
-    !(s.key === 'language' && HIDE_LANGUAGE_STEP) &&
-    !(s.key === 'pos' && posSystem === 'manual')
-  );
+  const filtered = base.filter(s => !(s.key === 'pos' && posSystem === 'manual'));
   const steps: JourneyStep[] = filtered.map(s => ({ ...s, skipped: skips.has(s.key) }));
 
   // Core path = company exists + first event created.
