@@ -6,6 +6,14 @@ import venviewLogo from '../../assets/venOS-logo.jpg';
 
 type AuthMode = 'signin' | 'signup';
 
+// Capture the password-recovery indicator at module load — this runs during the
+// synchronous import phase, BEFORE Supabase's auto-init clears the URL hash in a
+// microtask. Reading it later (during render) is too late: the hash is already
+// gone, we'd miss the recovery flow, and getSession() would sign the user in.
+const IS_RECOVERY_REDIRECT =
+  typeof window !== 'undefined' &&
+  new URLSearchParams(window.location.hash.replace(/^#/, '')).get('type') === 'recovery';
+
 export function AuthPage() {
   const { t } = useTranslation('auth');
   const navigate = useNavigate();
@@ -25,16 +33,10 @@ export function AuthPage() {
   const [resetStatus, setResetStatus] = useState<'idle' | 'sent' | 'error'>('idle');
   const [resetError, setResetError] = useState('');
 
-  // Set new password modal (after clicking email link)
-  // Detect the password-recovery redirect from the URL on first render, before
-  // Supabase asynchronously parses and clears the hash. This must be captured
-  // synchronously — otherwise getSession() below sees the (valid) recovery
-  // session and navigates into the app before we can show the reset form.
-  const [isRecovery] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
-    return hash.get('type') === 'recovery';
-  });
+  // Set new password modal (after clicking email link). IS_RECOVERY_REDIRECT is
+  // captured at module load (see top of file) so it survives Supabase clearing
+  // the hash during init.
+  const isRecovery = IS_RECOVERY_REDIRECT;
   const [showSetPassword, setShowSetPassword] = useState(isRecovery);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
