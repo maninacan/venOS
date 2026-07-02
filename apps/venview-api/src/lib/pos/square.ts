@@ -1,4 +1,5 @@
 import axios from 'axios';
+import logger from '../logger.js';
 import { getSquareClient, getSquareBaseUrl, getSquareToken } from '../square.js';
 import {
   buildDateWindow,
@@ -121,6 +122,7 @@ export const squareProvider: PosProvider = {
     const token = await getSquareToken(companyId);
     const timeZone = await getLocationTimeZone(companyId, locationId);
     const { startAt, endAt } = buildDateWindow(event, timeZone);
+    logger.info('pullSales.orders', { build: 'SQUARE_RAWHTTP_v3', locationId, startAt, endAt });
 
     // Orders via raw HTTP: the SDK intermittently serializes an empty sort_field
     // on orders.search (Square then 400s). Build the request explicitly, as the

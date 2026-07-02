@@ -14,7 +14,9 @@ COPY libs/data/package.json ./libs/data/
 RUN npm ci --legacy-peer-deps
 
 COPY . .
-RUN npx nx build venview-api --configuration=production
+# --skip-nx-cache: never restore a cached build artifact during the image build,
+# so prod always compiles the exact committed source (avoids shipping stale code).
+RUN npx nx build venview-api --configuration=production --skip-nx-cache
 
 # ── Stage 2: Production image ─────────────────────────────────────────────────
 FROM node:24-alpine
