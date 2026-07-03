@@ -1,4 +1,6 @@
 ---
+import PostHog from '../components/posthog.astro';
+
 interface Props {
   title?: string;
   description?: string;
@@ -37,6 +39,7 @@ const {
       gtag('config', 'G-7658VP10C6');
     </script>
     <script is:inline src="https://t.contentsquare.net/uxa/649ea33ce46c3.js"></script>
+    <PostHog />
   </head>
   <body>
 
@@ -49,11 +52,17 @@ const {
             <span class="brand-tag">Vendor Intelligence for Events</span>
           </span>
         </a>
-        <a href="#early-access" class="nav-cta">Get Early Access</a>
+        <a href="#early-access" class="nav-cta" id="nav-cta">Get Early Access</a>
       </div>
     </nav>
 
     <slot />
+
+    <script is:inline>
+      document.getElementById('nav-cta')?.addEventListener('click', function() {
+        window.posthog?.capture('nav_cta_clicked');
+      });
+    </script>
 
     <footer>
       <p>© 2026 venOS &nbsp;·&nbsp; <a href="/privacy">Privacy Policy</a> &nbsp;·&nbsp; <a href="mailto:hello@venos.app">hello@venos.app</a></p>

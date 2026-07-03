@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation } from '@apollo/client/react';
 import { gql } from '@apollo/client/core';
 import { useTranslation, Trans } from 'react-i18next';
@@ -57,6 +57,84 @@ function suggestMatch(catalogItem: CatalogItem, inventoryItems: InventoryItem[])
     if (!best || score > best.score) best = { id: inv.id, score };
   }
   return best && best.score >= 0.45 ? best.id : null;
+}
+
+// Searchable recipe picker. Renders its dropdown with position:fixed so it isn't
+// clipped by the modal's scrollable item list.
+function RecipeCombobox({ recipes, value, onChange, disabled, noneLabel, placeholder, noMatchesLabel }: {
+  recipes: RecipeItem[];
+  value: string | null;
+  onChange: (id: string | null) => void;
+  disabled?: boolean;
+  noneLabel: string;
+  placeholder: string;
+  noMatchesLabel: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const [coords, setCoords] = useState<{ left: number; top: number; width: number } | null>(null);
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  const popRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  const label = (r: RecipeItem) => `${r.name} ($${Number(r.totalCost).toFixed(2)})`;
+  const selected = recipes.find(r => r.id === value) ?? null;
+
+  function place() {
+    const el = inputRef.current;
+    if (el) { const rc = el.getBoundingClientRect(); setCoords({ left: rc.left, top: rc.bottom + 2, width: rc.width }); }
+  }
+  function openMenu() { if (disabled) return; setQuery(''); place(); setOpen(true); }
+  function closeMenu() { setOpen(false); setQuery(''); }
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (!wrapRef.current?.contains(t) && !popRef.current?.contains(t)) closeMenu();
+    };
+    const onScroll = () => closeMenu();
+    document.addEventListener('mousedown', onDown);
+    window.addEventListener('scroll', onScroll, true);
+    window.addEventListener('resize', closeMenu);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      window.removeEventListener('scroll', onScroll, true);
+      window.removeEventListener('resize', closeMenu);
+    };
+  }, [open]);
+
+  const filtered = recipes.filter(r => r.name.toLowerCase().includes(query.trim().toLowerCase()));
+
+  return (
+    <div ref={wrapRef} style={{ position: 'relative' }}>
+      <input
+        ref={inputRef}
+        type="text"
+        disabled={disabled}
+        value={open ? query : (selected ? label(selected) : '')}
+        placeholder={selected ? label(selected) : placeholder}
+        onFocus={openMenu}
+        onChange={e => { setQuery(e.target.value); if (!open) { place(); setOpen(true); } }}
+        onKeyDown={e => {
+          if (e.key === 'Escape') { closeMenu(); (e.target as HTMLInputElement).blur(); }
+          else if (e.key === 'Enter' && filtered.length) { onChange(filtered[0].id); closeMenu(); (e.target as HTMLInputElement).blur(); }
+        }}
+        style={{ width: '100%', padding: '5px 8px', border: '1px solid #d1d5db', borderRadius: 6, fontSize: '0.83rem', background: disabled ? '#f3f4f6' : '#fff', opacity: disabled ? 0.6 : 1 }}
+      />
+      {open && coords && (
+        <div ref={popRef} style={{ position: 'fixed', left: coords.left, top: coords.top, width: coords.width, maxHeight: 220, overflowY: 'auto', background: '#fff', border: '1px solid #d1d5db', borderRadius: 8, boxShadow: '0 8px 24px rgba(0,0,0,0.14)', zIndex: 1000, fontSize: '0.83rem' }}>
+          <div onMouseDown={e => { e.preventDefault(); onChange(null); closeMenu(); }}
+            style={{ padding: '7px 10px', cursor: 'pointer', color: 'var(--muted)' }}>{noneLabel}</div>
+          {filtered.map(r => (
+            <div key={r.id} onMouseDown={e => { e.preventDefault(); onChange(r.id); closeMenu(); }}
+              style={{ padding: '7px 10px', cursor: 'pointer', background: r.id === value ? '#eff6ff' : '#fff' }}>{label(r)}</div>
+          ))}
+          {filtered.length === 0 && <div style={{ padding: '7px 10px', color: 'var(--muted)' }}>{noMatchesLabel}</div>}
+        </div>
+      )}
+    </div>
+  );
 }
 
 interface Props {
@@ -191,16 +269,14 @@ export function PosMappingModal({ companyId, onClose }: Props) {
                         {displayLabel}
                       </td>
                       <td style={{ padding: '7px 12px', borderBottom: '1px solid #f0f0f0' }}>
-                        <select
-                          value={mapping?.recipeId ?? ''}
-                          onChange={e => setMapping(item.posItemId, { recipeId: e.target.value || null })}
-                          style={{ width: '100%', padding: '5px 8px', border: '1px solid #d1d5db', borderRadius: 6, fontSize: '0.83rem', background: '#fff' }}
-                        >
-                          <option value="">{t('posMapping.noRecipe', '— No recipe —')}</option>
-                          {recipeItems.map(r => (
-                            <option key={r.id} value={r.id}>{t('posMapping.recipeOption', '{{name}} (${{cost}})', { name: r.name, cost: Number(r.totalCost).toFixed(2) })}</option>
-                          ))}
-                        </select>
+                        <RecipeCombobox
+                          recipes={recipeItems}
+                          value={mapping?.recipeId ?? null}
+                          onChange={id => setMapping(item.posItemId, { recipeId: id })}
+                          noneLabel={t('posMapping.noRecipe', '— No recipe —')}
+                          placeholder={t('posMapping.searchRecipes', 'Search recipes…')}
+                          noMatchesLabel={t('posMapping.noMatches', 'No matching recipes')}
+                        />
                       </td>
                       <td style={{ padding: '7px 12px', borderBottom: '1px solid #f0f0f0' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

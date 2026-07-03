@@ -213,6 +213,8 @@ import Layout from '../layouts/Layout.astro';
       return;
     }
 
+    (window as any).posthog?.capture('waitlist_signup_submitted', { source });
+
     try {
       const res = await fetch(apiBase() + '/api/waitlist', {
         method: 'POST',
@@ -228,15 +230,20 @@ import Layout from '../layouts/Layout.astro';
             event_label: source,
           });
         }
+        (window as any).posthog?.identify(email);
+        (window as any).posthog?.capture('waitlist_signup_success', { source });
         emailInput.value = '';
       } else {
         const data = await res.json().catch(() => ({}));
         errorEl.textContent = (data as any).message || 'Something went wrong. Please try again.';
         errorEl.style.display = 'block';
+        (window as any).posthog?.capture('waitlist_signup_error', { source, error_type: 'server' });
       }
-    } catch {
+    } catch (err) {
       errorEl.textContent = 'Network error. Please check your connection and try again.';
       errorEl.style.display = 'block';
+      (window as any).posthog?.captureException(err);
+      (window as any).posthog?.capture('waitlist_signup_error', { source, error_type: 'network' });
     }
   }
 
@@ -248,4 +255,18 @@ import Layout from '../layouts/Layout.astro';
       if ((e as KeyboardEvent).key === 'Enter') submitEmail(source);
     });
   });
+
+  // Track when the bottom CTA section comes into view (once)
+  const ctaSection = document.getElementById('early-access');
+  if (ctaSection) {
+    const ctaObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          (window as any).posthog?.capture('cta_section_viewed');
+          ctaObserver.disconnect();
+        }
+      });
+    }, { threshold: 0.3 });
+    ctaObserver.observe(ctaSection);
+  }
 </script>
