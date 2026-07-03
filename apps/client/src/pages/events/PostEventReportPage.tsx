@@ -7,6 +7,7 @@ import { useCurrentCompany } from '../../hooks/useCurrentCompany';
 import { useCurrency } from '../../i18n/useCurrency';
 import { formatDate } from '../../i18n/format';
 import { showToast } from '@org/data';
+import venviewLogo from '../../assets/venOS-logo.jpg';
 
 const GET_REPORT = gql`
   query GetPostEventReport($id: ID!) {
@@ -328,6 +329,24 @@ export function PostEventReportPage() {
 
   return (
     <>
+      {/* Print: show only the report card, nothing else on the page. */}
+      <style>{`
+        @media print {
+          body * { visibility: hidden; }
+          #report-content, #report-content * { visibility: visible; }
+          #report-content {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            max-width: none !important;
+            margin: 0;
+            border: none;
+            box-shadow: none;
+          }
+        }
+      `}</style>
+
       {/* Controls */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
         <div ref={exportRef} style={{ position: 'relative' }}>
@@ -362,9 +381,12 @@ export function PostEventReportPage() {
       <div className="card" id="report-content" style={{ maxWidth: 760 }}>
         {/* Header */}
         <div style={{ borderBottom: '2px solid var(--vv-navy)', paddingBottom: 16, marginBottom: 20 }}>
-          <h1 style={{ margin: '0 0 4px', fontSize: '1.6rem', color: 'var(--vv-navy)', fontFamily: 'DM Serif Display, serif' }}>
-            <i className="fa-solid fa-chart-bar" /> {t('report.title', 'Post-Event Report')}
-          </h1>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
+            <h1 style={{ margin: '0 0 4px', fontSize: '1.6rem', color: 'var(--vv-navy)', fontFamily: 'DM Serif Display, serif' }}>
+              <i className="fa-solid fa-chart-bar" /> {t('report.title', 'Post-Event Report')}
+            </h1>
+            <img src={venviewLogo} alt={t('report.logoAlt', 'venOS')} style={{ height: 48, width: 'auto', flexShrink: 0 }} />
+          </div>
           <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--vv-navy)', marginBottom: 2 }}>
             {event?.eventName}
           </div>
