@@ -229,6 +229,7 @@ export const typeDefs = `#graphql
     inventorySales: [InventorySaleRow!]!
     laborEntries: [LaborEntry!]!
     supplies: [Supply!]!
+    additionalFees: [AdditionalFee!]!
   }
 
   type EventKpi {

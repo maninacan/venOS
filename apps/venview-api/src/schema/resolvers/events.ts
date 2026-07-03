@@ -119,6 +119,12 @@ async function buildEventReport(eventId: string) {
       total: r['total'] ?? (Number(r['hours'] ?? 0) * Number(r['wage'] ?? 0)),
     })),
     supplies: supplyRows ?? [],
+    additionalFees: (additionalFees ?? []).map((r: Record<string, unknown>) => ({
+      id: r['id'],
+      label: r['label'],
+      amount: r['amount'],
+      isDiscount: Boolean(r['isDiscount']),
+    })),
     permits: permits ?? [],
   };
 }
@@ -144,6 +150,33 @@ function rowToEvent(row: Record<string, unknown>) {
   return out;
 }
 
+// Columns to join so net profit can be computed with the same shared logic the
+// dashboard uses (computeProfit). Labor, additional fees and COGS all feed in.
+const NET_PROFIT_JOIN =
+  '*, SalesSummary(*), EventExpenses(*), EventLabor(*), AdditionalFees(*), InventorySales(totalCost)';
+
+// Net profit for a joined EventInfo row, using the canonical shared calculation
+// so the events list, the trend chart and the dashboard all agree.
+function netProfitFromRow(row: Record<string, unknown>): number {
+  const sales = (row['SalesSummary'] as Record<string, unknown> | null) ?? {};
+  const expenses = (row['EventExpenses'] as Record<string, unknown> | null) ?? {};
+  const laborRows = (row['EventLabor'] as Record<string, unknown>[] | null) ?? [];
+  const additionalFees = (row['AdditionalFees'] as Record<string, unknown>[] | null) ?? [];
+  const inventorySales = (row['InventorySales'] as Record<string, unknown>[] | null) ?? [];
+  const cogs = inventorySales.reduce((sum, r) => sum + Number(r['totalCost'] ?? 0), 0);
+
+  const summary = computeProfit(
+    sales as Parameters<typeof computeProfit>[0],
+    expenses as Parameters<typeof computeProfit>[1],
+    laborRows as Parameters<typeof computeProfit>[2],
+    additionalFees as unknown as Parameters<typeof computeProfit>[3],
+    cogs,
+    !!row['posLocationId'],
+    Number(sales['taxRate'] ?? 0)
+  );
+  return summary.netProfit;
+}
+
 // ── Resolvers ─────────────────────────────────────────────────────────────────
 
 export const eventResolvers = {
@@ -158,7 +191,7 @@ export const eventResolvers = {
 
       let query = supabase
         .from('EventInfo')
-        .select('*, SalesSummary(*), EventExpenses(*)')
+        .select(NET_PROFIT_JOIN)
         .eq('companyId', companyId)
         .order('eventDate', { ascending: false });
 
@@ -169,24 +202,11 @@ export const eventResolvers = {
       const { data, error } = await query;
       if (error) throw new Error(error.message);
 
-      return (data ?? []).map((row: Record<string, unknown>) => {
-        const sales = (row['SalesSummary'] as Record<string, unknown> | null) ?? {};
-        const exp = (row['EventExpenses'] as Record<string, unknown> | null) ?? {};
-        const hasSquare = !!row['posLocationId'];
-        const posFees = Number(exp['posFee'] ?? 0) || (hasSquare ? Number(sales['squareFees'] ?? 0) : 0);
-        const netSales = Number(sales['netSales'] ?? row['grossSales'] ?? 0);
-        const netProfit = netSales
-          - Number(exp['healthDeptFee'] ?? 0)
-          - Number(exp['eventFee'] ?? 0)
-          - Number(exp['coordinatorFee'] ?? 0)
-          - Number(exp['employeeBonus'] ?? 0)
-          - Number(exp['eventRunnerFees'] ?? 0)
-          - (Number(exp['mileage'] ?? 0) * Number(exp['mileageRate'] ?? 0.67))
-          - Number(exp['laborFees'] ?? 0)   // denormalized from EventLabor via syncLaborFees
-          - posFees;
-
-        return { ...rowToEvent(row as Record<string, unknown>), netProfit, sales: row['SalesSummary'] ?? null };
-      });
+      return (data ?? []).map((row: Record<string, unknown>) => ({
+        ...rowToEvent(row),
+        netProfit: netProfitFromRow(row),
+        sales: row['SalesSummary'] ?? null,
+      }));
     },
 
     event: async (_: unknown, { id }: { id: string }, ctx: AppContext) => {
@@ -247,32 +267,16 @@ export const eventResolvers = {
 
       const { data } = await supabase
         .from('EventInfo')
-        .select('eventID, eventName, eventDate, posLocationId, SalesSummary(*), EventExpenses(*)')
+        .select(NET_PROFIT_JOIN)
         .eq('companyId', companyId)
         .order('eventDate', { ascending: true });
 
-      return (data ?? []).map((r: Record<string, unknown>) => {
-        const s = (r['SalesSummary'] as Record<string, unknown> | null) ?? {};
-        const exp = (r['EventExpenses'] as Record<string, unknown> | null) ?? {};
-        const hasSquare = !!r['posLocationId'];
-        const posFees = Number(exp['posFee'] ?? 0) || (hasSquare ? Number(s['squareFees'] ?? 0) : 0);
-        const netSales = Number(s['netSales'] ?? 0);
-        const netProfit = netSales
-          - Number(exp['healthDeptFee'] ?? 0)
-          - Number(exp['eventFee'] ?? 0)
-          - Number(exp['coordinatorFee'] ?? 0)
-          - Number(exp['employeeBonus'] ?? 0)
-          - Number(exp['eventRunnerFees'] ?? 0)
-          - (Number(exp['mileage'] ?? 0) * Number(exp['mileageRate'] ?? 0.67))
-          - posFees;
-
-        return {
-          eventId: r['eventID'],
-          name: r['eventName'],
-          date: r['eventDate'],
-          netProfit,
-        };
-      });
+      return (data ?? []).map((r: Record<string, unknown>) => ({
+        eventId: r['eventID'],
+        name: r['eventName'],
+        date: r['eventDate'],
+        netProfit: netProfitFromRow(r),
+      }));
     },
   },
 

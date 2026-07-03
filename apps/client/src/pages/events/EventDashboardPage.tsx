@@ -37,6 +37,7 @@ const GET_REPORT = gql`
       inventorySales { name quantitySold unitPrice totalCost }
       laborEntries { id employeeId name hours wage total }
       supplies { id name quantity unitCost total }
+      additionalFees { id label amount isDiscount }
     }
   }
 `;
@@ -100,6 +101,7 @@ export function EventDashboardPage() {
   const inventorySales = report?.inventorySales ?? [];
   const laborEntries = report?.laborEntries ?? [];
   const supplies = report?.supplies ?? [];
+  const additionalFees = report?.additionalFees ?? [];
 
   // Opening a PAST event with a POS connected + no sales yet → auto-pull sales
   // (and labor, if the provider supports it) once. Guarded so it never re-pulls
@@ -223,7 +225,7 @@ export function EventDashboardPage() {
     },
     {
       title: t('dashboard.tabs.additionalFees', 'Additional Fees'),
-      content: <AdditionalFeesSection eventId={eventId!} fees={[]} onSaved={refetch} />,
+      content: <AdditionalFeesSection eventId={eventId!} fees={additionalFees} onSaved={refetch} />,
     },
     {
       title: t('dashboard.tabs.expenses', 'Expenses'),
