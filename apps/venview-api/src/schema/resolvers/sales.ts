@@ -183,25 +183,42 @@ export const salesResolvers = {
       await markPosNeedsReauth(companyId, provider.key, false);
 
       // Match items to inventory via POS mappings — by catalog object id first
-      // (exact), then by normalized name/variation. See buildCostLookup.
+      // (exact), then by normalized name/variation. A mapped recipe's total
+      // ingredient cost wins over the inventory unit cost. See buildCostLookup.
       const { data: mappings } = await supabase
         .from('PosItemMapping')
-        .select('posItemId, posItemName, variationName, inventoryId, VendorInventory(itemName, unitCost)')
+        .select('posItemId, posItemName, variationName, inventoryId, recipeId, VendorInventory(itemName, unitCost)')
         .eq('companyId', companyId);
+
+      // Precompute each company recipe's total ingredient cost (qty × unitCost).
+      const { data: recipeCards } = await supabase
+        .from('RecipeCards')
+        .select('id, RecipeIngredients(quantity, unitCost)')
+        .eq('companyId', companyId);
+      const recipeCostById = new Map<string, number>();
+      for (const rc of (recipeCards ?? []) as Array<Record<string, unknown>>) {
+        const ings = (rc['RecipeIngredients'] as Array<Record<string, unknown>> | null) ?? [];
+        recipeCostById.set(
+          rc['id'] as string,
+          ings.reduce((sum, i) => sum + Number(i['quantity'] ?? 0) * Number(i['unitCost'] ?? 0), 0)
+        );
+      }
 
       const costLookup = buildCostLookup((mappings ?? []).map((m: Record<string, unknown>) => ({
         posItemId: m['posItemId'] as string | null,
         posItemName: m['posItemName'] as string | null,
         variationName: m['variationName'] as string | null,
         unitCost: (m['VendorInventory'] as Record<string, unknown> | null)?.['unitCost'] as number | null,
+        recipeId: m['recipeId'] as string | null,
+        recipeCost: m['recipeId'] ? recipeCostById.get(m['recipeId'] as string) ?? null : null,
       })));
 
       const inventoryRows: Array<Record<string, unknown>> = [];
       let unmatchedCount = 0;
       for (const item of pull.items) {
-        const unitCost = costLookup.unitCostFor({ name: item.name, catalogObjectId: item.catalogObjectId });
+        const { unitCost, recipeId } = costLookup.resolve({ name: item.name, catalogObjectId: item.catalogObjectId });
         if (unitCost == null) unmatchedCount++;
-        inventoryRows.push({ eventID: eventId, name: item.name, quantitySold: item.qty, unitPrice: unitCost, totalCost: unitCost != null ? unitCost * item.qty : null });
+        inventoryRows.push({ eventID: eventId, name: item.name, quantitySold: item.qty, unitPrice: unitCost, totalCost: unitCost != null ? unitCost * item.qty : null, recipeId });
       }
 
       const netSales = pull.grossSales - pull.refunds - pull.discounts;

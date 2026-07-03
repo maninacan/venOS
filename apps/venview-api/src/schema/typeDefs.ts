@@ -222,6 +222,8 @@ export const typeDefs = `#graphql
     quantitySold: Float
     unitPrice: Float
     totalCost: Float
+    "Name of the recipe this item's COGS came from, when matched via a recipe."
+    recipeName: String
   }
 
   type EventReport {
@@ -407,6 +409,7 @@ export const typeDefs = `#graphql
     posItemName: String
     variationName: String
     inventoryItemId: ID
+    recipeId: ID
   }
 
   type EventInventory {
@@ -441,6 +444,7 @@ export const typeDefs = `#graphql
     posItemName: String
     variationName: String
     inventoryId: ID
+    recipeId: ID
   }
 
   # ─── Square ──────────────────────────────────────────────────────────────────

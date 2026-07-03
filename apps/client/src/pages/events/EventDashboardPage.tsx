@@ -34,7 +34,7 @@ const GET_REPORT = gql`
         posFees cogs grossProfit totalExpenses netProfit
         tips stateFoodTax laborFees additionalFeesTotal mileageReimbursement
       }
-      inventorySales { name quantitySold unitPrice totalCost }
+      inventorySales { name quantitySold unitPrice totalCost recipeName }
       laborEntries { id employeeId name hours wage total }
       supplies { id name quantity unitCost total }
       additionalFees { id label amount isDiscount calcType pctBase }
@@ -256,7 +256,56 @@ export function EventDashboardPage() {
     },
     {
       title: t('dashboard.tabs.ingredientCosts', 'Ingredient Costs (Recipe Matching)'),
-      content: <p style={{ color: 'var(--muted)', fontSize: '0.86rem', margin: 0 }}>{t('dashboard.recipeMatchingComing', 'Recipe matching coming in Phase 5. Connect recipes to auto-calculate COGS.')}</p>,
+      content: inventorySales.length === 0 ? (
+        <p style={{ color: 'var(--muted)', fontSize: '0.86rem', margin: 0 }}>{t('dashboard.noInventorySales', 'No Inventory Sales recorded. Pull sales to populate.')}</p>
+      ) : (
+        <div>
+          <p style={{ fontSize: '0.82rem', color: 'var(--muted)', margin: '0 0 10px' }}>
+            {t('dashboard.recipeMatchingHint', 'COGS per item comes from its mapped recipe (ingredient cost), falling back to the inventory unit cost. Map items to recipes under Settings → POS Item Mapping, then re-pull sales.')}
+          </p>
+          <div className="table-container">
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.86rem' }}>
+              <thead><tr style={{ background: '#f3f4f6', textAlign: 'left' }}>
+                <th style={{ padding: '6px 8px' }}>{t('dashboard.invItem', 'Item')}</th>
+                <th style={{ padding: '6px 8px' }}>{t('dashboard.invQtySold', 'Qty Sold')}</th>
+                <th style={{ padding: '6px 8px' }}>{t('dashboard.recipeCol', 'Recipe')}</th>
+                <th style={{ padding: '6px 8px' }}>{t('dashboard.invUnitCost', 'Unit Cost')}</th>
+                <th style={{ padding: '6px 8px' }}>{t('dashboard.invTotalCogs', 'Total COGS')}</th>
+              </tr></thead>
+              <tbody>
+                {inventorySales.map((r: Record<string, unknown>, i: number) => {
+                  const costed = r['totalCost'] != null;
+                  return (
+                    <tr key={i}>
+                      <td style={{ padding: '6px 8px' }}>{r['name'] as string}</td>
+                      <td style={{ padding: '6px 8px' }}>{Number(r['quantitySold'])}</td>
+                      <td style={{ padding: '6px 8px' }}>
+                        {r['recipeName']
+                          ? (r['recipeName'] as string)
+                          : <span style={{ color: 'var(--muted)' }}>{costed ? t('dashboard.recipeFromInventory', 'inventory cost') : t('dashboard.recipeNone', '— unmatched')}</span>}
+                      </td>
+                      <td style={{ padding: '6px 8px' }}>{r['unitPrice'] != null ? fmt(r['unitPrice'] as number) : '—'}</td>
+                      <td style={{ padding: '6px 8px' }}>{fmt(Number(r['totalCost'] ?? 0))}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+              <tfoot><tr style={{ borderTop: '2px solid var(--vv-border)', fontWeight: 700 }}>
+                <td style={{ padding: '6px 8px' }} colSpan={4}>{t('dashboard.totalCogsLabel', 'Total COGS')}</td>
+                <td style={{ padding: '6px 8px' }}>{fmt(inventorySales.reduce((s: number, r: Record<string, unknown>) => s + Number(r['totalCost'] ?? 0), 0))}</td>
+              </tr></tfoot>
+            </table>
+          </div>
+          {(() => {
+            const unmatched = (inventorySales as Array<Record<string, unknown>>).filter(r => r['totalCost'] == null).length;
+            return unmatched > 0 ? (
+              <p style={{ fontSize: '0.82rem', color: '#c2410c', marginTop: 10 }}>
+                {t('dashboard.recipeUnmatchedWarn', '{{count}} item(s) have no recipe or inventory cost — their COGS is $0. Map them under Settings → POS Item Mapping, then re-pull sales.', { count: unmatched })}
+              </p>
+            ) : null;
+          })()}
+        </div>
+      ),
     },
   ];
   const active = tabs[Math.min(activeTab, tabs.length - 1)];

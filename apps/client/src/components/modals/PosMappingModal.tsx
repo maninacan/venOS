@@ -8,7 +8,8 @@ const GET_DATA = gql`
   query GetPosMappingData($companyId: ID!) {
     posCatalog(companyId: $companyId) { posItemId posItemName variationName price }
     inventory(companyId: $companyId) { id name unitCost }
-    posMappings(companyId: $companyId) { posItemId inventoryItemId }
+    recipes(companyId: $companyId) { id name totalCost }
+    posMappings(companyId: $companyId) { posItemId inventoryItemId recipeId }
   }
 `;
 const SAVE_MAPPINGS = gql`
@@ -19,7 +20,8 @@ const SAVE_MAPPINGS = gql`
 
 interface CatalogItem { posItemId: string; posItemName: string; variationName?: string | null; price?: number | null; }
 interface InventoryItem { id: string; name: string; unitCost: number; }
-interface Mapping { posItemId: string; inventoryItemId: string | null; suggested?: boolean; }
+interface RecipeItem { id: string; name: string; totalCost: number; }
+interface Mapping { posItemId: string; inventoryItemId: string | null; recipeId: string | null; suggested?: boolean; }
 
 // Name similarity scorer — ported exactly from old app
 const STOP_WORDS = new Set(['the', 'a', 'an', 'and', 'or', 'of', 'in', 'for', 'with']);
@@ -71,30 +73,32 @@ export function PosMappingModal({ companyId, onClose }: Props) {
 
   const catalogItems: CatalogItem[] = data?.posCatalog ?? [];
   const inventoryItems: InventoryItem[] = data?.inventory ?? [];
-  const existingMaps: Array<{ posItemId: string; inventoryItemId: string }> = data?.posMappings ?? [];
+  const recipeItems: RecipeItem[] = data?.recipes ?? [];
+  const existingMaps: Array<{ posItemId: string; inventoryItemId: string | null; recipeId: string | null }> = data?.posMappings ?? [];
 
-  // Initialize mappings: saved first, then auto-suggest for unmapped
+  // Initialize mappings: saved first, then auto-suggest inventory for unmapped
   useEffect(() => {
     if (!data) return;
     const m = new Map<string, Mapping>();
-    const savedMap = new Map(existingMaps.map(e => [e.posItemId, e.inventoryItemId]));
+    const savedMap = new Map(existingMaps.map(e => [e.posItemId, e]));
 
     for (const item of catalogItems) {
       const saved = savedMap.get(item.posItemId);
       if (saved !== undefined) {
-        m.set(item.posItemId, { posItemId: item.posItemId, inventoryItemId: saved, suggested: false });
+        m.set(item.posItemId, { posItemId: item.posItemId, inventoryItemId: saved.inventoryItemId ?? null, recipeId: saved.recipeId ?? null, suggested: false });
       } else {
         const suggestion = suggestMatch(item, inventoryItems);
-        m.set(item.posItemId, { posItemId: item.posItemId, inventoryItemId: suggestion, suggested: !!suggestion });
+        m.set(item.posItemId, { posItemId: item.posItemId, inventoryItemId: suggestion, recipeId: null, suggested: !!suggestion });
       }
     }
     setMappings(m);
   }, [data]); // eslint-disable-line
 
-  function setMapping(posItemId: string, inventoryItemId: string | null) {
+  function setMapping(posItemId: string, patch: Partial<Mapping>) {
     setMappings(prev => {
       const next = new Map(prev);
-      next.set(posItemId, { posItemId, inventoryItemId, suggested: false });
+      const cur = next.get(posItemId) ?? { posItemId, inventoryItemId: null, recipeId: null };
+      next.set(posItemId, { ...cur, ...patch, posItemId, suggested: false });
       return next;
     });
   }
@@ -108,6 +112,7 @@ export function PosMappingModal({ companyId, onClose }: Props) {
         posItemName: catalogItems.find(c => c.posItemId === m.posItemId)?.posItemName ?? '',
         variationName: catalogItems.find(c => c.posItemId === m.posItemId)?.variationName,
         inventoryId: m.inventoryItemId,
+        recipeId: m.recipeId,
       }));
       await saveMappings({ variables: { companyId, mappings: mapsArray } });
       showToast(t('posMapping.toast.saved', '✅ Mappings saved! Cost calculations are now accurate.'), 'success', 5000);
@@ -117,7 +122,7 @@ export function PosMappingModal({ companyId, onClose }: Props) {
     } finally { setSaving(false); }
   }
 
-  const unmappedCount = Array.from(mappings.values()).filter(m => !m.inventoryItemId).length;
+  const unmappedCount = Array.from(mappings.values()).filter(m => !m.inventoryItemId && !m.recipeId).length;
   const suggestedCount = Array.from(mappings.values()).filter(m => m.suggested && m.inventoryItemId).length;
 
   return (
@@ -167,8 +172,9 @@ export function PosMappingModal({ companyId, onClose }: Props) {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: '#f9fafb' }}>
-                  <th style={{ padding: '9px 12px', textAlign: 'left', fontSize: '0.72rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb', width: '45%' }}>{t('posMapping.colPosItem', 'POS Item')}</th>
-                  <th style={{ padding: '9px 12px', textAlign: 'left', fontSize: '0.72rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>{t('posMapping.colInventoryItem', 'Your Inventory Item')}</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', fontSize: '0.72rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb', width: '34%' }}>{t('posMapping.colPosItem', 'POS Item')}</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', fontSize: '0.72rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb', width: '33%' }}>{t('posMapping.colRecipe', 'Recipe (COGS)')}</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', fontSize: '0.72rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>{t('posMapping.colInventoryItem', 'Inventory Item (fallback)')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -185,15 +191,30 @@ export function PosMappingModal({ companyId, onClose }: Props) {
                         {displayLabel}
                       </td>
                       <td style={{ padding: '7px 12px', borderBottom: '1px solid #f0f0f0' }}>
+                        <select
+                          value={mapping?.recipeId ?? ''}
+                          onChange={e => setMapping(item.posItemId, { recipeId: e.target.value || null })}
+                          style={{ width: '100%', padding: '5px 8px', border: '1px solid #d1d5db', borderRadius: 6, fontSize: '0.83rem', background: '#fff' }}
+                        >
+                          <option value="">{t('posMapping.noRecipe', '— No recipe —')}</option>
+                          {recipeItems.map(r => (
+                            <option key={r.id} value={r.id}>{t('posMapping.recipeOption', '{{name}} (${{cost}})', { name: r.name, cost: Number(r.totalCost).toFixed(2) })}</option>
+                          ))}
+                        </select>
+                      </td>
+                      <td style={{ padding: '7px 12px', borderBottom: '1px solid #f0f0f0' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           <select
                             value={mapping?.inventoryItemId ?? ''}
-                            onChange={e => setMapping(item.posItemId, e.target.value || null)}
+                            onChange={e => setMapping(item.posItemId, { inventoryItemId: e.target.value || null })}
+                            disabled={!!mapping?.recipeId}
+                            title={mapping?.recipeId ? t('posMapping.recipeOverrides', 'Recipe cost is used when a recipe is selected') : undefined}
                             style={{
                               flex: 1, padding: '5px 8px',
                               border: isSuggested ? '1.5px solid #f59e0b' : '1px solid #d1d5db',
                               borderRadius: 6, fontSize: '0.83rem',
-                              background: isSuggested ? '#fffbeb' : '#fff',
+                              background: mapping?.recipeId ? '#f3f4f6' : isSuggested ? '#fffbeb' : '#fff',
+                              opacity: mapping?.recipeId ? 0.6 : 1,
                             }}
                           >
                             <option value="">{t('posMapping.notInMenu', '— Not in my menu —')}</option>
@@ -201,7 +222,7 @@ export function PosMappingModal({ companyId, onClose }: Props) {
                               <option key={inv.id} value={inv.id}>{t('posMapping.inventoryOption', '{{name}} (${{cost}}/unit)', { name: inv.name, cost: Number(inv.unitCost).toFixed(4) })}</option>
                             ))}
                           </select>
-                          {isSuggested && (
+                          {isSuggested && !mapping?.recipeId && (
                             <span style={{ background: '#fef3c7', color: '#92400e', borderRadius: 99, padding: '1px 7px', fontSize: '0.72rem', fontWeight: 600, whiteSpace: 'nowrap' }}>{t('posMapping.suggestedBadge', 'suggested')}</span>
                           )}
                         </div>

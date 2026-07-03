@@ -89,7 +89,13 @@ export const inventoryResolvers = {
         .from('PosItemMapping')
         .select('*')
         .eq('companyId', companyId);
-      return data ?? [];
+      // DB stores `inventoryId`; the GraphQL field is `inventoryItemId`. Map it
+      // (and pass recipeId through) so the mapping modal can prefill saved values.
+      return (data ?? []).map((r: Record<string, unknown>) => ({
+        ...r,
+        inventoryItemId: r['inventoryId'] ?? null,
+        recipeId: r['recipeId'] ?? null,
+      }));
     },
 
     eventInventory: async (_: unknown, { eventId }: { eventId: string }, ctx: AppContext) => {
@@ -219,6 +225,7 @@ export const inventoryResolvers = {
           posItemName: m['posItemName'],
           variationName: m['variationName'],
           inventoryId: m['inventoryId'] || null,
+          recipeId: m['recipeId'] || null,
         }));
 
       if (toInsert.length > 0) {

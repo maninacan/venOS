@@ -45,6 +45,13 @@ async function buildEventReport(eventId: string) {
   const hasSquare = !!ev['posLocationId'];
   const taxRate = Number((sales as Record<string, unknown> | null)?.['taxRate'] ?? 0);
 
+  // Recipe names for per-item COGS attribution on the Ingredient Costs tab.
+  const { data: recipeNameRows } = await supabase
+    .from('RecipeCards').select('id, name').eq('companyId', ev['companyId'] as string);
+  const recipeNameById = new Map(
+    (recipeNameRows ?? []).map((r: Record<string, unknown>) => [r['id'] as string, r['name'] as string])
+  );
+
   // COGS = sum of InventorySales totalCost (recipe-matched costs)
   const cogs = (inventorySales ?? []).reduce(
     (sum: number, r: Record<string, unknown>) => sum + Number(r['totalCost'] ?? 0),
@@ -115,6 +122,7 @@ async function buildEventReport(eventId: string) {
       quantitySold: r['quantitySold'],
       unitPrice: r['unitPrice'],
       totalCost: r['totalCost'],
+      recipeName: r['recipeId'] ? recipeNameById.get(r['recipeId'] as string) ?? null : null,
     })),
     laborEntries: (laborRows ?? []).map((r: Record<string, unknown>) => ({
       id: r['id'],
