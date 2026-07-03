@@ -32,6 +32,7 @@ export function AuthPage() {
   const [resetEmail, setResetEmail] = useState('');
   const [resetStatus, setResetStatus] = useState<'idle' | 'sent' | 'error'>('idle');
   const [resetError, setResetError] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
 
   // Set new password modal (after clicking email link). IS_RECOVERY_REDIRECT is
   // captured at module load (see top of file) so it survives Supabase clearing
@@ -105,6 +106,7 @@ export function AuthPage() {
   async function handleSendReset(e: FormEvent) {
     e.preventDefault();
     setResetError('');
+    setResetLoading(true);
     try {
       const { error: resetErr } = await supabase.auth.resetPasswordForEmail(resetEmail, {
         redirectTo: window.location.origin + '/auth',
@@ -113,6 +115,8 @@ export function AuthPage() {
       setResetStatus('sent');
     } catch {
       setResetError(t('error.sendReset', 'Could not send reset email. Please try again.'));
+    } finally {
+      setResetLoading(false);
     }
   }
 
@@ -288,8 +292,11 @@ export function AuthPage() {
                 </div>
                 {resetError && <p className="form-error">{resetError}</p>}
                 <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 12 }}>
-                  <button type="button" className="btn-secondary" onClick={() => setShowForgot(false)}>{t('reset.cancel', 'Cancel')}</button>
-                  <button type="submit" className="btn-primary">{t('reset.sendLink', 'Send Reset Link')}</button>
+                  <button type="button" className="btn-secondary" onClick={() => setShowForgot(false)} disabled={resetLoading}>{t('reset.cancel', 'Cancel')}</button>
+                  <button type="submit" className="btn-primary" disabled={resetLoading}>
+                    {resetLoading && <span className="spinner" />}
+                    <span>{t('reset.sendLink', 'Send Reset Link')}</span>
+                  </button>
                 </div>
               </form>
             )}
