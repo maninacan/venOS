@@ -5,6 +5,7 @@ import { decryptToken } from '../../lib/crypto.js';
 import { lookupTaxRates } from '../../lib/taxRates.js';
 import { providerForCompany, type PosEvent } from '../../lib/pos/index.js';
 import { isPosAuthError } from '../../lib/pos/types.js';
+import { buildCostLookup } from '../../lib/pos/matchCost.js';
 
 // Flag/clear the POS connection so the UI can prompt a reconnect only when a
 // real auth failure has occurred (cleared on the next successful sync/reconnect).
@@ -181,20 +182,24 @@ export const salesResolvers = {
       }
       await markPosNeedsReauth(companyId, provider.key, false);
 
-      // Match items to inventory via POS mappings.
+      // Match items to inventory via POS mappings — by catalog object id first
+      // (exact), then by normalized name/variation. See buildCostLookup.
       const { data: mappings } = await supabase
         .from('PosItemMapping')
-        .select('posItemName, inventoryId, VendorInventory(itemName, unitCost)')
+        .select('posItemId, posItemName, variationName, inventoryId, VendorInventory(itemName, unitCost)')
         .eq('companyId', companyId);
+
+      const costLookup = buildCostLookup((mappings ?? []).map((m: Record<string, unknown>) => ({
+        posItemId: m['posItemId'] as string | null,
+        posItemName: m['posItemName'] as string | null,
+        variationName: m['variationName'] as string | null,
+        unitCost: (m['VendorInventory'] as Record<string, unknown> | null)?.['unitCost'] as number | null,
+      })));
 
       const inventoryRows: Array<Record<string, unknown>> = [];
       let unmatchedCount = 0;
       for (const item of pull.items) {
-        const mapping = (mappings ?? []).find(
-          (m: Record<string, unknown>) => String(m['posItemName']).toLowerCase() === item.name.toLowerCase()
-        );
-        const inv = mapping ? (mapping as Record<string, unknown>)['VendorInventory'] as Record<string, unknown> | null : null;
-        const unitCost = inv ? Number(inv['unitCost'] ?? 0) : null;
+        const unitCost = costLookup.unitCostFor({ name: item.name, catalogObjectId: item.catalogObjectId });
         if (unitCost == null) unmatchedCount++;
         inventoryRows.push({ eventID: eventId, name: item.name, quantitySold: item.qty, unitPrice: unitCost, totalCost: unitCost != null ? unitCost * item.qty : null });
       }

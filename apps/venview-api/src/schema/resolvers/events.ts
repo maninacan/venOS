@@ -50,6 +50,11 @@ async function buildEventReport(eventId: string) {
     (sum: number, r: Record<string, unknown>) => sum + Number(r['totalCost'] ?? 0),
     0
   );
+  // Total items sold — multiplier for per-unit custom expenses
+  const unitsSold = (inventorySales ?? []).reduce(
+    (sum: number, r: Record<string, unknown>) => sum + Number(r['quantitySold'] ?? 0),
+    0
+  );
 
   const summary = computeProfit(
     sales as Parameters<typeof computeProfit>[0],
@@ -58,7 +63,8 @@ async function buildEventReport(eventId: string) {
     (additionalFees ?? []) as Parameters<typeof computeProfit>[3],
     cogs,
     hasSquare,
-    taxRate
+    taxRate,
+    unitsSold
   );
 
   return {
@@ -124,6 +130,8 @@ async function buildEventReport(eventId: string) {
       label: r['label'],
       amount: r['amount'],
       isDiscount: Boolean(r['isDiscount']),
+      calcType: r['calcType'] ?? 'flat',
+      pctBase: r['pctBase'] ?? null,
     })),
     permits: permits ?? [],
   };
@@ -153,7 +161,7 @@ function rowToEvent(row: Record<string, unknown>) {
 // Columns to join so net profit can be computed with the same shared logic the
 // dashboard uses (computeProfit). Labor, additional fees and COGS all feed in.
 const NET_PROFIT_JOIN =
-  '*, SalesSummary(*), EventExpenses(*), EventLabor(*), AdditionalFees(*), InventorySales(totalCost)';
+  '*, SalesSummary(*), EventExpenses(*), EventLabor(*), AdditionalFees(*), InventorySales(totalCost, quantitySold)';
 
 // Net profit for a joined EventInfo row, using the canonical shared calculation
 // so the events list, the trend chart and the dashboard all agree.
@@ -164,6 +172,7 @@ function netProfitFromRow(row: Record<string, unknown>): number {
   const additionalFees = (row['AdditionalFees'] as Record<string, unknown>[] | null) ?? [];
   const inventorySales = (row['InventorySales'] as Record<string, unknown>[] | null) ?? [];
   const cogs = inventorySales.reduce((sum, r) => sum + Number(r['totalCost'] ?? 0), 0);
+  const unitsSold = inventorySales.reduce((sum, r) => sum + Number(r['quantitySold'] ?? 0), 0);
 
   const summary = computeProfit(
     sales as Parameters<typeof computeProfit>[0],
@@ -172,7 +181,8 @@ function netProfitFromRow(row: Record<string, unknown>): number {
     additionalFees as unknown as Parameters<typeof computeProfit>[3],
     cogs,
     !!row['posLocationId'],
-    Number(sales['taxRate'] ?? 0)
+    Number(sales['taxRate'] ?? 0),
+    unitsSold
   );
   return summary.netProfit;
 }

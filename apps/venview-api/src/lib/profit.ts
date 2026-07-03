@@ -31,9 +31,40 @@ export interface LaborRow {
   total?: number | null;
 }
 
+export type FeeCalcType = 'flat' | 'per_unit' | 'percentage';
+export type FeePctBase = 'gross' | 'net';
+
 export interface AdditionalFeeRow {
   amount: number;
   isDiscount: boolean;
+  // How `amount` is interpreted: flat dollars, dollars-per-unit, or a percentage.
+  // Absent/unknown → 'flat' (preserves legacy rows).
+  calcType?: FeeCalcType | null;
+  // For percentage rows: which sales figure the percent applies to.
+  pctBase?: FeePctBase | null;
+}
+
+// Resolve a fee/expense row to its effective (signed) dollar amount.
+// `unitsSold` is total items sold for the event; `sales` supplies the gross/net base.
+export function resolveFeeAmount(
+  fee: AdditionalFeeRow,
+  sales: SalesSummaryRow | null,
+  unitsSold: number
+): number {
+  const n = (v: number | null | undefined) => Number(v ?? 0);
+  const rate = n(fee.amount);
+  let value: number;
+  switch (fee.calcType) {
+    case 'per_unit':
+      value = rate * n(unitsSold);
+      break;
+    case 'percentage':
+      value = (rate / 100) * n(fee.pctBase === 'gross' ? sales?.grossSales : sales?.netSales);
+      break;
+    default: // 'flat'
+      value = rate;
+  }
+  return fee.isDiscount ? -value : value;
 }
 
 export interface ProfitSummary {
@@ -56,7 +87,8 @@ export function computeProfit(
   additionalFees: AdditionalFeeRow[],
   cogsSalesFees: number,
   hasSquare: boolean,
-  taxRate = 0
+  taxRate = 0,
+  unitsSold = 0
 ): ProfitSummary {
   const n = (v: number | null | undefined) => Number(v ?? 0);
 
@@ -70,10 +102,11 @@ export function computeProfit(
     return sum + Math.ceil(shiftTotal * 100) / 100;
   }, 0);
 
-  // Additional fees/discounts
-  const additionalFeesTotal = additionalFees.reduce((sum, f) => {
-    return f.isDiscount ? sum - n(f.amount) : sum + n(f.amount);
-  }, 0);
+  // Additional fees / custom expenses (flat, per-unit, or percentage-based; discounts subtract)
+  const additionalFeesTotal = additionalFees.reduce(
+    (sum, f) => sum + resolveFeeAmount(f, sales, unitsSold),
+    0
+  );
 
   const mileageReimbursement = n(expenses?.mileage) * n(expenses?.mileageRate ?? 0.67);
 

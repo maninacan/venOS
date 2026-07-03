@@ -178,6 +178,10 @@ export const typeDefs = `#graphql
     label: String!
     amount: Float!
     isDiscount: Boolean!
+    "How amount is interpreted: 'flat' | 'per_unit' | 'percentage'."
+    calcType: String!
+    "For percentage rows: 'gross' | 'net' (the sales base the percent applies to)."
+    pctBase: String
   }
 
   type Permit {
@@ -335,6 +339,10 @@ export const typeDefs = `#graphql
     label: String!
     amount: Float!
     isDiscount: Boolean!
+    "'flat' | 'per_unit' | 'percentage' (defaults to 'flat' if omitted)."
+    calcType: String
+    "'gross' | 'net' — only used when calcType is 'percentage'."
+    pctBase: String
   }
 
   # ─── Employees ───────────────────────────────────────────────────────────────

@@ -167,13 +167,15 @@ export const squareProvider: PosProvider = {
     const amt = (m: unknown): number => Number((m as { amount?: number | bigint } | null)?.amount ?? 0);
 
     let grossSales = 0, discounts = 0, tips = 0, taxCollected = 0, refunds = 0;
-    const itemMap = new Map<string, { name: string; qty: number }>();
+    const itemMap = new Map<string, { name: string; qty: number; catalogObjectId: string | null }>();
     for (const order of allOrders) {
       // Gross = true item sales (pre-discount/return/tax/tip), summed per line
       // item from gross_sales_money (fallback total_money, then base_price × qty).
       for (const item of (order['line_items'] as Array<Record<string, unknown>> | null) ?? []) {
         const name = (item['name'] as string ?? '').trim();
         const qty = Number(item['quantity'] ?? 0);
+        // Variation id ordered — the exact key mappings are stored under (PosItemMapping.posItemId).
+        const catalogObjectId = (item['catalog_object_id'] as string | undefined) ?? null;
         const giAmt = (item['gross_sales_money'] as { amount?: number } | null)?.amount;
         const tmAmt = (item['total_money'] as { amount?: number } | null)?.amount;
         const bpAmt = (item['base_price_money'] as { amount?: number } | null)?.amount;
@@ -181,7 +183,9 @@ export const squareProvider: PosProvider = {
           : tmAmt != null ? Number(tmAmt)
           : Number(bpAmt ?? 0) * qty;
         grossSales += cents / 100;
-        if (name) itemMap.set(name, { name, qty: (itemMap.get(name)?.qty ?? 0) + qty });
+        // Key by variation id when present (distinct cost per variation); else by name.
+        const key = catalogObjectId ?? name;
+        if (name) itemMap.set(key, { name, qty: (itemMap.get(key)?.qty ?? 0) + qty, catalogObjectId });
       }
       discounts += amt(order['total_discount_money']) / 100;
       tips += amt(order['total_tip_money']) / 100;

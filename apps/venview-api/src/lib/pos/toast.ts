@@ -73,7 +73,7 @@ export const toastProvider: PosProvider = {
 
     let grossSales = 0, discounts = 0, refunds = 0, tips = 0, taxCollected = 0, totalCollected = 0;
     let orderCount = 0;
-    const itemMap = new Map<string, { name: string; qty: number }>();
+    const itemMap = new Map<string, { name: string; qty: number; catalogObjectId: string | null }>();
 
     for (const order of allOrders) {
       if (order['voided']) continue;
@@ -90,7 +90,10 @@ export const toastProvider: PosProvider = {
           const name = String(sel['displayName'] ?? '').trim();
           const qty = Number(sel['quantity'] ?? 0);
           if (!name) continue;
-          itemMap.set(name, { name, qty: (itemMap.get(name)?.qty ?? 0) + qty });
+          // Toast menu-item guid — the key mappings are stored under (PosItemMapping.posItemId).
+          const catalogObjectId = ((sel['item'] as Record<string, unknown> | null)?.['guid'] as string | undefined) ?? null;
+          const key = catalogObjectId ?? name;
+          itemMap.set(key, { name, qty: (itemMap.get(key)?.qty ?? 0) + qty, catalogObjectId });
         }
         for (const p of (check['payments'] as Array<Record<string, unknown>> | null) ?? []) {
           totalCollected += Number(p['amount'] ?? 0) + Number(p['tipAmount'] ?? 0);

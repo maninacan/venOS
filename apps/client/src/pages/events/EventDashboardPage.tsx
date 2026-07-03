@@ -37,7 +37,7 @@ const GET_REPORT = gql`
       inventorySales { name quantitySold unitPrice totalCost }
       laborEntries { id employeeId name hours wage total }
       supplies { id name quantity unitCost total }
-      additionalFees { id label amount isDiscount }
+      additionalFees { id label amount isDiscount calcType pctBase }
     }
   }
 `;
@@ -102,6 +102,10 @@ export function EventDashboardPage() {
   const laborEntries = report?.laborEntries ?? [];
   const supplies = report?.supplies ?? [];
   const additionalFees = report?.additionalFees ?? [];
+  // Total items sold — multiplier for per-unit custom expenses (display only; server is authoritative)
+  const unitsSold = (inventorySales as Array<Record<string, unknown>>).reduce(
+    (sum, r) => sum + Number(r['quantitySold'] ?? 0), 0
+  );
 
   // Opening a PAST event with a POS connected + no sales yet → auto-pull sales
   // (and labor, if the provider supports it) once. Guarded so it never re-pulls
@@ -225,11 +229,22 @@ export function EventDashboardPage() {
     },
     {
       title: t('dashboard.tabs.additionalFees', 'Additional Fees'),
-      content: <AdditionalFeesSection eventId={eventId!} fees={additionalFees} onSaved={refetch} />,
+      content: <AdditionalFeesSection eventId={eventId!} fees={additionalFees} sales={sales} unitsSold={unitsSold} onSaved={refetch} />,
     },
     {
       title: t('dashboard.tabs.expenses', 'Expenses'),
-      content: <ExpensesForm eventId={eventId!} expenses={expenses} onSaved={refetch} />,
+      content: (
+        <div>
+          <ExpensesForm eventId={eventId!} expenses={expenses} onSaved={refetch} />
+          <div style={{ borderTop: '1px solid var(--vv-border)', marginTop: 20, paddingTop: 16 }}>
+            <h4 style={{ margin: '0 0 4px', color: 'var(--vv-navy)', fontSize: '0.95rem' }}>{t('dashboard.customExpenses', 'Custom Expenses')}</h4>
+            <p style={{ fontSize: '0.82rem', color: 'var(--muted)', margin: '0 0 10px' }}>
+              {t('dashboard.customExpensesHint', 'Add one-off expenses — a flat amount, a per-unit rate, or a percentage of sales. These also appear under Additional Fees.')}
+            </p>
+            <AdditionalFeesSection eventId={eventId!} fees={additionalFees} sales={sales} unitsSold={unitsSold} onSaved={refetch} />
+          </div>
+        </div>
+      ),
     },
     {
       title: t('dashboard.tabs.tips', 'Tips'),
@@ -776,10 +791,29 @@ function LaborSection({ eventId, companyId, laborEntries, laborMethod, onSaved }
   );
 }
 
-function AdditionalFeesSection({ eventId, fees, onSaved }: { eventId: string; fees: Array<Record<string, unknown>>; onSaved: () => void }) {
+// Resolve a fee/expense row to its effective (unsigned) dollar amount for display.
+// Mirrors resolveFeeAmount() in the API's profit.ts — the server stays authoritative
+// for the profit calc; this is just so each row shows its computed value.
+function feeEffectiveAmount(
+  fee: Record<string, unknown>,
+  sales: Record<string, unknown>,
+  unitsSold: number
+): number {
+  const rate = Number(fee['amount'] ?? 0);
+  switch (fee['calcType']) {
+    case 'per_unit':
+      return rate * Number(unitsSold ?? 0);
+    case 'percentage':
+      return (rate / 100) * Number((fee['pctBase'] === 'gross' ? sales['grossSales'] : sales['netSales']) ?? 0);
+    default:
+      return rate;
+  }
+}
+
+function AdditionalFeesSection({ eventId, fees, sales, unitsSold, onSaved }: { eventId: string; fees: Array<Record<string, unknown>>; sales: Record<string, unknown>; unitsSold: number; onSaved: () => void }) {
   const CREATE = gql`
     mutation CreateFee($eventId: ID!, $input: AdditionalFeeInput!) {
-      createAdditionalFee(eventId: $eventId, input: $input) { id label amount isDiscount }
+      createAdditionalFee(eventId: $eventId, input: $input) { id label amount isDiscount calcType pctBase }
     }
   `;
   const DELETE_FEE = gql`
@@ -789,40 +823,84 @@ function AdditionalFeesSection({ eventId, fees, onSaved }: { eventId: string; fe
   const [deleteFee] = useMutation(DELETE_FEE);
   const { t } = useTranslation('events');
   const { fmt } = useCurrency();
-  const [form, setForm] = useState({ label: '', amount: '', isDiscount: false });
+  const [form, setForm] = useState({ label: '', amount: '', isDiscount: false, calcType: 'flat', pctBase: 'net' });
   const [saving, setSaving] = useState(false);
 
   async function addFee() {
     if (!form.label || !form.amount) return;
     setSaving(true);
     try {
-      await create({ variables: { eventId, input: { label: form.label, amount: +form.amount, isDiscount: form.isDiscount } } });
-      setForm({ label: '', amount: '', isDiscount: false });
+      await create({ variables: { eventId, input: {
+        label: form.label,
+        amount: +form.amount,
+        isDiscount: form.isDiscount,
+        calcType: form.calcType,
+        pctBase: form.calcType === 'percentage' ? form.pctBase : null,
+      } } });
+      setForm({ label: '', amount: '', isDiscount: false, calcType: 'flat', pctBase: 'net' });
       onSaved();
     } catch { showToast(t('toast.failed', 'Failed'), 'error'); }
     finally { setSaving(false); }
   }
 
+  // Short descriptor of how a row's amount is computed, e.g. "$0.10/unit × 850" or "3% of net".
+  function rateDescriptor(f: Record<string, unknown>): string {
+    const rate = Number(f['amount'] ?? 0);
+    if (f['calcType'] === 'per_unit') return `${fmt(rate)}${t('dashboard.fees.perUnitSuffix', '/unit')} × ${unitsSold}`;
+    if (f['calcType'] === 'percentage') return `${rate}% ${t('dashboard.fees.ofBase', 'of')} ${f['pctBase'] === 'gross' ? t('dashboard.fees.gross', 'gross') : t('dashboard.fees.net', 'net')}`;
+    return '';
+  }
+
+  const amountLabel = form.calcType === 'per_unit'
+    ? t('dashboard.fees.ratePerUnit', 'Rate ($/unit)')
+    : form.calcType === 'percentage'
+      ? t('dashboard.fees.percent', 'Percent (%)')
+      : t('dashboard.fees.amount', 'Amount');
+
   return (
     <div>
-      {fees.map(f => (
-        <div key={f['id'] as string} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '0.86rem' }}>
-          <span>{f['label'] as string}{f['isDiscount'] ? t('dashboard.fees.discountSuffix', ' (discount)') : ''}</span>
-          <span style={{ display: 'flex', gap: 8 }}>
-            <span>{f['isDiscount'] ? '-' : ''}{fmt(Number(f['amount']))}</span>
-            <button onClick={() => { deleteFee({ variables: { id: f['id'] } }); onSaved(); }} style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer' }}><i className="fa-solid fa-xmark" /></button>
-          </span>
-        </div>
-      ))}
+      {fees.map(f => {
+        const eff = feeEffectiveAmount(f, sales, unitsSold);
+        const desc = rateDescriptor(f);
+        return (
+          <div key={f['id'] as string} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', fontSize: '0.86rem' }}>
+            <span>
+              {f['label'] as string}{f['isDiscount'] ? t('dashboard.fees.discountSuffix', ' (discount)') : ''}
+              {desc && <span style={{ color: 'var(--muted)', marginLeft: 6, fontSize: '0.82em' }}>({desc})</span>}
+            </span>
+            <span style={{ display: 'flex', gap: 8 }}>
+              <span>{f['isDiscount'] ? '-' : ''}{fmt(eff)}</span>
+              <button onClick={() => { deleteFee({ variables: { id: f['id'] } }); onSaved(); }} style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer' }}><i className="fa-solid fa-xmark" /></button>
+            </span>
+          </div>
+        );
+      })}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8, alignItems: 'flex-end' }}>
         <div className="form-group" style={{ margin: 0 }}>
           <label>{t('dashboard.fees.label', 'Label')}</label>
-          <input type="text" value={form.label} onChange={e => setForm(f => ({ ...f, label: e.target.value }))} style={{ width: 160 }} />
+          <input type="text" value={form.label} onChange={e => setForm(f => ({ ...f, label: e.target.value }))} style={{ width: 150 }} />
         </div>
         <div className="form-group" style={{ margin: 0 }}>
-          <label>{t('dashboard.fees.amount', 'Amount')}</label>
+          <label>{t('dashboard.fees.type', 'Type')}</label>
+          <select value={form.calcType} onChange={e => setForm(f => ({ ...f, calcType: e.target.value }))} style={{ width: 110 }}>
+            <option value="flat">{t('dashboard.fees.typeFlat', 'Flat')}</option>
+            <option value="per_unit">{t('dashboard.fees.typePerUnit', 'Per unit')}</option>
+            <option value="percentage">{t('dashboard.fees.typePercentage', 'Percentage')}</option>
+          </select>
+        </div>
+        <div className="form-group" style={{ margin: 0 }}>
+          <label>{amountLabel}</label>
           <input type="number" step="0.01" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} style={{ width: 100 }} />
         </div>
+        {form.calcType === 'percentage' && (
+          <div className="form-group" style={{ margin: 0 }}>
+            <label>{t('dashboard.fees.base', 'Of')}</label>
+            <select value={form.pctBase} onChange={e => setForm(f => ({ ...f, pctBase: e.target.value }))} style={{ width: 100 }}>
+              <option value="net">{t('dashboard.fees.net', 'net')}</option>
+              <option value="gross">{t('dashboard.fees.gross', 'gross')}</option>
+            </select>
+          </div>
+        )}
         <div className="form-group" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
           <input type="checkbox" checked={form.isDiscount} onChange={e => setForm(f => ({ ...f, isDiscount: e.target.checked }))} id="feeDiscount" />
           <label htmlFor="feeDiscount" style={{ marginBottom: 0 }}>{t('dashboard.fees.discount', 'Discount')}</label>
