@@ -1,8 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
-import { useQuery, useMutation } from '@apollo/client/react';
+import { useQuery, useMutation, useLazyQuery } from '@apollo/client/react';
 import { gql } from '@apollo/client/core';
 import { useTranslation, Trans } from 'react-i18next';
 import { showToast } from '@org/data';
+
+const GET_AI_RECOMMENDATIONS = gql`
+  query PosMappingRecommendations($companyId: ID!) {
+    posMappingRecommendations(companyId: $companyId) {
+      posItemId recipeId inventoryId confidence reason
+    }
+  }
+`;
 
 const GET_DATA = gql`
   query GetPosMappingData($companyId: ID!) {
@@ -146,8 +154,10 @@ export function PosMappingModal({ companyId, onClose }: Props) {
   const { t } = useTranslation('modals');
   const { data, loading } = useQuery(GET_DATA, { variables: { companyId } });
   const [saveMappings] = useMutation(SAVE_MAPPINGS);
+  const [fetchAiRecommendations] = useLazyQuery(GET_AI_RECOMMENDATIONS);
   const [mappings, setMappings] = useState<Map<string, Mapping>>(new Map());
   const [saving, setSaving] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
 
   const catalogItems: CatalogItem[] = data?.posCatalog ?? [];
   const inventoryItems: InventoryItem[] = data?.inventory ?? [];
@@ -179,6 +189,47 @@ export function PosMappingModal({ companyId, onClose }: Props) {
       next.set(posItemId, { ...cur, ...patch, posItemId, suggested: false });
       return next;
     });
+  }
+
+  async function handleSuggestAI() {
+    setAiLoading(true);
+    try {
+      const { data, error } = await fetchAiRecommendations({ variables: { companyId } });
+      if (error) throw error;
+      const recs: Array<{ posItemId: string; recipeId: string | null; inventoryId: string | null }> =
+        data?.posMappingRecommendations ?? [];
+      let applied = 0;
+      setMappings(prev => {
+        const next = new Map(prev);
+        for (const rec of recs) {
+          const cur = next.get(rec.posItemId) ?? { posItemId: rec.posItemId, inventoryItemId: null, recipeId: null };
+          // Respect deliberate user choices — only fill blanks or replace prior (name-based / AI) suggestions.
+          const userConfirmed = !cur.suggested && (cur.recipeId || cur.inventoryItemId);
+          if (userConfirmed) continue;
+          if (!rec.recipeId && !rec.inventoryId) continue;
+          next.set(rec.posItemId, {
+            posItemId: rec.posItemId,
+            recipeId: rec.recipeId ?? null,
+            // Recipe wins for COGS; only carry an inventory suggestion when no recipe was matched.
+            inventoryItemId: rec.recipeId ? null : (rec.inventoryId ?? null),
+            suggested: true,
+          });
+          applied += 1;
+        }
+        return next;
+      });
+      showToast(
+        applied > 0
+          ? t('posMapping.aiApplied', '✨ AI suggested {{count}} mapping(s). Review and Save.', { count: applied })
+          : t('posMapping.aiNone', 'No confident AI matches found. Map the items manually.'),
+        applied > 0 ? 'success' : 'info',
+        5000,
+      );
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : t('posMapping.aiFailed', 'AI suggestion failed. Please try again.'), 'error');
+    } finally {
+      setAiLoading(false);
+    }
   }
 
   async function handleSave() {
@@ -312,11 +363,21 @@ export function PosMappingModal({ companyId, onClose }: Props) {
         )}
 
         {/* Footer */}
-        <div style={{ padding: '14px 26px', borderTop: '1px solid #e5e7eb', display: 'flex', justifyContent: 'flex-end', gap: 10, background: '#fff' }}>
-          <button className="btn-secondary" onClick={onClose}>{t('posMapping.cancel', 'Cancel')}</button>
-          <button className="btn-primary" onClick={handleSave} disabled={saving || loading}>
-            {saving && <span className="spinner" />} <span>{t('posMapping.save', 'Save Mappings')}</span>
+        <div style={{ padding: '14px 26px', borderTop: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, background: '#fff' }}>
+          <button
+            className="btn-secondary"
+            onClick={handleSuggestAI}
+            disabled={aiLoading || loading || catalogItems.length === 0}
+            title={t('posMapping.aiTitle', 'Let AI suggest matches for you to review')}
+          >
+            {aiLoading && <span className="spinner" />} <span>{t('posMapping.suggestAi', '✨ Suggest with AI')}</span>
           </button>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button className="btn-secondary" onClick={onClose}>{t('posMapping.cancel', 'Cancel')}</button>
+            <button className="btn-primary" onClick={handleSave} disabled={saving || loading}>
+              {saving && <span className="spinner" />} <span>{t('posMapping.save', 'Save Mappings')}</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

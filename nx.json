@@ -12,7 +12,11 @@
       { "env": "VITE_API_URL" },
       { "env": "VITE_SUPABASE_URL" },
       { "env": "VITE_SUPABASE_ANON_KEY" },
-      { "env": "VITE_MEMBER" }
+      { "env": "VITE_MEMBER" },
+      { "env": "VITE_POSTHOG_PROJECT_TOKEN" },
+      { "env": "VITE_POSTHOG_HOST" },
+      { "env": "PUBLIC_POSTHOG_PROJECT_TOKEN" },
+      { "env": "PUBLIC_POSTHOG_HOST" }
     ]
   },
   "plugins": [

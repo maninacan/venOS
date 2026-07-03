@@ -6,6 +6,7 @@ import { lookupTaxRates } from '../../lib/taxRates.js';
 import { providerForCompany, type PosEvent } from '../../lib/pos/index.js';
 import { isPosAuthError } from '../../lib/pos/types.js';
 import { buildCostLookup } from '../../lib/pos/matchCost.js';
+import { suggestMappings } from '../../lib/aiMappingSuggest.js';
 
 // Flag/clear the POS connection so the UI can prompt a reconnect only when a
 // real auth failure has occurred (cleared on the next successful sync/reconnect).
@@ -316,6 +317,45 @@ export const salesResolvers = {
       try { return await provider.listCatalog(companyId); } catch (err) {
         logger.error('posCatalog: failed to fetch catalog', { companyId, error: err });
         return [];
+      }
+    },
+
+    // AI-suggested POS→recipe/inventory mappings. Read-only: returns suggestions
+    // for the user to review and accept in the mapping modal; saves nothing.
+    posMappingRecommendations: async (_: unknown, { companyId }: { companyId: string }, ctx: AppContext) => {
+      requireAuth(ctx);
+      await requireCompanyMember(companyId, ctx.user!.id);
+      const provider = await companyProvider(companyId);
+      if (!provider || !provider.implemented) return [];
+
+      let catalog;
+      try { catalog = await provider.listCatalog(companyId); } catch (err) {
+        logger.error('posMappingRecommendations: failed to fetch catalog', { companyId, error: err });
+        return [];
+      }
+
+      const [{ data: recipeCards }, { data: invRows }] = await Promise.all([
+        supabase.from('RecipeCards').select('id, name, RecipeIngredients(quantity, unitCost)').eq('companyId', companyId),
+        supabase.from('VendorInventory').select('id, itemName, unitCost').eq('companyId', companyId),
+      ]);
+
+      const recipes = (recipeCards ?? []).map((r: Record<string, unknown>) => ({
+        id: r['id'] as string,
+        name: r['name'] as string,
+        totalCost: ((r['RecipeIngredients'] as Array<Record<string, unknown>> | null) ?? [])
+          .reduce((s, i) => s + Number(i['quantity'] ?? 0) * Number(i['unitCost'] ?? 0), 0),
+      }));
+      const inventory = (invRows ?? []).map((i: Record<string, unknown>) => ({
+        id: i['id'] as string,
+        name: i['itemName'] as string,
+        unitCost: Number(i['unitCost'] ?? 0),
+      }));
+
+      try {
+        return await suggestMappings(catalog, recipes, inventory);
+      } catch (err) {
+        logger.error('posMappingRecommendations: AI suggestion failed', { companyId, error: err });
+        throw new Error('Could not generate AI suggestions. Please try again.');
       }
     },
   },

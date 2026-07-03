@@ -471,6 +471,17 @@ export const typeDefs = `#graphql
     price: Float
   }
 
+  "An AI-suggested mapping for one POS item — reviewed/accepted by the user before saving."
+  type PosMappingRecommendation {
+    posItemId: String!
+    recipeId: ID
+    inventoryId: ID
+    "Model confidence in the match, 0.0–1.0."
+    confidence: Float
+    "Short human-readable rationale for the suggested match."
+    reason: String
+  }
+
   type SyncResult {
     success: Boolean!
     message: String
@@ -604,6 +615,8 @@ export const typeDefs = `#graphql
     inventoryAlerts(companyId: ID!): [InventoryAlert!]!
     lowStockItems(companyId: ID!): [InventoryItem!]!
     posMappings(companyId: ID!): [PosMapping!]!
+    "AI-suggested POS→recipe/inventory mappings for the user to review (nothing is persisted)."
+    posMappingRecommendations(companyId: ID!): [PosMappingRecommendation!]!
     eventInventory(eventId: ID!): [EventInventory!]!
 
     adminUsers: [AdminUser!]!
