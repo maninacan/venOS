@@ -18,14 +18,18 @@ export interface MappingSuggestion {
   reason: string;
 }
 
-const MODEL = 'claude-opus-4-8';
+// Sonnet handles this name-similarity matching well and is several times faster
+// and cheaper than Opus — important because a large catalog fans out into many
+// concurrent calls and the user waits on the slowest one.
+const MODEL = 'claude-sonnet-4-6';
 const MAX_ATTEMPTS = 3;
 // Large catalogs (hundreds of POS items) can't fit one suggestion-per-item in a
 // single response without truncating the JSON, so we split the catalog into
 // batches and match each independently. Recipes + inventory are sent with every
-// batch as shared context. Batches run concurrently, capped by MAX_CONCURRENCY.
+// batch as shared context. Batches run concurrently, capped by MAX_CONCURRENCY,
+// so total latency is roughly one batch (not the sum) up to that cap.
 const BATCH_SIZE = 80;
-const MAX_CONCURRENCY = 4;
+const MAX_CONCURRENCY = 12;
 
 function isTransient(err: unknown): boolean {
   if (err instanceof Anthropic.APIError) {

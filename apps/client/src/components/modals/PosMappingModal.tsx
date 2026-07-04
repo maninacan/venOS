@@ -212,26 +212,27 @@ export function PosMappingModal({ companyId, onClose }: Props) {
       if (error) throw error;
       const recs: Array<{ posItemId: string; recipeId: string | null; inventoryId: string | null }> =
         data?.posMappingRecommendations ?? [];
+      // Build the next map and count synchronously from current state — do NOT
+      // count inside the setMappings updater, which React defers until render
+      // (the count would still be 0 when the toast below reads it).
       let applied = 0;
-      setMappings(prev => {
-        const next = new Map(prev);
-        for (const rec of recs) {
-          const cur = next.get(rec.posItemId) ?? { posItemId: rec.posItemId, inventoryItemId: null, recipeId: null };
-          // Respect deliberate user choices — only fill blanks or replace prior (name-based / AI) suggestions.
-          const userConfirmed = !cur.suggested && (cur.recipeId || cur.inventoryItemId);
-          if (userConfirmed) continue;
-          if (!rec.recipeId && !rec.inventoryId) continue;
-          next.set(rec.posItemId, {
-            posItemId: rec.posItemId,
-            recipeId: rec.recipeId ?? null,
-            // Recipe wins for COGS; only carry an inventory suggestion when no recipe was matched.
-            inventoryItemId: rec.recipeId ? null : (rec.inventoryId ?? null),
-            suggested: true,
-          });
-          applied += 1;
-        }
-        return next;
-      });
+      const next = new Map(mappings);
+      for (const rec of recs) {
+        const cur = next.get(rec.posItemId) ?? { posItemId: rec.posItemId, inventoryItemId: null, recipeId: null };
+        // Respect deliberate user choices — only fill blanks or replace prior (name-based / AI) suggestions.
+        const userConfirmed = !cur.suggested && (cur.recipeId || cur.inventoryItemId);
+        if (userConfirmed) continue;
+        if (!rec.recipeId && !rec.inventoryId) continue;
+        next.set(rec.posItemId, {
+          posItemId: rec.posItemId,
+          recipeId: rec.recipeId ?? null,
+          // Recipe wins for COGS; only carry an inventory suggestion when no recipe was matched.
+          inventoryItemId: rec.recipeId ? null : (rec.inventoryId ?? null),
+          suggested: true,
+        });
+        applied += 1;
+      }
+      setMappings(next);
       showToast(
         applied > 0
           ? t('posMapping.aiApplied', '✨ AI suggested {{count}} mapping(s). Review and Save.', { count: applied })
@@ -266,7 +267,7 @@ export function PosMappingModal({ companyId, onClose }: Props) {
   }
 
   const unmappedCount = Array.from(mappings.values()).filter(m => !m.inventoryItemId && !m.recipeId).length;
-  const suggestedCount = Array.from(mappings.values()).filter(m => m.suggested && m.inventoryItemId).length;
+  const suggestedCount = Array.from(mappings.values()).filter(m => m.suggested && (m.inventoryItemId || m.recipeId)).length;
 
   const aiSteps = [
     t('posMapping.aiStep1', 'Reading your POS catalog'),
