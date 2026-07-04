@@ -25,6 +25,8 @@ export const typeDefs = `#graphql
     plan: String!
     "ISO 4217 currency code the merchant transacts in (defaults to 'USD'). Amounts are shown in this currency, POS-style."
     currency: String!
+    "ISO 3166-1 alpha-2 country new events default to (defaults to 'US')."
+    defaultCountry: String!
     subscriptionStatus: String
     currentPeriodEnd: String
     createdAt: String
@@ -83,6 +85,8 @@ export const typeDefs = `#graphql
     email: String
     "ISO 4217 currency code (e.g. 'USD', 'MXN')."
     currency: String
+    "ISO 3166-1 alpha-2 country new events default to (e.g. 'US', 'CA')."
+    defaultCountry: String
   }
 
   # ─── Events ──────────────────────────────────────────────────────────────────
@@ -99,6 +103,8 @@ export const typeDefs = `#graphql
     coordinator: String
     notes: String
     zipCode: String
+    "ISO 3166-1 alpha-2 country code (e.g. 'US'). Defaults from the company on create."
+    country: String
     posLocationId: String
     time: String
     applicationDate: String
@@ -263,6 +269,8 @@ export const typeDefs = `#graphql
     coordinator: String
     notes: String
     zipCode: String
+    "ISO 3166-1 alpha-2 country code (e.g. 'US'). Defaults from the company on create."
+    country: String
     posLocationId: String
     time: String
     applicationDate: String
@@ -292,6 +300,8 @@ export const typeDefs = `#graphql
     coordinator: String
     notes: String
     zipCode: String
+    "ISO 3166-1 alpha-2 country code (e.g. 'US'). Defaults from the company on create."
+    country: String
     posLocationId: String
     time: String
     applicationDate: String
@@ -547,6 +557,12 @@ export const typeDefs = `#graphql
     count: Int!
   }
 
+  type CountryCount {
+    "ISO 3166-1 alpha-2 country code (e.g. 'US', 'CA')."
+    country: String!
+    count: Int!
+  }
+
   type CompanyLocation {
     id: ID!
     name: String!
@@ -555,6 +571,8 @@ export const typeDefs = `#graphql
     lng: Float!
     city: String
     zipCode: String
+    "ISO 3166-1 alpha-2 country code (e.g. 'US'). Defaults from the company on create."
+    country: String
     eventCount: Int!
     memberCount: Int!
   }
@@ -591,6 +609,7 @@ export const typeDefs = `#graphql
     # Geography
     topZipCodes: [ZipCount!]!
     eventsByState: [StateCount!]!
+    eventsByCountry: [CountryCount!]!
   }
 
   # ─── Queries ─────────────────────────────────────────────────────────────────

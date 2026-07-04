@@ -101,14 +101,14 @@ export const adminResolvers = {
       ] = await Promise.all([
         supabase.from('Companies').select('id, plan, createdAt'),
         supabase.auth.admin.listUsers({ perPage: 1000 }),
-        supabase.from('EventInfo').select('eventID, companyId, isFinalized, eventDate, finalizedDate, zipCode'),
+        supabase.from('EventInfo').select('eventID, companyId, isFinalized, eventDate, finalizedDate, zipCode, country'),
         supabase.from('PosConnection').select('companyId'),
         supabase.from('SalesSummary').select('eventID, netProfit'),
       ]);
 
       const allCompanies = (companies ?? []) as Array<{ id: string; plan: string; createdAt?: string | null }>;
       const allUsers     = authUsers ?? [];
-      const allEvents    = (events ?? []) as Array<{ eventID: string; companyId: string; isFinalized: boolean; eventDate?: string | null; finalizedDate?: string | null; zipCode?: string | null }>;
+      const allEvents    = (events ?? []) as Array<{ eventID: string; companyId: string; isFinalized: boolean; eventDate?: string | null; finalizedDate?: string | null; zipCode?: string | null; country?: string | null }>;
       const allSales     = (salesData ?? []) as Array<{ eventID: string; netProfit?: number | null }>;
 
       // ── Totals ───────────────────────────────────────────────────────────────
@@ -199,6 +199,18 @@ export const adminResolvers = {
         .sort((a, b) => b[1] - a[1])
         .map(([state, count]) => ({ state, count }));
 
+      // ── Events by country ─────────────────────────────────────────────────────
+      // Uses the event's country (ISO 3166-1 alpha-2). Events created before the
+      // country field existed fall back to 'US' (the app was US-only then).
+      const countryCounts = new Map<string, number>();
+      for (const e of allEvents) {
+        const country = (e.country ?? '').trim().toUpperCase() || 'US';
+        countryCounts.set(country, (countryCounts.get(country) ?? 0) + 1);
+      }
+      const eventsByCountry = Array.from(countryCounts.entries())
+        .sort((a, b) => b[1] - a[1])
+        .map(([country, count]) => ({ country, count }));
+
       return {
         totalUsers, totalCompanies, totalEvents, totalFinalizedEvents,
         newUsers30d, newCompanies30d, newEvents30d, newFinalizedEvents30d,
@@ -210,6 +222,7 @@ export const adminResolvers = {
         companiesByMonth, eventsByMonth,
         topZipCodes,
         eventsByState,
+        eventsByCountry,
       };
     },
 

@@ -8,11 +8,12 @@ import { BackToSetupButton } from '../../components/guidance/BackToSetupButton';
 import { showToast, useAuth } from '@org/data';
 import { PosMappingModal } from '../../components/modals/PosMappingModal';
 import { LanguageRegionCard } from '../../components/settings/LanguageRegionCard';
+import { COUNTRIES } from '../../lib/countries';
 
 const GET_SETTINGS = gql`
   query GetSettings($companyId: ID!) {
     company(id: $companyId) {
-      id name phone contactName vendorCategory email joinCode plan pendingOwnerId taxjarConnected posSystem
+      id name phone contactName vendorCategory email joinCode plan pendingOwnerId taxjarConnected posSystem defaultCountry
       members { userId email role }
       pendingRequests { userId email role }
       posStatus { connected provider locationName locationId needsReauth }
@@ -21,7 +22,7 @@ const GET_SETTINGS = gql`
 `;
 const UPDATE_COMPANY = gql`
   mutation UpdateCompany($id: ID!, $input: UpdateCompanyInput!) {
-    updateCompany(id: $id, input: $input) { id name phone contactName vendorCategory email }
+    updateCompany(id: $id, input: $input) { id name phone contactName vendorCategory email defaultCountry }
   }
 `;
 const REMOVE_MEMBER = gql`
@@ -112,7 +113,7 @@ export function SettingsPage() {
   });
 
   const [showPosMappings, setShowPosMappings] = useState(false);
-  const [companyForm, setCompanyForm] = useState({ name: '', phone: '', contactName: '', vendorCategory: '', email: '' });
+  const [companyForm, setCompanyForm] = useState({ name: '', phone: '', contactName: '', vendorCategory: '', email: '', defaultCountry: 'US' });
   const [savingCompany, setSavingCompany] = useState(false);
   const [connectingPos, setConnectingPos] = useState(false);
   const [toastGuid, setToastGuid] = useState('');
@@ -148,6 +149,7 @@ export function SettingsPage() {
       contactName: info.contactName ?? '',
       vendorCategory: info.vendorCategory ?? '',
       email: info.email ?? '',
+      defaultCountry: info.defaultCountry ?? 'US',
     });
   }, [info]);
 
@@ -590,6 +592,18 @@ export function SettingsPage() {
               />
             </div>
           ))}
+          <div className="form-group">
+            <label>{t('companyDetails.defaultCountry', 'Default Country')}</label>
+            <select
+              value={companyForm.defaultCountry}
+              onChange={e => setCompanyForm(prev => ({ ...prev, defaultCountry: e.target.value }))}
+            >
+              {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
+            </select>
+            <p style={{ fontSize: '0.8rem', color: 'var(--muted)', margin: '4px 0 0' }}>
+              {t('companyDetails.defaultCountryHelp', 'New events default to this country. You can change it per event.')}
+            </p>
+          </div>
         </div>
         <button className="btn-primary" onClick={saveCompanyDetails} disabled={savingCompany}>
           {savingCompany && <span className="spinner" />} <span>{t('companyDetails.save', 'Save Details')}</span>

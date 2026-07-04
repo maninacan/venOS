@@ -16,6 +16,7 @@ import {
 } from 'recharts';
 import { ComposableMap, Geographies, Geography, Marker } from 'react-simple-maps';
 import { scaleLinear } from 'd3-scale';
+import { ISO_COUNTRIES, countryNameFromA2 } from '../../lib/isoCountries';
 
 const GET_DASHBOARD = gql`
   query GetAdminDashboard {
@@ -31,6 +32,7 @@ const GET_DASHBOARD = gql`
       eventsByMonth { month count }
       topZipCodes { zipCode count }
       eventsByState { state count }
+      eventsByCountry { country count }
     }
   }
 `;
@@ -47,6 +49,7 @@ interface Dashboard {
   eventsByMonth: { month: string; count: number }[];
   topZipCodes: { zipCode: string; count: number }[];
   eventsByState: { state: string; count: number }[];
+  eventsByCountry: { country: string; count: number }[];
 }
 
 function pct(rate: number) { return `${(rate * 100).toFixed(1)}%`; }
@@ -667,6 +670,93 @@ function USMap({ eventsByState, onStateClick }: {
   );
 }
 
+// ── World map (event activity by country) ─────────────────────────────────────
+const WORLD_TOPO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json';
+
+function WorldMap({ eventsByCountry }: { eventsByCountry: { country: string; count: number }[] }) {
+  const [tooltip, setTooltip] = useState<{ name: string; count: number; x: number; y: number } | null>(null);
+
+  // Aggregate counts by ISO numeric code (matches world-atlas geo.id, compared numerically).
+  const countByNum = new Map<number, number>();
+  for (const c of eventsByCountry) {
+    const iso = ISO_COUNTRIES[c.country];
+    if (iso) countByNum.set(parseInt(iso.num, 10), (countByNum.get(parseInt(iso.num, 10)) ?? 0) + c.count);
+  }
+  const maxCount = Math.max(...eventsByCountry.map(c => c.count), 1);
+  const colorScale = scaleLinear<string>().domain([0, maxCount]).range(['#dbeafe', '#0B2A4A']).clamp(true);
+
+  return (
+    <div className="bg-white border border-[rgba(11,42,74,0.12)] rounded-xl p-5 shadow-[0_2px_8px_rgba(11,42,74,0.06)]">
+      <div className="flex items-start justify-between mb-2">
+        <div>
+          <div className="text-[0.72rem] font-bold uppercase tracking-[0.06em] text-[#64748b]">Event Activity by Country</div>
+          <div className="text-[0.72rem] text-[#94a3b8] mt-0.5">Derived from each event's country</div>
+        </div>
+        <div className="flex items-center gap-1.5 text-[0.65rem] text-[#94a3b8]">
+          <span>0</span>
+          <div className="h-2 w-24 rounded-sm" style={{ background: 'linear-gradient(to right, #dbeafe, #0B2A4A)' }} />
+          <span>{maxCount}</span>
+        </div>
+      </div>
+
+      <div className="relative" style={{ width: '100%' }}>
+        <ComposableMap projection="geoEqualEarth" projectionConfig={{ scale: 150 }} style={{ width: '100%', height: 'auto' }}>
+          <Geographies geography={WORLD_TOPO_URL}>
+            {({ geographies }) =>
+              geographies.map(geo => {
+                const count = countByNum.get(parseInt(geo.id as string, 10)) ?? 0;
+                const fill = count > 0 ? colorScale(count) : '#f1f5f9';
+                const name = geo.properties['name'] as string;
+                return (
+                  <Geography
+                    key={geo.rsmKey}
+                    geography={geo}
+                    onMouseEnter={(evt: React.MouseEvent) => setTooltip({ name, count, x: evt.clientX, y: evt.clientY })}
+                    onMouseLeave={() => setTooltip(null)}
+                    style={{
+                      default: { fill, stroke: '#fff', strokeWidth: 0.4, outline: 'none' },
+                      hover:   { fill: count > 0 ? '#19B37A' : '#e2e8f0', stroke: '#fff', strokeWidth: 0.4, outline: 'none' },
+                      pressed: { fill: count > 0 ? '#166534' : '#cbd5e1', stroke: '#fff', strokeWidth: 0.4, outline: 'none' },
+                    }}
+                  />
+                );
+              })
+            }
+          </Geographies>
+        </ComposableMap>
+
+        {tooltip && (
+          <div
+            className="fixed z-50 bg-[#0B2A4A] text-white text-[0.75rem] px-3 py-1.5 rounded-lg shadow-lg pointer-events-none"
+            style={{ left: tooltip.x + 12, top: tooltip.y - 36 }}
+          >
+            <span className="font-semibold">{tooltip.name}</span>
+            {' — '}
+            <span>{tooltip.count} event{tooltip.count !== 1 ? 's' : ''}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Top 5 countries summary */}
+      {eventsByCountry.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {eventsByCountry.slice(0, 5).map(c => (
+            <div key={c.country} className="flex items-center gap-1.5 bg-[#f8fafc] rounded-full px-3 py-1 text-[0.72rem]">
+              <span className="font-bold text-[#0B2A4A]">{countryNameFromA2(c.country)}</span>
+              <span className="text-[#64748b]">{c.count}</span>
+            </div>
+          ))}
+          {eventsByCountry.length > 5 && (
+            <div className="flex items-center text-[0.72rem] text-[#94a3b8] px-2">
+              +{eventsByCountry.length - 5} more countries
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Section header ────────────────────────────────────────────────────────────
 function SectionHeader({ children }: { children: React.ReactNode }) {
   return (
@@ -683,6 +773,7 @@ export function DashboardPage() {
   const { data, loading } = useQuery<{ adminDashboard: Dashboard }>(GET_DASHBOARD);
   const d = data?.adminDashboard;
   const [selectedState, setSelectedState] = useState<string | null>(null);
+  const [geoView, setGeoView] = useState<'us' | 'world'>('us');
 
   return (
     <>
@@ -782,8 +873,23 @@ export function DashboardPage() {
           />
 
           {/* ── Geography ───────────────────────────────────────────────────── */}
-          <SectionHeader>Geography</SectionHeader>
-          {selectedState ? (
+          <div className="flex items-center justify-between">
+            <SectionHeader>Geography</SectionHeader>
+            <div className="inline-flex rounded-lg border border-[#e2e8f0] overflow-hidden text-[0.75rem] font-semibold">
+              {(['us', 'world'] as const).map(v => (
+                <button
+                  key={v}
+                  onClick={() => setGeoView(v)}
+                  className={`px-3 py-1.5 ${geoView === v ? 'bg-[#0B2A4A] text-white' : 'bg-white text-[#64748b] hover:bg-[#f1f5f9]'}`}
+                >
+                  {v === 'us' ? 'United States' : 'World'}
+                </button>
+              ))}
+            </div>
+          </div>
+          {geoView === 'world' ? (
+            <WorldMap eventsByCountry={d.eventsByCountry} />
+          ) : selectedState ? (
             <StateDrillDown state={selectedState} onBack={() => setSelectedState(null)} />
           ) : (
             <USMap eventsByState={d.eventsByState} onStateClick={setSelectedState} />

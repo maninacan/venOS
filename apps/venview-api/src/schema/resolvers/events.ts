@@ -148,7 +148,7 @@ async function buildEventReport(eventId: string) {
 // Strip DB-only columns not in the GraphQL Event type
 const EVENT_SCHEMA_FIELDS = new Set([
   'id', 'companyId', 'eventName', 'eventDate', 'endDate', 'status', 'eventType',
-  'eventHost', 'eventLocation', 'coordinator', 'notes', 'zipCode', 'posLocationId',
+  'eventHost', 'eventLocation', 'coordinator', 'notes', 'zipCode', 'country', 'posLocationId',
   'time', 'applicationDate', 'eventRating', 'permits', 'employees', 'customFields', 'numDays',
   'isFinalized', 'finalizedDate', 'days', 'netProfit',
   // joined sub-objects used for inline computation (stripped below)
@@ -308,6 +308,15 @@ export const eventResolvers = {
       await requireCompanyMember(companyId, ctx.user!.id);
 
       const { days, ...eventFields } = input;
+
+      // Default the event's country to the company's default when the client
+      // didn't supply one (per-event override still wins).
+      if (eventFields['country'] == null) {
+        const { data: co } = await supabase
+          .from('Companies').select('defaultCountry').eq('id', companyId).single();
+        const def = (co as Record<string, unknown> | null)?.['defaultCountry'];
+        if (def) eventFields['country'] = def;
+      }
 
       const { data: event, error } = await supabase
         .from('EventInfo')

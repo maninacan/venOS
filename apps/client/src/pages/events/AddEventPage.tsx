@@ -7,6 +7,7 @@ import type { TFunction } from 'i18next';
 import { useCurrentCompany } from '../../hooks/useCurrentCompany';
 import { formatDate } from '../../i18n/format';
 import { showToast } from '@org/data';
+import { COUNTRIES } from '../../lib/countries';
 
 const API_URL = (import.meta.env['VITE_API_URL'] as string) || 'http://localhost:3000';
 
@@ -18,7 +19,7 @@ const GET_EVENT = gql`
   query GetEventForEdit($id: ID!) {
     event(id: $id) {
       id eventName eventType eventRating eventDate applicationDate
-      eventLocation zipCode permits eventHost coordinator employees notes
+      eventLocation zipCode country permits eventHost coordinator employees notes
       posLocationId numDays
       days { id dayNumber date startTime endTime }
     }
@@ -85,7 +86,7 @@ interface DayRow { dayNumber: number; eventDate: string; startTime: string; endT
 const EMPTY_FORM = {
   eventName: '', eventType: '', eventRating: '',
   eventDate: '', applicationDate: '',
-  eventLocation: '', zipCode: '', permits: '',
+  eventLocation: '', zipCode: '', country: '', permits: '',
   eventHost: '', coordinator: '', employees: '', notes: '',
   posLocationId: '',
 };
@@ -94,7 +95,7 @@ type EventFormState = typeof EMPTY_FORM;
 export function AddEventPage() {
   const { t } = useTranslation('events');
   const navigate = useNavigate();
-  const { companyId } = useCurrentCompany();
+  const { companyId, company } = useCurrentCompany();
   const { eventId } = useParams<{ eventId: string }>();
   const [searchParams] = useSearchParams();
   const fromSetup = searchParams.get('setup') === '1';
@@ -112,6 +113,13 @@ export function AddEventPage() {
   const [createEvent] = useMutation(CREATE_EVENT);
   const [updateEvent] = useMutation(UPDATE_EVENT);
 
+  // New events default to the company's default country (user can still change it).
+  useEffect(() => {
+    if (isEdit) return;
+    const def = (company as { defaultCountry?: string } | null)?.defaultCountry;
+    if (def) setForm(prev => (prev.country ? prev : { ...prev, country: def }));
+  }, [isEdit, company]);
+
   const posLocations: Array<{ id: string; name: string }> = setupData?.posLocations ?? [];
 
   function setField<K extends keyof EventFormState>(key: K, val: string) {
@@ -125,7 +133,7 @@ export function AddEventPage() {
     setForm({
       eventName: ev.eventName ?? '', eventType: ev.eventType ?? '', eventRating: ev.eventRating ?? '',
       eventDate: ev.eventDate ?? '', applicationDate: ev.applicationDate ?? '',
-      eventLocation: ev.eventLocation ?? '', zipCode: ev.zipCode ?? '', permits: ev.permits ?? '',
+      eventLocation: ev.eventLocation ?? '', zipCode: ev.zipCode ?? '', country: ev.country ?? '', permits: ev.permits ?? '',
       eventHost: ev.eventHost ?? '', coordinator: ev.coordinator ?? '', employees: ev.employees ?? '',
       notes: ev.notes ?? '', posLocationId: ev.posLocationId ?? '',
     });
@@ -155,6 +163,7 @@ export function AddEventPage() {
       applicationDate: form.applicationDate || null,
       eventLocation: form.eventLocation || null,
       zipCode: form.zipCode || null,
+      country: form.country || null,
       permits: form.permits || null,
       eventHost: form.eventHost || null,
       coordinator: form.coordinator || null,
@@ -285,6 +294,14 @@ export function AddEventPage() {
             <p style={{ fontSize: '0.8rem', color: 'var(--muted)', margin: '4px 0 0' }}>{t('form.zipHelp', 'We use this to auto-look-up your sales tax rate.')}</p>
           </div>
 
+          <div className="form-group">
+            <label>{t('form.country', 'Country')}</label>
+            <select value={form.country} onChange={e => setField('country', e.target.value)}>
+              {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
+            </select>
+            <p style={{ fontSize: '0.8rem', color: 'var(--muted)', margin: '4px 0 0' }}>{t('form.countryHelp', 'Defaults to your company default — change it for this event if needed.')}</p>
+          </div>
+
           <div style={{ background: '#eff6ff', borderLeft: '3px solid #0B2A4A', borderRadius: 6, padding: '12px 14px', fontSize: '0.86rem', color: 'var(--vv-navy)', margin: '16px 0' }}>
             <strong>{t('form.almostDone', 'Almost done.')}</strong> {t('form.almostDoneBody', 'After this you can add host, coordinator, permits and notes — or skip and add them anytime from the event page.')}
           </div>
@@ -393,6 +410,12 @@ export function AddEventPage() {
         <div className="form-group">
           <label>{t('form.zipCodeLabel', 'Zip Code *')}</label>
           <input type="text" value={form.zipCode} onChange={e => setField('zipCode', e.target.value)} />
+        </div>
+        <div className="form-group">
+          <label>{t('form.country', 'Country')}</label>
+          <select value={form.country} onChange={e => setField('country', e.target.value)}>
+            {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
+          </select>
         </div>
         <div className="form-group">
           <label>{t('form.permits', 'Permits')}</label>
