@@ -29,7 +29,7 @@ const GET_REPORT = gql`
         healthDeptFee eventFee mileage mileageRate coordinatorFee
         posFee employeeBonus eventRunnerFees laborFees additionalFees
       }
-      taxes { stateRate localRate combinedRate stateTax localTax taxCollected jurisdiction }
+      taxes { stateRate localRate combinedRate stateTax localTax taxCollected rateSource jurisdiction }
       summary {
         posFees cogs grossProfit totalExpenses netProfit
         tips stateFoodTax laborFees additionalFeesTotal mileageReimbursement
@@ -601,6 +601,19 @@ function TaxSection({ eventId, hasPos, taxes, onSaved }: {
         {t('dashboard.tax.intro', "Sales tax is a pass-through you remit to the taxing authorities — it's tracked here for your records and never counted as profit.")}
         {hasPos ? ' ' + t('dashboard.tax.fromPos', 'Amounts come from your actual POS sales.') : ' ' + t('dashboard.tax.estimated', 'Amounts are estimated from the rates below.')}
       </p>
+
+      {String(taxes?.['rateSource'] ?? '') === 'none' && (
+        <div style={{ background: '#fff7ed', border: '1px solid #fed7aa', color: '#c2410c', borderRadius: 8, padding: '10px 12px', fontSize: '0.82rem', margin: '0 0 12px', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+          <i className="fa-solid fa-triangle-exclamation" aria-hidden="true" style={{ marginTop: 2 }} />
+          <span>{t('dashboard.tax.promptNone', "We couldn't determine your sales tax rates, so the collected tax isn't split by state. Enter your state and local rates below, or connect TaxJar in Settings for automatic lookup.")}</span>
+        </div>
+      )}
+      {String(taxes?.['rateSource'] ?? '') === 'estimated' && (
+        <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', color: '#1e40af', borderRadius: 8, padding: '10px 12px', fontSize: '0.82rem', margin: '0 0 12px', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+          <i className="fa-solid fa-circle-info" aria-hidden="true" style={{ marginTop: 2 }} />
+          <span>{t('dashboard.tax.promptEstimated', "State rate estimated from your ZIP ({{state}}); local tax isn't included. For exact state + local rates, enter them below or connect TaxJar in Settings.", { state: stateName })}</span>
+        </div>
+      )}
 
       <div style={{ marginBottom: 14 }}>
         <div style={rowStyle}><span>{t('dashboard.tax.remitState', 'Remit to {{name}} — State ({{rate}}%)', { name: stateName, rate: (Number(taxes?.['stateRate'] ?? 0) * 100).toFixed(2) })}</span><strong>{fmt(stateTax)}</strong></div>

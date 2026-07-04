@@ -214,6 +214,8 @@
       "intro": "Sales tax is a pass-through you remit to the taxing authorities — it's tracked here for your records and never counted as profit.",
       "fromPos": "Amounts come from your actual POS sales.",
       "estimated": "Amounts are estimated from the rates below.",
+      "promptNone": "We couldn't determine your sales tax rates, so the collected tax isn't split by state. Enter your state and local rates below, or connect TaxJar in Settings for automatic lookup.",
+      "promptEstimated": "State rate estimated from your ZIP ({{state}}); local tax isn't included. For exact state + local rates, enter them below or connect TaxJar in Settings.",
       "remitState": "Remit to {{name}} — State ({{rate}}%)",
       "local": "{{name}} — Local ({{rate}}%)",
       "totalCollected": "Total tax collected",

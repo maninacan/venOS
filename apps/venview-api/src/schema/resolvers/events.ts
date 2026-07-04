@@ -100,9 +100,17 @@ async function buildEventReport(eventId: string) {
       const taxCollected = ev['posLocationId']
         ? Number(sr?.['taxCollected'] ?? 0)
         : +(taxBase * combinedRate).toFixed(2);
-      const split = stateRate + localRate > 0 ? stateRate / (stateRate + localRate) : 0;
-      const stateTax = +(taxCollected * split).toFixed(2);
-      const localTax = +(taxCollected - stateTax).toFixed(2);
+      // State portion = the state's statutory rate applied to the base (capped at
+      // what was actually collected); the remainder is local. Works whether we
+      // know both rates (TaxJar) or only the state rate (ZIP fallback).
+      const stateTax = stateRate > 0 ? Math.min(taxCollected, +(taxBase * stateRate).toFixed(2)) : 0;
+      const localTax = +(Math.max(0, taxCollected - stateTax)).toFixed(2);
+      // Where the rates came from, so the client can prompt when they're missing
+      // ('none') or only estimated from the ZIP ('estimated').
+      const rateSource = sr?.['taxOverride'] ? 'manual'
+        : localRate > 0 ? 'taxjar'
+        : stateRate > 0 ? 'estimated'
+        : 'none';
       return {
         stateRate,
         localRate,
@@ -110,6 +118,7 @@ async function buildEventReport(eventId: string) {
         stateTax,
         localTax,
         taxCollected,
+        rateSource,
         jurisdiction: sr?.['taxJurisdiction'] ?? null,
         // legacy aliases retained for safety
         stateFoodTax: taxCollected,

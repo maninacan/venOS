@@ -2,7 +2,7 @@ import type { AppContext } from '../../context/index.js';
 import { requireAuth, requireCompanyMember } from '../../context/index.js';
 import { supabase } from '../../lib/supabase.js';
 import { decryptToken } from '../../lib/crypto.js';
-import { lookupTaxRates } from '../../lib/taxRates.js';
+import { lookupTaxRates, lookupStateFallbackRate, type TaxRateLookup } from '../../lib/taxRates.js';
 import { providerForCompany, type PosEvent } from '../../lib/pos/index.js';
 import { isPosAuthError } from '../../lib/pos/types.js';
 import { buildCostLookup } from '../../lib/pos/matchCost.js';
@@ -62,8 +62,10 @@ async function upsertSales(eventId: string, patch: Record<string, unknown>): Pro
 }
 
 // Look up state + local rates from the event's ZIP and store them — unless the
-// rate was manually overridden. Best-effort: no-ops when there's no ZIP, no API
-// token, or the lookup fails (rates stay at their current values / 0).
+// rate was manually overridden. Prefers TaxJar (exact state + local) when the
+// company has a token; otherwise falls back to the state's base rate derived
+// from the ZIP so the STATE portion is still computed. Best-effort: no-ops when
+// there's no ZIP or no rate can be resolved.
 export async function applyTaxRates(eventId: string): Promise<void> {
   const { data: ev } = await supabase.from('EventInfo').select('zipCode, companyId').eq('eventID', eventId).single();
   const evRow = ev as Record<string, unknown> | null;
@@ -74,14 +76,16 @@ export async function applyTaxRates(eventId: string): Promise<void> {
   const { data: s } = await supabase.from('SalesSummary').select('taxOverride').eq('eventID', eventId).single();
   if ((s as Record<string, unknown> | null)?.['taxOverride']) return;
 
-  // Use the company's own (encrypted) TaxJar token.
+  // Prefer the company's own (encrypted) TaxJar token for exact state + local rates.
+  let rates: TaxRateLookup | null = null;
   const { data: company } = await supabase.from('Companies').select('taxjarToken').eq('id', companyId).single();
   const enc = (company as Record<string, unknown> | null)?.['taxjarToken'] as string | null;
-  if (!enc) return;
-  let token: string;
-  try { token = decryptToken(enc); } catch { return; }
-
-  const rates = await lookupTaxRates(zip, token);
+  if (enc) {
+    try { rates = await lookupTaxRates(zip, decryptToken(enc)); } catch { rates = null; }
+  }
+  // No TaxJar (or lookup failed) → estimate the state rate from the ZIP so the
+  // state portion still shows. Local is unknown; the user can refine it manually.
+  if (!rates) rates = lookupStateFallbackRate(zip);
   if (!rates) return;
 
   await upsertSales(eventId, {

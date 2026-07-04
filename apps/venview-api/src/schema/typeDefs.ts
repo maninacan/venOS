@@ -205,6 +205,7 @@ export const typeDefs = `#graphql
     stateTax: Float
     localTax: Float
     taxCollected: Float
+    rateSource: String
     jurisdiction: JSON
     stateFoodTax: Float
     taxDetail: JSON
