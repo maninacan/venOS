@@ -437,8 +437,7 @@ export function RecipesPage() {
                         <td style={{ padding: '8px 12px', fontWeight: 600, color: 'var(--vv-navy)' }}>
                           {hasIngredients && (
                             <i
-                              className="fa-solid fa-chevron-right"
-                              style={{ marginRight: 8, fontSize: '0.72rem', color: 'var(--muted)', transition: 'transform 0.15s', transform: isOpen ? 'rotate(90deg)' : 'none' }}
+                              className={`fa-solid fa-chevron-right inline-block mr-2 text-[0.72rem] text-[color:var(--muted)] transition-transform duration-200 ease-in-out ${isOpen ? 'rotate-90' : 'rotate-0'}`}
                             />
                           )}
                           {recipe.name}
