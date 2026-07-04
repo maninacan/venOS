@@ -156,6 +156,10 @@ export function PosMappingModal({ companyId, onClose }: Props) {
   const [saveMappings] = useMutation(SAVE_MAPPINGS);
   const [fetchAiRecommendations] = useLazyQuery(GET_AI_RECOMMENDATIONS);
   const [mappings, setMappings] = useState<Map<string, Mapping>>(new Map());
+  // Display order of catalog rows. Unmapped items are floated to the top, but the
+  // order is snapshotted (on load and after AI-suggest) rather than recomputed on
+  // every keystroke, so rows don't jump around while the user is mapping.
+  const [sortedIds, setSortedIds] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiElapsed, setAiElapsed] = useState(0);
@@ -194,6 +198,7 @@ export function PosMappingModal({ companyId, onClose }: Props) {
       }
     }
     setMappings(m);
+    setSortedIds(orderIds(m));
   }, [data]); // eslint-disable-line
 
   function setMapping(posItemId: string, patch: Partial<Mapping>) {
@@ -203,6 +208,16 @@ export function PosMappingModal({ companyId, onClose }: Props) {
       next.set(posItemId, { ...cur, ...patch, posItemId, suggested: false });
       return next;
     });
+  }
+
+  const isUnmapped = (m?: Mapping) => !m?.recipeId && !m?.inventoryItemId;
+
+  // Order catalog rows with unmapped items first; Array.sort is stable so items
+  // within each group keep their original catalog order.
+  function orderIds(map: Map<string, Mapping>): string[] {
+    return [...catalogItems]
+      .sort((a, b) => Number(isUnmapped(map.get(b.posItemId))) - Number(isUnmapped(map.get(a.posItemId))))
+      .map(i => i.posItemId);
   }
 
   async function handleSuggestAI() {
@@ -233,6 +248,7 @@ export function PosMappingModal({ companyId, onClose }: Props) {
         applied += 1;
       }
       setMappings(next);
+      setSortedIds(orderIds(next));
       showToast(
         applied > 0
           ? t('posMapping.aiApplied', 'AI suggested {{count}} mapping(s). Review and Save.', { count: applied })
@@ -268,6 +284,12 @@ export function PosMappingModal({ companyId, onClose }: Props) {
 
   const unmappedCount = Array.from(mappings.values()).filter(m => !m.inventoryItemId && !m.recipeId).length;
   const suggestedCount = Array.from(mappings.values()).filter(m => m.suggested && (m.inventoryItemId || m.recipeId)).length;
+
+  // Rows in display order (unmapped floated to top via the sortedIds snapshot).
+  const catalogById = new Map(catalogItems.map(c => [c.posItemId, c]));
+  const orderedItems: CatalogItem[] = sortedIds.length
+    ? sortedIds.map(id => catalogById.get(id)).filter((c): c is CatalogItem => !!c)
+    : catalogItems;
 
   const aiSteps = [
     t('posMapping.aiStep1', 'Reading your POS catalog'),
@@ -332,16 +354,18 @@ export function PosMappingModal({ companyId, onClose }: Props) {
                 </tr>
               </thead>
               <tbody>
-                {catalogItems.map(item => {
+                {orderedItems.map(item => {
                   const mapping = mappings.get(item.posItemId);
                   const isSuggested = mapping?.suggested ?? false;
+                  const rowUnmapped = isUnmapped(mapping);
                   const displayLabel = item.variationName && item.variationName.toLowerCase() !== 'regular'
                     ? `${item.posItemName} — ${item.variationName}`
                     : item.posItemName;
 
                   return (
-                    <tr key={item.posItemId}>
-                      <td style={{ padding: '7px 12px', borderBottom: '1px solid #f0f0f0', fontSize: '0.87rem', color: '#333' }}>
+                    <tr key={item.posItemId} style={rowUnmapped ? { background: '#fff7ed' } : undefined}>
+                      <td style={{ padding: '7px 12px', borderBottom: '1px solid #f0f0f0', fontSize: '0.87rem', color: '#333', borderLeft: rowUnmapped ? '3px solid #f59e0b' : '3px solid transparent', fontWeight: rowUnmapped ? 600 : 400 }}>
+                        {rowUnmapped && <i className="fa-solid fa-triangle-exclamation" aria-hidden="true" style={{ color: '#f59e0b', marginRight: 6, fontSize: '0.78rem' }} />}
                         {displayLabel}
                       </td>
                       <td style={{ padding: '7px 12px', borderBottom: '1px solid #f0f0f0' }}>
