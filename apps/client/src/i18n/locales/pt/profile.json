@@ -1,0 +1,23 @@
+{
+  "heading": "Perfil",
+  "subtitle": "Gerencie os dados da sua conta pessoal.",
+  "loading": "Carregando…",
+  "email": "E-mail",
+  "displayName": "Nome de exibição",
+  "displayNamePlaceholder": "Seu nome",
+  "saveProfile": "Salvar perfil",
+  "changePassword": "Alterar senha",
+  "newPassword": "Nova senha",
+  "newPasswordPlaceholder": "Pelo menos 8 caracteres",
+  "confirmPassword": "Confirmar nova senha",
+  "confirmPasswordPlaceholder": "Digite a nova senha novamente",
+  "changePasswordButton": "Alterar senha",
+  "toast": {
+    "profileUpdated": "Perfil atualizado!",
+    "profileUpdateFailed": "Falha ao atualizar o perfil",
+    "passwordTooShort": "A senha deve ter pelo menos 8 caracteres",
+    "passwordsDoNotMatch": "As senhas não coincidem",
+    "passwordChanged": "Senha alterada!",
+    "passwordChangeFailed": "Falha ao alterar a senha"
+  }
+}

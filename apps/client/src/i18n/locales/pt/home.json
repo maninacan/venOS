@@ -1,0 +1,57 @@
+{
+  "page": {
+    "defaultTitle": "Início",
+    "subtitle": "Veja no que vale a pena focar agora."
+  },
+  "banner": {
+    "getSetUp": "Concluir a configuração",
+    "nextForEvent": "Próximo para {{eventName}}",
+    "openEvent": "Abrir evento"
+  },
+  "events": {
+    "heading": "Eventos em andamento",
+    "allEvents": "Todos os eventos",
+    "emptyNoEvents": "Ainda não há eventos.",
+    "createFirst": "Crie seu primeiro evento",
+    "allFinalized": "Todos os eventos foram finalizados.",
+    "phaseDone": "Concluído"
+  },
+  "profit": {
+    "cardTitle": "Resumo de lucro do evento",
+    "revenue": "Faturamento",
+    "grossSales": "Vendas brutas",
+    "returns": "Devoluções",
+    "discounts": "Descontos",
+    "netSales": "Vendas líquidas",
+    "cogsTitle": "Custo dos Produtos Vendidos (CMV) - Custo de insumos",
+    "ingredientCosts": "Custo dos ingredientes",
+    "grossProfit": "Lucro bruto",
+    "operatingExpenses": "Despesas operacionais",
+    "healthDeptFee": "Taxa da vigilância sanitária",
+    "eventFee": "Taxa do evento",
+    "additionalFees": "Taxas adicionais",
+    "mileageReimbursement": "Reembolso de quilometragem",
+    "employeeBonus": "Bônus para funcionários",
+    "eventRunnerFees": "Taxas do organizador do evento",
+    "laborFees": "Custo de mão de obra",
+    "coordinatorFee": "Taxa do coordenador",
+    "posFees": "Taxas do POS",
+    "totalOperatingExpenses": "Total de despesas operacionais",
+    "netProfit": "Lucro líquido",
+    "laborWarning": "A mão de obra ainda não foi inserida — o lucro pode mudar. Adicione a mão de obra no cartão de Mão de obra acima.",
+    "forYourRecords": "Para seus registros",
+    "finalizeEvent": "Finalizar evento",
+    "tips": "Gorjetas (repassadas à equipe)",
+    "salesTaxRemitState": "Imposto sobre vendas — recolher a {{jurisdiction}} ({{rate}})",
+    "salesTaxRemitLocal": "Imposto sobre vendas — recolher a {{jurisdiction}} ({{rate}})",
+    "stateFallback": "Estadual",
+    "localFallback": "Municipal",
+    "totalSalesTaxCollected": "Total de imposto sobre vendas arrecadado (a recolher)",
+    "taxDisclaimer": "ⓘ O imposto sobre vendas é arrecadado em nome das autoridades fiscais e excluído do lucro. Os impostos sobre a renda são calculados anualmente — consulte seu contador."
+  },
+  "toast": {
+    "eventFinalized": "Evento finalizado!",
+    "finalizeLimit": "Faça upgrade para o Pro para finalizar mais de 1 evento.",
+    "finalizeFailed": "Não foi possível finalizar"
+  }
+}

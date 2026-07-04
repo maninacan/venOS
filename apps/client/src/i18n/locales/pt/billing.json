@@ -1,0 +1,51 @@
+{
+  "heading": "Faturamento",
+  "subtitle": "Gerencie sua assinatura do venOS e os dados de pagamento.",
+  "loading": "Carregando…",
+  "planPro": "venOS Pro",
+  "planStarter": "venOS Starter",
+  "accessEnds": "O acesso termina em {{date}}",
+  "renews": "Renova em {{date}}",
+  "manage": {
+    "eyebrow": "Gerenciar assinatura",
+    "description": "Atualize sua forma de pagamento, veja faturas ou cancele seu plano pelo nosso portal de faturamento seguro.",
+    "button": "Gerenciar assinatura"
+  },
+  "upgrade": {
+    "eyebrow": "Faça upgrade para o venOS Pro",
+    "headline": "Veja o lucro real de cada evento.",
+    "subhead": "Acompanhe tendências ao longo do tempo e tome decisões mais inteligentes — com mais rapidez.",
+    "button": "Fazer upgrade para o Pro",
+    "secureNote": "Checkout seguro com tecnologia Stripe · cancele quando quiser."
+  },
+  "features": {
+    "reports": {
+      "title": "Relatórios pós-evento",
+      "detail": "Demonstrativo completo de lucros e perdas, pronto para compartilhar e imprimir"
+    },
+    "unlimitedEvents": {
+      "title": "Eventos finalizados ilimitados",
+      "detail": "Acompanhe cada mercado, festival e pop-up que você realizar"
+    },
+    "pdfExport": {
+      "title": "Exportação em PDF",
+      "detail": "Baixe relatórios com sua marca para seus registros ou seu contador"
+    },
+    "history": {
+      "title": "Histórico completo de eventos",
+      "detail": "Compare eventos ao longo do tempo para encontrar seus mercados mais lucrativos"
+    },
+    "squareSync": {
+      "title": "Sincronização com o Square POS",
+      "detail": "Obtenha dados reais de vendas — incluindo taxas, reembolsos e descontos"
+    },
+    "customForms": {
+      "title": "Modelos de formulários personalizados",
+      "detail": "Crie formulários de eventos que se adaptam exatamente ao seu jeito de trabalhar"
+    }
+  },
+  "toast": {
+    "paymentReceived": "Pagamento recebido — ativando o venOS Pro…",
+    "checkoutCancelled": "Checkout cancelado."
+  }
+}

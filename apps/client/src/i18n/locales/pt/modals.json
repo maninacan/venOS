@@ -1,0 +1,115 @@
+{
+  "welcome": {
+    "beta": "Beta",
+    "title": "Bem-vindo ao venOS!",
+    "intro": "Você está nos ajudando a criar a forma mais simples de os vendedores de eventos saberem se realmente lucraram.",
+    "focusPrefix": "Esta versão beta está focada em uma única coisa:",
+    "focusHighlight": "Levar você do evento → ao lucro real em minutos.",
+    "stepsHeading": "Comece em 3 passos",
+    "step1": {
+      "title": "Adicione um evento real",
+      "description": "Use um evento passado dos últimos 30 dias.",
+      "example1": "Feira de produtores",
+      "example2": "Serviço de buffet",
+      "example3": "Evento escolar",
+      "example4": "Festival",
+      "cta": "Crie seu primeiro evento"
+    },
+    "step2": {
+      "title": "Conecte e sincronize as vendas",
+      "description": "Se você usa o Square, conecte-o em Configurações. O venOS extrairá seus dados reais de vendas e impostos automaticamente.",
+      "descriptionAlt": "Caso contrário, informe os totais manualmente.",
+      "cta": "Sincronizar vendas"
+    },
+    "step3": {
+      "title": "Adicione seus custos",
+      "description": "Informe a mão de obra, os insumos, as taxas do evento e o imposto sobre alimentos. Depois, abra seu Resumo de lucro.",
+      "cta": "Ver resumo de lucro"
+    },
+    "discover": {
+      "heading": "O que você vai descobrir",
+      "item1": "Seu lucro líquido real (após impostos e taxas)",
+      "item2": "O impacto real do custo de mão de obra",
+      "item3": "Se o evento valeu a pena",
+      "item4": "Onde você perdeu margem"
+    },
+    "disclaimer": "Esta é uma versão beta. Por favor, relate erros. Os cálculos financeiros baseiam-se nos dados informados ou sincronizados. Se algo parecer incorreto, avise-nos.",
+    "ctaPrimary": "Vamos lá — Criar meu primeiro evento",
+    "ctaExplore": "Prefiro explorar por conta própria"
+  },
+  "upgrade": {
+    "badge": "venOS Pro",
+    "title": "Descubra o panorama completo.",
+    "subtitle": "Veja o lucro real de cada evento, acompanhe as tendências ao longo do tempo e tome decisões mais inteligentes — com mais rapidez.",
+    "contexts": {
+      "report": "Os relatórios pós-evento são um recurso Pro.",
+      "finalize": "O Starter inclui 1 evento finalizado. Faça upgrade para acompanhar mais.",
+      "history": "Ver o histórico de eventos finalizados exige o Pro.",
+      "pdf": "A exportação em PDF é um recurso Pro.",
+      "multiday": "O Starter permite eventos de até 2 dias. Faça upgrade para o Pro para festivais mais longos."
+    },
+    "featuresHeading": "Tudo o que o Pro inclui",
+    "features": {
+      "reports": {
+        "title": "Relatórios pós-evento",
+        "description": "Demonstrativo completo de lucros e perdas, pronto para compartilhar e imprimir"
+      },
+      "unlimited": {
+        "title": "Eventos finalizados ilimitados",
+        "description": "Acompanhe cada feira, festival e pop-up que você realizar"
+      },
+      "pdf": {
+        "title": "Exportação em PDF",
+        "description": "Baixe relatórios com sua marca para seus registros ou seu contador"
+      },
+      "history": {
+        "title": "Histórico completo de eventos",
+        "description": "Compare eventos ao longo do tempo para encontrar suas feiras mais lucrativas"
+      },
+      "sync": {
+        "title": "Sincronização com o Square POS",
+        "description": "Extraia dados reais de vendas — incluindo taxas, reembolsos e descontos"
+      },
+      "templates": {
+        "title": "Modelos de formulário personalizados",
+        "description": "Crie formulários de evento que se encaixem exatamente na sua forma de trabalhar"
+      }
+    },
+    "starterNote": "Você está no <1>venOS Starter</1> — inclui 1 evento finalizado e um resumo básico de lucro.",
+    "ctaUpgrade": "Fazer upgrade para o Pro",
+    "secureNote": "Pagamento seguro com tecnologia da Stripe · cancele quando quiser",
+    "ctaLater": "Talvez mais tarde"
+  },
+  "posMapping": {
+    "title": "Vincule o menu do seu POS às suas fichas técnicas",
+    "description": "Vincule cada item do POS à receita que o compõe — o venOS usa o custo dos ingredientes da receita para calcular o CMV automaticamente em cada sincronização. Escolha <2>\"Sem receita\"</2> para gorjetas, taxas e outros itens que não fazem parte do menu.",
+    "suggestedLegend": "<1>{{count}} item(ns)</1> foram vinculados por IA — marcados como <3>sugerido</3>. Revise antes de salvar.",
+    "unmappedWarning": "<1>{{count}} item(ns)</1> não têm ficha técnica — o CMV aparecerá como $0 para eles.",
+    "empty": "Nenhum item do catálogo do POS foi encontrado. Verifique se o seu POS está conectado e tem itens.",
+    "colPosItem": "Item do POS",
+    "colInventoryItem": "Seu item de estoque",
+    "notInMenu": "— Não está no meu menu —",
+    "searchInventory": "Buscar no estoque…",
+    "noInventoryMatches": "Nenhum item correspondente",
+    "inventoryOption": "{{name}} (${{cost}}/unidade)",
+    "suggestedBadge": "sugerido",
+    "cancel": "Cancelar",
+    "save": "Salvar vínculos",
+    "suggestAi": "Sugerir com IA",
+    "aiTitle": "Deixe a IA sugerir vínculos para você revisar",
+    "aiApplied": "A IA sugeriu {{count}} vínculo(s). Revise e salve.",
+    "aiNone": "Nenhum vínculo confiável foi encontrado pela IA. Vincule os itens manualmente.",
+    "aiFailed": "A sugestão da IA falhou. Tente novamente.",
+    "aiWorkingTitle": "O Claude está vinculando os itens do seu POS…",
+    "aiWorkingNote": "Analisando {{count}} itens do POS com base nas suas receitas e no seu estoque. Isso pode levar um ou dois minutos.",
+    "aiStep1": "Lendo o catálogo do seu POS",
+    "aiStep2": "Comparando itens com as suas receitas",
+    "aiStep3": "Buscando correspondências no estoque",
+    "aiStep4": "Avaliando a confiança dos vínculos",
+    "aiStep5": "Finalizando as sugestões",
+    "toast": {
+      "saved": "Vínculos salvos! Os cálculos de custo agora estão precisos.",
+      "saveFailed": "Não foi possível salvar"
+    }
+  }
+}

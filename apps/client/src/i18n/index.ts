@@ -28,6 +28,7 @@ for (const [path, mod] of Object.entries(modules)) {
 export const SUPPORTED_LANGUAGES = [
   { code: 'en-US', label: 'English', base: 'en' },
   { code: 'es-MX', label: 'Español', base: 'es' },
+  { code: 'pt-BR', label: 'Português', base: 'pt' },
 ] as const;
 
 i18n
@@ -36,7 +37,7 @@ i18n
   .init({
     resources,
     fallbackLng: 'en',
-    supportedLngs: ['en', 'es'],
+    supportedLngs: ['en', 'es', 'pt'],
     // en-US / es-MX resolve to the en / es resource bundles, while
     // i18n.language keeps the full region tag that drives Intl formatting.
     load: 'languageOnly',

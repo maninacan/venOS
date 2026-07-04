@@ -1,0 +1,85 @@
+{
+  "steps": {
+    "language": {
+      "label": "Escolha seu idioma",
+      "description": "Selecione o idioma de exibição e a moeda.",
+      "cta": "Escolher idioma"
+    },
+    "company": {
+      "label": "Crie sua empresa",
+      "description": "Seu espaço de trabalho para eventos, receitas e estoque.",
+      "cta": "Concluído"
+    },
+    "pos": {
+      "label": "Conectar {{pos}}",
+      "description": "Sincronize automaticamente as vendas (e a mão de obra) do seu POS.",
+      "cta": "Conectar {{pos}}",
+      "genericPos": "seu POS"
+    },
+    "recipes": {
+      "label": "Adicione suas receitas",
+      "description": "Defina os custos dos ingredientes para que o venOS calcule o Custo dos Produtos Vendidos (CMV).",
+      "cta": "Adicionar receitas"
+    },
+    "inventory": {
+      "label": "Adicione seu estoque",
+      "description": "Importe seu catálogo de produtos para controlar estoque e custos.",
+      "cta": "Adicionar estoque"
+    },
+    "team": {
+      "label": "Convide sua equipe",
+      "description": "Compartilhe eventos, estoque e receitas com seus colegas.",
+      "cta": "Convidar equipe"
+    },
+    "firstEvent": {
+      "label": "Crie seu primeiro evento",
+      "description": "Adicione uma feira, festival ou pop-up para começar a acompanhar o lucro.",
+      "cta": "Criar evento"
+    }
+  },
+  "checklist": {
+    "setupComplete": "Configuração concluída",
+    "gettingStarted": "Primeiros passos",
+    "counter": "{{done}}/{{total}}",
+    "showSetup": "Mostrar configuração ▾",
+    "hide": "Ocultar ▴",
+    "progress": "{{done}} de {{total}} concluídos",
+    "optional": "opcional",
+    "skip": "Pular"
+  },
+  "questions": {
+    "title": "Configuração rápida",
+    "subtitle": "Duas perguntas para adaptarmos o venOS à sua forma de trabalhar.",
+    "skip": "Pular",
+    "posQuestion": "Você usa um sistema de ponto de venda?",
+    "laborQuestion": "Como você calcula a mão de obra?",
+    "soon": " (em breve)",
+    "save": "Salvar e continuar",
+    "pos": {
+      "square": "Square",
+      "manual": "Sem POS / manual",
+      "shopify": "Shopify",
+      "toast": "Toast"
+    },
+    "labor": {
+      "pos": "Do meu sistema POS",
+      "other": "Outro método (inserção manual)",
+      "flatRate": "Taxa fixa por turno"
+    },
+    "toast": {
+      "answerBoth": "Por favor, responda às duas perguntas",
+      "saveFailed": "Não foi possível salvar as respostas"
+    }
+  },
+  "backToSetup": "Voltar à lista de configuração",
+  "banner": {
+    "dismiss": "Dispensar"
+  },
+  "stepper": {
+    "descriptions": {
+      "plan": "Detalhes do evento e local",
+      "reconcile": "Registre vendas, mão de obra e custos",
+      "finalize": "Revise o lucro e confirme"
+    }
+  }
+}

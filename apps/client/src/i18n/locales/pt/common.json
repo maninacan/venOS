@@ -1,0 +1,33 @@
+{
+  "save": "Salvar",
+  "cancel": "Cancelar",
+  "delete": "Excluir",
+  "edit": "Editar",
+  "close": "Fechar",
+  "add": "Adicionar",
+  "remove": "Remover",
+  "back": "Voltar",
+  "next": "Próximo",
+  "previous": "Anterior",
+  "confirm": "Confirmar",
+  "loading": "Carregando…",
+  "saving": "Salvando…",
+  "search": "Buscar",
+  "yes": "Sim",
+  "no": "Não",
+  "optional": "opcional",
+  "required": "obrigatório",
+  "skip": "Pular",
+  "done": "Concluído",
+  "retry": "Tentar novamente",
+  "language": "Idioma",
+  "english": "English",
+  "spanish": "Español",
+  "pagination": {
+    "showing": "Mostrando",
+    "to": "a",
+    "of": "de",
+    "results": "resultados",
+    "perPage": "/ página"
+  }
+}

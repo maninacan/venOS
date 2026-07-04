@@ -1,0 +1,23 @@
+{
+  "heading": "Lista de reposição",
+  "subtitle": "Escolha um evento e marque os itens como repostos após reabastecê-los. A reposição soma a quantidade de volta ao estoque do seu depósito.",
+  "event": "Evento",
+  "selectEvent": "Selecione um evento…",
+  "refresh": "Atualizar",
+  "lowWarning_one": "{{count}} item com estoque baixo",
+  "lowWarning_other": "{{count}} itens com estoque baixo",
+  "itemsTracked_one": "{{count}} item monitorado",
+  "itemsTracked_other": "{{count}} itens monitorados",
+  "selectPrompt": "Selecione um evento acima para ver sua lista de reposição.",
+  "noInventory": "Nenhum estoque de food truck carregado para este evento. Adicione estoque pelo Painel do evento.",
+  "loaded": "Carregado",
+  "sold": "Vendido",
+  "remaining": "Restante",
+  "restockQty": "Qtd. a repor",
+  "markRestocked": "Marcar como reposto",
+  "toast": {
+    "invalidQty": "Informe uma quantidade de reposição válida",
+    "restocked": "Repostas {{qty}} unidades de {{name}}",
+    "restockFailed": "Não foi possível repor"
+  }
+}
