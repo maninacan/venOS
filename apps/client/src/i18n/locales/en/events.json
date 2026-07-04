@@ -163,7 +163,7 @@
       "notes": "Notes"
     },
     "tabs": {
-      "inventorySales": "Inventory Sales",
+      "costOfGoods": "Cost of Goods",
       "truckInventory": "Truck Inventory",
       "manualSalesEntry": "Manual Sales Entry",
       "discounts": "Discounts",
@@ -171,8 +171,7 @@
       "additionalFees": "Additional Fees",
       "expenses": "Expenses",
       "tips": "Tips",
-      "salesTax": "Sales Tax",
-      "ingredientCosts": "Ingredient Costs (Recipe Matching)"
+      "salesTax": "Sales Tax"
     },
     "noInventorySales": "No Inventory Sales recorded. Pull sales to populate.",
     "invItem": "Item",

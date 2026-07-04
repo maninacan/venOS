@@ -163,7 +163,7 @@
       "notes": "Notas"
     },
     "tabs": {
-      "inventorySales": "Ventas de inventario",
+      "costOfGoods": "Costo de bienes",
       "truckInventory": "Inventario del camión",
       "manualSalesEntry": "Entrada manual de ventas",
       "discounts": "Descuentos",
@@ -171,8 +171,7 @@
       "additionalFees": "Cuotas adicionales",
       "expenses": "Gastos",
       "tips": "Propinas",
-      "salesTax": "Impuesto sobre ventas",
-      "ingredientCosts": "Costos de ingredientes (coincidencia de recetas)"
+      "salesTax": "Impuesto sobre ventas"
     },
     "noInventorySales": "No hay ventas de inventario registradas. Sincroniza las ventas para llenar la tabla.",
     "invItem": "Artículo",

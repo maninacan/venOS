@@ -179,85 +179,12 @@ export function EventDashboardPage() {
     { label: t('dashboard.meta.notes', 'Notes'), value: event?.notes },
   ].filter(f => f.value);
 
-  // Event-data tabs (Inventory Sales → Ingredient Costs)
+  // Event-data tabs (Cost of Goods → Sales Tax)
   const tabs: Array<{ title: string; headerRight?: ReactNode; content: ReactNode }> = [
     {
-      title: t('dashboard.tabs.inventorySales', 'Inventory Sales'),
+      title: t('dashboard.tabs.costOfGoods', 'Cost of Goods'),
       content: inventorySales.length === 0 ? (
-        <p style={{ color: 'var(--muted)', fontSize: '0.86rem', margin: 0 }}>{t('dashboard.noInventorySales', 'No Inventory Sales recorded. Pull sales to populate.')}</p>
-      ) : (
-        <div className="table-container">
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.86rem' }}>
-            <thead><tr style={{ background: '#f3f4f6', textAlign: 'left' }}>
-              <th style={{ padding: '6px 8px' }}>{t('dashboard.invItem', 'Item')}</th>
-              <th style={{ padding: '6px 8px' }}>{t('dashboard.invQtySold', 'Qty Sold')}</th>
-              <th style={{ padding: '6px 8px' }}>{t('dashboard.invUnitCost', 'Unit Cost')}</th>
-              <th style={{ padding: '6px 8px' }}>{t('dashboard.invTotalCogs', 'Total COGS')}</th>
-            </tr></thead>
-            <tbody>
-              {inventorySales.map((r: Record<string, unknown>, i: number) => (
-                <tr key={i}>
-                  <td style={{ padding: '6px 8px' }}>{r['name'] as string}</td>
-                  <td style={{ padding: '6px 8px' }}>{Number(r['quantitySold'])}</td>
-                  <td style={{ padding: '6px 8px' }}>{r['unitPrice'] != null ? fmt(r['unitPrice'] as number) : '—'}</td>
-                  <td style={{ padding: '6px 8px' }}>{fmt(r['totalCost'] as number)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ),
-    },
-    {
-      title: t('dashboard.tabs.truckInventory', 'Truck Inventory'),
-      content: <p style={{ color: 'var(--muted)', fontSize: '0.86rem', margin: 0 }}>{t('dashboard.truckInventoryComing', 'Truck inventory tracking coming in Phase 5.')}</p>,
-    },
-    {
-      title: t('dashboard.tabs.manualSalesEntry', 'Manual Sales Entry'),
-      content: <ManualSalesForm eventId={eventId!} sales={sales} onSaved={refetch} />,
-    },
-    {
-      title: t('dashboard.tabs.discounts', 'Discounts'),
-      content: <AdjustmentForm eventId={eventId!} field="discounts" label={t('dashboard.discountsLabel', 'Discounts')} currentValue={Number(sales.discounts ?? 0)} onSaved={refetch} />,
-    },
-    {
-      title: t('dashboard.tabs.labor', 'Labor'),
-      headerRight: company?.posStatus?.connected && providerHasLabor(company?.posStatus?.provider)
-        ? <SyncLaborButton eventId={eventId!} posLocationId={event?.posLocationId} onSynced={refetch} />
-        : undefined,
-      content: <LaborSection eventId={eventId!} companyId={companyId!} laborEntries={laborEntries} laborMethod={company?.laborMethod} onSaved={refetch} />,
-    },
-    {
-      title: t('dashboard.tabs.additionalFees', 'Additional Fees'),
-      content: <AdditionalFeesSection eventId={eventId!} fees={additionalFees} sales={sales} unitsSold={unitsSold} onSaved={refetch} />,
-    },
-    {
-      title: t('dashboard.tabs.expenses', 'Expenses'),
-      content: (
-        <div>
-          <ExpensesForm eventId={eventId!} expenses={expenses} onSaved={refetch} />
-          <div style={{ borderTop: '1px solid var(--vv-border)', marginTop: 20, paddingTop: 16 }}>
-            <h4 style={{ margin: '0 0 4px', color: 'var(--vv-navy)', fontSize: '0.95rem' }}>{t('dashboard.customExpenses', 'Custom Expenses')}</h4>
-            <p style={{ fontSize: '0.82rem', color: 'var(--muted)', margin: '0 0 10px' }}>
-              {t('dashboard.customExpensesHint', 'Add one-off expenses — a flat amount, a per-unit rate, or a percentage of sales. These also appear under Additional Fees.')}
-            </p>
-            <AdditionalFeesSection eventId={eventId!} fees={additionalFees} sales={sales} unitsSold={unitsSold} onSaved={refetch} />
-          </div>
-        </div>
-      ),
-    },
-    {
-      title: t('dashboard.tabs.tips', 'Tips'),
-      content: <AdjustmentForm eventId={eventId!} field="tips" label={t('dashboard.tipsLabel', 'Tips (pass-through)')} currentValue={Number(sales.tips ?? 0)} onSaved={refetch} />,
-    },
-    {
-      title: t('dashboard.tabs.salesTax', 'Sales Tax'),
-      content: <TaxSection eventId={eventId!} hasPos={!!event?.posLocationId} taxes={taxes} onSaved={refetch} />,
-    },
-    {
-      title: t('dashboard.tabs.ingredientCosts', 'Ingredient Costs (Recipe Matching)'),
-      content: inventorySales.length === 0 ? (
-        <p style={{ color: 'var(--muted)', fontSize: '0.86rem', margin: 0 }}>{t('dashboard.noInventorySales', 'No Inventory Sales recorded. Pull sales to populate.')}</p>
+        <p style={{ color: 'var(--muted)', fontSize: '0.86rem', margin: 0 }}>{t('dashboard.noInventorySales', 'No sales recorded yet. Pull sales to populate.')}</p>
       ) : (
         <div>
           <p style={{ fontSize: '0.82rem', color: 'var(--muted)', margin: '0 0 10px' }}>
@@ -306,6 +233,52 @@ export function EventDashboardPage() {
           })()}
         </div>
       ),
+    },
+    {
+      title: t('dashboard.tabs.truckInventory', 'Truck Inventory'),
+      content: <p style={{ color: 'var(--muted)', fontSize: '0.86rem', margin: 0 }}>{t('dashboard.truckInventoryComing', 'Truck inventory tracking coming in Phase 5.')}</p>,
+    },
+    {
+      title: t('dashboard.tabs.manualSalesEntry', 'Manual Sales Entry'),
+      content: <ManualSalesForm eventId={eventId!} sales={sales} onSaved={refetch} />,
+    },
+    {
+      title: t('dashboard.tabs.discounts', 'Discounts'),
+      content: <AdjustmentForm eventId={eventId!} field="discounts" label={t('dashboard.discountsLabel', 'Discounts')} currentValue={Number(sales.discounts ?? 0)} onSaved={refetch} />,
+    },
+    {
+      title: t('dashboard.tabs.labor', 'Labor'),
+      headerRight: company?.posStatus?.connected && providerHasLabor(company?.posStatus?.provider)
+        ? <SyncLaborButton eventId={eventId!} posLocationId={event?.posLocationId} onSynced={refetch} />
+        : undefined,
+      content: <LaborSection eventId={eventId!} companyId={companyId!} laborEntries={laborEntries} laborMethod={company?.laborMethod} onSaved={refetch} />,
+    },
+    {
+      title: t('dashboard.tabs.additionalFees', 'Additional Fees'),
+      content: <AdditionalFeesSection eventId={eventId!} fees={additionalFees} sales={sales} unitsSold={unitsSold} onSaved={refetch} />,
+    },
+    {
+      title: t('dashboard.tabs.expenses', 'Expenses'),
+      content: (
+        <div>
+          <ExpensesForm eventId={eventId!} expenses={expenses} onSaved={refetch} />
+          <div style={{ borderTop: '1px solid var(--vv-border)', marginTop: 20, paddingTop: 16 }}>
+            <h4 style={{ margin: '0 0 4px', color: 'var(--vv-navy)', fontSize: '0.95rem' }}>{t('dashboard.customExpenses', 'Custom Expenses')}</h4>
+            <p style={{ fontSize: '0.82rem', color: 'var(--muted)', margin: '0 0 10px' }}>
+              {t('dashboard.customExpensesHint', 'Add one-off expenses — a flat amount, a per-unit rate, or a percentage of sales. These also appear under Additional Fees.')}
+            </p>
+            <AdditionalFeesSection eventId={eventId!} fees={additionalFees} sales={sales} unitsSold={unitsSold} onSaved={refetch} />
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: t('dashboard.tabs.tips', 'Tips'),
+      content: <AdjustmentForm eventId={eventId!} field="tips" label={t('dashboard.tipsLabel', 'Tips (pass-through)')} currentValue={Number(sales.tips ?? 0)} onSaved={refetch} />,
+    },
+    {
+      title: t('dashboard.tabs.salesTax', 'Sales Tax'),
+      content: <TaxSection eventId={eventId!} hasPos={!!event?.posLocationId} taxes={taxes} onSaved={refetch} />,
     },
   ];
   const active = tabs[Math.min(activeTab, tabs.length - 1)];
@@ -430,7 +403,7 @@ export function EventDashboardPage() {
 
       {showData && (
         <>
-          {/* ── Reconcile: event data tabs (Inventory Sales → Ingredient Costs) ── */}
+          {/* ── Reconcile: event data tabs (Cost of Goods → Sales Tax) ── */}
           <div ref={tabsRef} className="bg-white rounded-xl border border-[rgba(11,42,74,0.12)] overflow-hidden mb-2.5 shadow-[0_4px_12px_rgba(11,42,74,0.08)]">
             <div className="flex bg-[#f8fafc] border-b border-[rgba(11,42,74,0.12)]" role="tablist">
               {tabs.map((t, i) => (
