@@ -15,7 +15,6 @@ const GET_AI_RECOMMENDATIONS = gql`
 const GET_DATA = gql`
   query GetPosMappingData($companyId: ID!) {
     posCatalog(companyId: $companyId) { posItemId posItemName variationName price }
-    inventory(companyId: $companyId) { id name unitCost }
     recipes(companyId: $companyId) { id name totalCost }
     posMappings(companyId: $companyId) { posItemId inventoryItemId recipeId }
   }
@@ -27,45 +26,11 @@ const SAVE_MAPPINGS = gql`
 `;
 
 interface CatalogItem { posItemId: string; posItemName: string; variationName?: string | null; price?: number | null; }
-interface InventoryItem { id: string; name: string; unitCost: number; }
 interface RecipeItem { id: string; name: string; totalCost: number; }
+// inventoryItemId is retained (loaded and saved back) so removing the inventory
+// UI doesn't wipe any inventory mappings a company saved previously — but it can
+// no longer be set from this modal. POS items map to recipes only.
 interface Mapping { posItemId: string; inventoryItemId: string | null; recipeId: string | null; suggested?: boolean; }
-
-// Name similarity scorer — ported exactly from old app
-const STOP_WORDS = new Set(['the', 'a', 'an', 'and', 'or', 'of', 'in', 'for', 'with']);
-
-function tokenize(str: string): Set<string> {
-  return new Set(
-    str.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(w => w.length > 1 && !STOP_WORDS.has(w))
-  );
-}
-
-function scoreNameMatch(catalogItem: CatalogItem, inventoryName: string): number {
-  const searchStr = catalogItem.variationName && catalogItem.variationName.toLowerCase() !== 'regular'
-    ? `${catalogItem.posItemName} ${catalogItem.variationName}`
-    : catalogItem.posItemName;
-  const squareTokens = tokenize(searchStr);
-  const invTokens = tokenize(inventoryName);
-  if (!squareTokens.size || !invTokens.size) return 0;
-
-  let overlap = 0;
-  for (const t of squareTokens) { if (invTokens.has(t)) overlap++; }
-
-  const variation = (catalogItem.variationName ?? '').toLowerCase().trim();
-  if (variation && variation !== 'regular' && inventoryName.toLowerCase().includes(variation)) {
-    overlap += 1.5;
-  }
-  return overlap / Math.max(squareTokens.size, invTokens.size);
-}
-
-function suggestMatch(catalogItem: CatalogItem, inventoryItems: InventoryItem[]): string | null {
-  let best: { id: string; score: number } | null = null;
-  for (const inv of inventoryItems) {
-    const score = scoreNameMatch(catalogItem, inv.name);
-    if (!best || score > best.score) best = { id: inv.id, score };
-  }
-  return best && best.score >= 0.45 ? best.id : null;
-}
 
 // Searchable picker used for both the Recipe and Inventory columns. Renders its
 // dropdown with position:fixed so it isn't clipped by the modal's scrollable list.
@@ -183,7 +148,6 @@ export function PosMappingModal({ companyId, onClose }: Props) {
   }, [aiLoading]);
 
   const catalogItems: CatalogItem[] = data?.posCatalog ?? [];
-  const inventoryItems: InventoryItem[] = data?.inventory ?? [];
   const recipeItems: RecipeItem[] = data?.recipes ?? [];
   const existingMaps: Array<{ posItemId: string; inventoryItemId: string | null; recipeId: string | null }> = data?.posMappings ?? [];
 
@@ -195,12 +159,12 @@ export function PosMappingModal({ companyId, onClose }: Props) {
 
     for (const item of catalogItems) {
       const saved = savedMap.get(item.posItemId);
-      if (saved !== undefined) {
-        m.set(item.posItemId, { posItemId: item.posItemId, inventoryItemId: saved.inventoryItemId ?? null, recipeId: saved.recipeId ?? null, suggested: false });
-      } else {
-        const suggestion = suggestMatch(item, inventoryItems);
-        m.set(item.posItemId, { posItemId: item.posItemId, inventoryItemId: suggestion, recipeId: null, suggested: !!suggestion });
-      }
+      m.set(item.posItemId, {
+        posItemId: item.posItemId,
+        inventoryItemId: saved?.inventoryItemId ?? null,
+        recipeId: saved?.recipeId ?? null,
+        suggested: false,
+      });
     }
     setMappings(m);
     setSortedIds(orderIds(m));
@@ -215,7 +179,7 @@ export function PosMappingModal({ companyId, onClose }: Props) {
     });
   }
 
-  const isUnmapped = (m?: Mapping) => !m?.recipeId && !m?.inventoryItemId;
+  const isUnmapped = (m?: Mapping) => !m?.recipeId;
 
   // Order catalog rows with unmapped items first; Array.sort is stable so items
   // within each group keep their original catalog order.
@@ -239,15 +203,15 @@ export function PosMappingModal({ companyId, onClose }: Props) {
       const next = new Map(mappings);
       for (const rec of recs) {
         const cur = next.get(rec.posItemId) ?? { posItemId: rec.posItemId, inventoryItemId: null, recipeId: null };
-        // Respect deliberate user choices — only fill blanks or replace prior (name-based / AI) suggestions.
-        const userConfirmed = !cur.suggested && (cur.recipeId || cur.inventoryItemId);
+        // Respect deliberate user choices — only fill blanks or replace prior suggestions.
+        const userConfirmed = !cur.suggested && cur.recipeId;
         if (userConfirmed) continue;
-        if (!rec.recipeId && !rec.inventoryId) continue;
+        // POS items map to recipes only — ignore inventory-only recommendations.
+        if (!rec.recipeId) continue;
         next.set(rec.posItemId, {
           posItemId: rec.posItemId,
-          recipeId: rec.recipeId ?? null,
-          // Recipe wins for COGS; only carry an inventory suggestion when no recipe was matched.
-          inventoryItemId: rec.recipeId ? null : (rec.inventoryId ?? null),
+          recipeId: rec.recipeId,
+          inventoryItemId: cur.inventoryItemId ?? null,
           suggested: true,
         });
         applied += 1;
@@ -287,15 +251,11 @@ export function PosMappingModal({ companyId, onClose }: Props) {
     } finally { setSaving(false); }
   }
 
-  const unmappedCount = Array.from(mappings.values()).filter(m => !m.inventoryItemId && !m.recipeId).length;
-  const suggestedCount = Array.from(mappings.values()).filter(m => m.suggested && (m.inventoryItemId || m.recipeId)).length;
+  const unmappedCount = Array.from(mappings.values()).filter(m => !m.recipeId).length;
+  const suggestedCount = Array.from(mappings.values()).filter(m => m.suggested && m.recipeId).length;
 
-  // Option lists for the two comboboxes — built once, shared by every row.
+  // Recipe options for the combobox — built once, shared by every row.
   const recipeOptions = recipeItems.map(r => ({ id: r.id, label: `${r.name} ($${Number(r.totalCost).toFixed(2)})` }));
-  const inventoryOptions = inventoryItems.map(i => ({
-    id: i.id,
-    label: t('posMapping.inventoryOption', '{{name}} (${{cost}}/unit)', { name: i.name, cost: Number(i.unitCost).toFixed(4) }),
-  }));
 
   // Rows in display order (unmapped floated to top via the sortedIds snapshot).
   const catalogById = new Map(catalogItems.map(c => [c.posItemId, c]));
@@ -322,8 +282,8 @@ export function PosMappingModal({ companyId, onClose }: Props) {
             {t('posMapping.title', 'Match Your POS Menu to Your Recipe Cards')}
           </h2>
           <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--muted)', lineHeight: 1.5 }}>
-            <Trans t={t} i18nKey="posMapping.description" defaults='Map each POS item to an inventory item once — venOS calculates costs automatically every sync. Use <2>"Not in my menu"</2> for tips, misc charges, etc.'>
-              Map each POS item to an inventory item once — venOS calculates costs automatically every sync. Use <em>"Not in my menu"</em> for tips, misc charges, etc.
+            <Trans t={t} i18nKey="posMapping.description" defaults='Map each POS item to the recipe that makes it — venOS uses the recipe’s ingredient cost to calculate COGS automatically every sync. Choose <2>"No recipe"</2> for tips, fees, and other non-menu items.'>
+              Map each POS item to the recipe that makes it — venOS uses the recipe’s ingredient cost to calculate COGS automatically every sync. Choose <em>"No recipe"</em> for tips, fees, and other non-menu items.
             </Trans>
           </p>
         </div>
@@ -331,8 +291,8 @@ export function PosMappingModal({ companyId, onClose }: Props) {
         {/* Auto-suggest legend */}
         {suggestedCount > 0 && (
           <div style={{ padding: '8px 26px', background: '#fffbeb', borderBottom: '1px solid #fde68a', fontSize: '0.8rem', color: '#78350f' }}>
-<i className="fa-solid fa-wand-magic-sparkles" aria-hidden="true" /> <Trans t={t} i18nKey="posMapping.suggestedLegend" count={suggestedCount} values={{ count: suggestedCount }} defaults="<1>{{count}} item(s)</1> were auto-matched by name — marked <3>suggested</3>. Review before saving.">
-              <strong>{{ count: suggestedCount }} item(s)</strong> were auto-matched by name — marked <span style={{ background: '#fef3c7', borderRadius: 4, padding: '1px 5px', fontWeight: 600 }}>suggested</span>. Review before saving.
+<i className="fa-solid fa-wand-magic-sparkles" aria-hidden="true" /> <Trans t={t} i18nKey="posMapping.suggestedLegend" count={suggestedCount} values={{ count: suggestedCount }} defaults="<1>{{count}} item(s)</1> were matched by AI — marked <3>suggested</3>. Review before saving.">
+              <strong>{{ count: suggestedCount }} item(s)</strong> were matched by AI — marked <span style={{ background: '#fef3c7', borderRadius: 4, padding: '1px 5px', fontWeight: 600 }}>suggested</span>. Review before saving.
             </Trans>
           </div>
         )}
@@ -360,9 +320,8 @@ export function PosMappingModal({ companyId, onClose }: Props) {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: '#f9fafb' }}>
-                  <th style={{ padding: '9px 12px', textAlign: 'left', fontSize: '0.72rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb', width: '34%' }}>{t('posMapping.colPosItem', 'POS Item')}</th>
-                  <th style={{ padding: '9px 12px', textAlign: 'left', fontSize: '0.72rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb', width: '33%' }}>{t('posMapping.colRecipe', 'Recipe (COGS)')}</th>
-                  <th style={{ padding: '9px 12px', textAlign: 'left', fontSize: '0.72rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>{t('posMapping.colInventoryItem', 'Inventory Item (fallback)')}</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', fontSize: '0.72rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb', width: '45%' }}>{t('posMapping.colPosItem', 'POS Item')}</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', fontSize: '0.72rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>{t('posMapping.colRecipe', 'Recipe (COGS)')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -381,30 +340,19 @@ export function PosMappingModal({ companyId, onClose }: Props) {
                         {displayLabel}
                       </td>
                       <td style={{ padding: '7px 12px', borderBottom: '1px solid #f0f0f0' }}>
-                        <Combobox
-                          options={recipeOptions}
-                          value={mapping?.recipeId ?? null}
-                          onChange={id => setMapping(item.posItemId, { recipeId: id })}
-                          noneLabel={t('posMapping.noRecipe', '— No recipe —')}
-                          placeholder={t('posMapping.searchRecipes', 'Search recipes…')}
-                          noMatchesLabel={t('posMapping.noMatches', 'No matching recipes')}
-                        />
-                      </td>
-                      <td style={{ padding: '7px 12px', borderBottom: '1px solid #f0f0f0' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <div style={{ flex: 1 }} title={mapping?.recipeId ? t('posMapping.recipeOverrides', 'Recipe cost is used when a recipe is selected') : undefined}>
+                          <div style={{ flex: 1 }}>
                             <Combobox
-                              options={inventoryOptions}
-                              value={mapping?.inventoryItemId ?? null}
-                              onChange={id => setMapping(item.posItemId, { inventoryItemId: id })}
-                              disabled={!!mapping?.recipeId}
-                              highlight={isSuggested && !mapping?.recipeId}
-                              noneLabel={t('posMapping.notInMenu', '— Not in my menu —')}
-                              placeholder={t('posMapping.searchInventory', 'Search inventory…')}
-                              noMatchesLabel={t('posMapping.noInventoryMatches', 'No matching items')}
+                              options={recipeOptions}
+                              value={mapping?.recipeId ?? null}
+                              onChange={id => setMapping(item.posItemId, { recipeId: id })}
+                              highlight={isSuggested && !!mapping?.recipeId}
+                              noneLabel={t('posMapping.noRecipe', '— No recipe —')}
+                              placeholder={t('posMapping.searchRecipes', 'Search recipes…')}
+                              noMatchesLabel={t('posMapping.noMatches', 'No matching recipes')}
                             />
                           </div>
-                          {isSuggested && !mapping?.recipeId && (
+                          {isSuggested && mapping?.recipeId && (
                             <span style={{ background: '#fef3c7', color: '#92400e', borderRadius: 99, padding: '1px 7px', fontSize: '0.72rem', fontWeight: 600, whiteSpace: 'nowrap' }}>{t('posMapping.suggestedBadge', 'suggested')}</span>
                           )}
                         </div>

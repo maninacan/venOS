@@ -82,8 +82,8 @@
   },
   "posMapping": {
     "title": "Vincula el menú de tu POS con tus fichas de receta",
-    "description": "Vincula cada artículo del POS con un artículo de inventario una sola vez: venOS calcula los costos automáticamente en cada sincronización. Usa <2>\"No está en mi menú\"</2> para propinas, cargos varios, etc.",
-    "suggestedLegend": "<1>{{count}} artículo(s)</1> se vincularon automáticamente por nombre, marcados como <3>sugerido</3>. Revísalos antes de guardar.",
+    "description": "Vincula cada artículo del POS con la receta que lo compone: venOS usa el costo de ingredientes de la receta para calcular el COGS automáticamente en cada sincronización. Elige <2>\"Sin receta\"</2> para propinas, cargos y otros conceptos que no son del menú.",
+    "suggestedLegend": "<1>{{count}} artículo(s)</1> fueron emparejados por IA, marcados como <3>sugerido</3>. Revísalos antes de guardar.",
     "unmappedWarning": "<1>{{count}} artículo(s)</1> no tienen ficha de receta: el costo de ventas se mostrará como $0 para esos.",
     "empty": "No se encontraron artículos en el catálogo del POS. Asegúrate de que tu POS esté conectado y tenga artículos.",
     "colPosItem": "Artículo del POS",

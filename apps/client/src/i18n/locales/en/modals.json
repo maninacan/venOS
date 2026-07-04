@@ -82,8 +82,8 @@
   },
   "posMapping": {
     "title": "Match Your POS Menu to Your Recipe Cards",
-    "description": "Map each POS item to an inventory item once — venOS calculates costs automatically every sync. Use <2>\"Not in my menu\"</2> for tips, misc charges, etc.",
-    "suggestedLegend": "<1>{{count}} item(s)</1> were auto-matched by name — marked <3>suggested</3>. Review before saving.",
+    "description": "Map each POS item to the recipe that makes it — venOS uses the recipe’s ingredient cost to calculate COGS automatically every sync. Choose <2>\"No recipe\"</2> for tips, fees, and other non-menu items.",
+    "suggestedLegend": "<1>{{count}} item(s)</1> were matched by AI — marked <3>suggested</3>. Review before saving.",
     "unmappedWarning": "<1>{{count}} item(s)</1> have no recipe card — COGS will show as $0 for those.",
     "empty": "No POS catalog items found. Make sure your POS is connected and has items.",
     "colPosItem": "POS Item",
