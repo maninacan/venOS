@@ -11,7 +11,7 @@ interface Props {
 }
 
 const linkBase =
-  'bg-transparent border-0 text-[#222] text-[0.87rem] font-medium rounded-md cursor-pointer transition-colors no-underline inline-flex items-center font-[inherit] hover:text-[#0B2A4A] hover:bg-[rgba(11,42,74,0.06)] px-3 py-2 w-full md:w-auto md:px-[10px] md:py-[7px]';
+  'bg-transparent border-0 text-[#222] text-[0.87rem] font-medium rounded-md cursor-pointer transition-colors no-underline inline-flex items-center gap-2 font-[inherit] hover:text-[#0B2A4A] hover:bg-[rgba(11,42,74,0.06)] px-3 py-2 w-full md:w-auto md:px-[10px] md:py-[7px]';
 const linkActive = 'text-[#0B2A4A] bg-[rgba(11,42,74,0.06)] font-semibold';
 
 const menuItem =
