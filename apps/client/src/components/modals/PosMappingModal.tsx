@@ -158,6 +158,20 @@ export function PosMappingModal({ companyId, onClose }: Props) {
   const [mappings, setMappings] = useState<Map<string, Mapping>>(new Map());
   const [saving, setSaving] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
+  const [aiElapsed, setAiElapsed] = useState(0);
+  const aiTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Drive the elapsed timer shown in the AI progress window.
+  useEffect(() => {
+    if (aiLoading) {
+      setAiElapsed(0);
+      aiTimerRef.current = setInterval(() => setAiElapsed(s => s + 1), 1000);
+    } else if (aiTimerRef.current) {
+      clearInterval(aiTimerRef.current);
+      aiTimerRef.current = null;
+    }
+    return () => { if (aiTimerRef.current) clearInterval(aiTimerRef.current); };
+  }, [aiLoading]);
 
   const catalogItems: CatalogItem[] = data?.posCatalog ?? [];
   const inventoryItems: InventoryItem[] = data?.inventory ?? [];
@@ -254,7 +268,17 @@ export function PosMappingModal({ companyId, onClose }: Props) {
   const unmappedCount = Array.from(mappings.values()).filter(m => !m.inventoryItemId && !m.recipeId).length;
   const suggestedCount = Array.from(mappings.values()).filter(m => m.suggested && m.inventoryItemId).length;
 
+  const aiSteps = [
+    t('posMapping.aiStep1', 'Reading your POS catalog'),
+    t('posMapping.aiStep2', 'Comparing items to your recipes'),
+    t('posMapping.aiStep3', 'Matching against inventory'),
+    t('posMapping.aiStep4', 'Scoring match confidence'),
+    t('posMapping.aiStep5', 'Finalizing suggestions'),
+  ];
+  const aiStepIndex = aiElapsed < 6 ? 0 : aiElapsed < 15 ? 1 : aiElapsed < 30 ? 2 : aiElapsed < 55 ? 3 : 4;
+
   return (
+    <>
     <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <div style={{ background: '#fff', borderRadius: 14, width: '100%', maxWidth: 720, boxShadow: '0 8px 32px rgba(0,0,0,0.18)', overflow: 'hidden', margin: '40px 16px' }}>
         {/* Header */}
@@ -381,5 +405,44 @@ export function PosMappingModal({ companyId, onClose }: Props) {
         </div>
       </div>
     </div>
+
+    {/* AI progress window — mirrors the streaming AI features elsewhere in the app */}
+    {aiLoading && (
+      <div className="modal-overlay" style={{ zIndex: 1100 }}>
+        <div style={{ background: '#fff', borderRadius: 14, width: '100%', maxWidth: 460, boxShadow: '0 8px 32px rgba(0,0,0,0.22)', overflow: 'hidden', margin: '40px 16px' }}>
+          <div style={{ padding: '24px 28px 14px' }}>
+            <h3 style={{ margin: '0 0 4px', color: 'var(--vv-navy)', fontSize: '1.05rem' }}>
+              <i className="fa-solid fa-wand-magic-sparkles fa-fade" style={{ marginRight: 8 }} />
+              <span>{t('posMapping.aiWorkingTitle', 'Claude is matching your POS items…')}</span>
+            </h3>
+            <p style={{ margin: 0, color: 'var(--muted)', fontSize: '0.83rem', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span>{t('posMapping.aiWorkingNote', 'Analyzing {{count}} POS items against your recipes and inventory. This can take a minute or two.', { count: catalogItems.length })}</span>
+              <span style={{ fontFamily: 'monospace', fontVariantNumeric: 'tabular-nums', fontSize: '0.88rem', color: 'var(--vv-navy)', fontWeight: 600 }}>
+                {`${Math.floor(aiElapsed / 60)}:${String(aiElapsed % 60).padStart(2, '0')}`}
+              </span>
+            </p>
+          </div>
+          <div style={{ padding: '4px 28px 26px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {aiSteps.map((label, i) => {
+              const done = i < aiStepIndex;
+              const active = i === aiStepIndex;
+              return (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.86rem', color: done ? 'var(--vv-navy)' : active ? 'var(--vv-navy)' : 'var(--muted)', opacity: done || active ? 1 : 0.55 }}>
+                  <span style={{ width: 18, textAlign: 'center', flexShrink: 0 }}>
+                    {done
+                      ? <i className="fa-solid fa-circle-check" style={{ color: '#16a34a' }} />
+                      : active
+                        ? <i className="fa-solid fa-spinner fa-spin" style={{ color: 'var(--vv-navy)' }} />
+                        : <i className="fa-regular fa-circle" style={{ color: '#cbd5e1' }} />}
+                  </span>
+                  <span style={{ fontWeight: active ? 600 : 400 }}>{label}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }

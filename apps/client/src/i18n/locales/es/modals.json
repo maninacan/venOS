@@ -93,6 +93,18 @@
     "suggestedBadge": "sugerido",
     "cancel": "Cancelar",
     "save": "Guardar vínculos",
+    "suggestAi": "✨ Sugerir con IA",
+    "aiTitle": "Deja que la IA sugiera coincidencias para que las revises",
+    "aiApplied": "✨ La IA sugirió {{count}} vínculo(s). Revisa y guarda.",
+    "aiNone": "No se encontraron coincidencias de IA confiables. Vincula los artículos manualmente.",
+    "aiFailed": "La sugerencia de IA falló. Inténtalo de nuevo.",
+    "aiWorkingTitle": "Claude está vinculando tus artículos del POS…",
+    "aiWorkingNote": "Analizando {{count}} artículos del POS con tus recetas e inventario. Esto puede tardar uno o dos minutos.",
+    "aiStep1": "Leyendo el catálogo de tu POS",
+    "aiStep2": "Comparando artículos con tus recetas",
+    "aiStep3": "Buscando coincidencias en el inventario",
+    "aiStep4": "Evaluando la confianza de las coincidencias",
+    "aiStep5": "Finalizando las sugerencias",
     "toast": {
       "saved": "✅ ¡Vínculos guardados! Los cálculos de costos ahora son precisos.",
       "saveFailed": "No se pudo guardar"

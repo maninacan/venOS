@@ -93,6 +93,18 @@
     "suggestedBadge": "suggested",
     "cancel": "Cancel",
     "save": "Save Mappings",
+    "suggestAi": "✨ Suggest with AI",
+    "aiTitle": "Let AI suggest matches for you to review",
+    "aiApplied": "✨ AI suggested {{count}} mapping(s). Review and Save.",
+    "aiNone": "No confident AI matches found. Map the items manually.",
+    "aiFailed": "AI suggestion failed. Please try again.",
+    "aiWorkingTitle": "Claude is matching your POS items…",
+    "aiWorkingNote": "Analyzing {{count}} POS items against your recipes and inventory. This can take a minute or two.",
+    "aiStep1": "Reading your POS catalog",
+    "aiStep2": "Comparing items to your recipes",
+    "aiStep3": "Matching against inventory",
+    "aiStep4": "Scoring match confidence",
+    "aiStep5": "Finalizing suggestions",
     "toast": {
       "saved": "✅ Mappings saved! Cost calculations are now accurate.",
       "saveFailed": "Failed to save"

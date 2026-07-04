@@ -20,6 +20,12 @@ export interface MappingSuggestion {
 
 const MODEL = 'claude-opus-4-8';
 const MAX_ATTEMPTS = 3;
+// Large catalogs (hundreds of POS items) can't fit one suggestion-per-item in a
+// single response without truncating the JSON, so we split the catalog into
+// batches and match each independently. Recipes + inventory are sent with every
+// batch as shared context. Batches run concurrently, capped by MAX_CONCURRENCY.
+const BATCH_SIZE = 80;
+const MAX_CONCURRENCY = 4;
 
 function isTransient(err: unknown): boolean {
   if (err instanceof Anthropic.APIError) {
@@ -50,15 +56,17 @@ Match on meaning, not just exact text: ignore variation suffixes like "(Regular)
 Return ONLY raw JSON, no markdown, no prose:
 {"suggestions":[{"posItemId":"...","recipeId":"..."|null,"inventoryId":"..."|null,"confidence":0.0,"reason":"..."}]}`;
 
-export async function suggestMappings(
-  catalog: CatalogItemLite[],
+// Ask the model to match a single batch of POS items. Streams the response
+// (long generations trip proxy timeouts on a buffered create) and returns the
+// raw suggestion rows for the caller to validate/merge.
+async function matchBatch(
+  anthropic: Anthropic,
+  batch: CatalogItemLite[],
   recipes: RecipeLite[],
-  inventory: InventoryLite[]
-): Promise<MappingSuggestion[]> {
-  if (catalog.length === 0) return [];
-
+  inventory: InventoryLite[],
+): Promise<Array<Record<string, unknown>>> {
   const payload = {
-    posItems: catalog.map(c => ({
+    posItems: batch.map(c => ({
       posItemId: c.posItemId,
       name: c.variationName && c.variationName.toLowerCase() !== 'regular'
         ? `${c.posItemName} (${c.variationName})` : c.posItemName,
@@ -67,14 +75,9 @@ export async function suggestMappings(
     inventory: inventory.map(i => ({ id: i.id, name: i.name, unitCost: Number(i.unitCost).toFixed(2) })),
   };
 
-  const anthropic = new Anthropic();
   let text = '';
   for (let attempt = 0; ; attempt++) {
     try {
-      // Stream the response: this catalog can be large and the generation can run
-      // well past a minute, which trips connection/proxy timeouts on a plain
-      // (buffered) messages.create. Streaming keeps the connection alive and lets
-      // the SDK assemble the final message for us.
       const res = await anthropic.messages
         .stream({
           model: MODEL,
@@ -84,8 +87,9 @@ export async function suggestMappings(
         })
         .finalMessage();
       if (res.stop_reason === 'max_tokens') {
-        logger.warn('suggestMappings: response hit max_tokens; suggestions may be truncated', {
-          posItems: payload.posItems.length,
+        // Should not happen with BATCH_SIZE items, but surface it if it ever does.
+        logger.warn('suggestMappings: batch hit max_tokens; some suggestions may be dropped', {
+          batchItems: batch.length,
         });
       }
       text = res.content.filter(b => b.type === 'text').map(b => (b as { text: string }).text).join('');
@@ -100,15 +104,44 @@ export async function suggestMappings(
     }
   }
 
+  const parsed = parseJsonObject(text);
+  return Array.isArray(parsed['suggestions']) ? parsed['suggestions'] as Array<Record<string, unknown>> : [];
+}
+
+export async function suggestMappings(
+  catalog: CatalogItemLite[],
+  recipes: RecipeLite[],
+  inventory: InventoryLite[]
+): Promise<MappingSuggestion[]> {
+  if (catalog.length === 0) return [];
+
+  // Split into batches so no single response has to emit a suggestion for every
+  // item at once (which truncates the JSON for large catalogs).
+  const batches: CatalogItemLite[][] = [];
+  for (let i = 0; i < catalog.length; i += BATCH_SIZE) batches.push(catalog.slice(i, i + BATCH_SIZE));
+
+  const anthropic = new Anthropic();
+  const rows: Array<Record<string, unknown>> = [];
+  // Run batches in waves of MAX_CONCURRENCY to bound load / rate-limit exposure.
+  for (let i = 0; i < batches.length; i += MAX_CONCURRENCY) {
+    const wave = batches.slice(i, i + MAX_CONCURRENCY);
+    const results = await Promise.all(wave.map(b => matchBatch(anthropic, b, recipes, inventory)));
+    for (const r of results) rows.push(...r);
+  }
+
   // Validate ids against the provided lists — never trust the model to not hallucinate.
   const recipeIds = new Set(recipes.map(r => r.id));
   const inventoryIds = new Set(inventory.map(i => i.id));
   const catalogIds = new Set(catalog.map(c => c.posItemId));
+  const seen = new Set<string>();
 
-  const parsed = parseJsonObject(text);
-  const rows = Array.isArray(parsed['suggestions']) ? parsed['suggestions'] as Array<Record<string, unknown>> : [];
   return rows
-    .filter(r => catalogIds.has(String(r['posItemId'])))
+    .filter(r => {
+      const id = String(r['posItemId']);
+      if (!catalogIds.has(id) || seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    })
     .map(r => {
       const recipeId = r['recipeId'] != null && recipeIds.has(String(r['recipeId'])) ? String(r['recipeId']) : null;
       const inventoryId = r['inventoryId'] != null && inventoryIds.has(String(r['inventoryId'])) ? String(r['inventoryId']) : null;
