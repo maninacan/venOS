@@ -256,12 +256,23 @@ export function EventDashboardPage() {
       ),
     },
     {
-      title: t('dashboard.tabs.truckInventory', 'Truck Inventory'),
-      content: <p style={{ color: 'var(--muted)', fontSize: '0.86rem', margin: 0 }}>{t('dashboard.truckInventoryComing', 'Truck inventory tracking coming in Phase 5.')}</p>,
-    },
-    {
       title: t('dashboard.tabs.manualSalesEntry', 'Manual Sales Entry'),
       content: <ManualSalesForm eventId={eventId!} sales={sales} onSaved={refetch} />,
+    },
+    {
+      title: t('dashboard.tabs.expenses', 'Expenses'),
+      content: (
+        <div>
+          <ExpensesForm eventId={eventId!} expenses={expenses} onSaved={refetch} />
+          <div style={{ borderTop: '1px solid var(--vv-border)', marginTop: 20, paddingTop: 16 }}>
+            <h4 style={{ margin: '0 0 4px', color: 'var(--vv-navy)', fontSize: '0.95rem' }}>{t('dashboard.customExpenses', 'Custom Expenses')}</h4>
+            <p style={{ fontSize: '0.82rem', color: 'var(--muted)', margin: '0 0 10px' }}>
+              {t('dashboard.customExpensesHint', 'Add one-off expenses — a flat amount, a per-unit rate, or a percentage of sales. These also appear under Additional Fees.')}
+            </p>
+            <AdditionalFeesSection eventId={eventId!} fees={additionalFees} sales={sales} unitsSold={unitsSold} onSaved={refetch} />
+          </div>
+        </div>
+      ),
     },
     {
       title: t('dashboard.tabs.discounts', 'Discounts'),
@@ -279,19 +290,8 @@ export function EventDashboardPage() {
       content: <AdditionalFeesSection eventId={eventId!} fees={additionalFees} sales={sales} unitsSold={unitsSold} onSaved={refetch} />,
     },
     {
-      title: t('dashboard.tabs.expenses', 'Expenses'),
-      content: (
-        <div>
-          <ExpensesForm eventId={eventId!} expenses={expenses} onSaved={refetch} />
-          <div style={{ borderTop: '1px solid var(--vv-border)', marginTop: 20, paddingTop: 16 }}>
-            <h4 style={{ margin: '0 0 4px', color: 'var(--vv-navy)', fontSize: '0.95rem' }}>{t('dashboard.customExpenses', 'Custom Expenses')}</h4>
-            <p style={{ fontSize: '0.82rem', color: 'var(--muted)', margin: '0 0 10px' }}>
-              {t('dashboard.customExpensesHint', 'Add one-off expenses — a flat amount, a per-unit rate, or a percentage of sales. These also appear under Additional Fees.')}
-            </p>
-            <AdditionalFeesSection eventId={eventId!} fees={additionalFees} sales={sales} unitsSold={unitsSold} onSaved={refetch} />
-          </div>
-        </div>
-      ),
+      title: t('dashboard.tabs.truckInventory', 'Truck Inventory'),
+      content: <p style={{ color: 'var(--muted)', fontSize: '0.86rem', margin: 0 }}>{t('dashboard.truckInventoryComing', 'Truck inventory tracking coming in Phase 5.')}</p>,
     },
     {
       title: t('dashboard.tabs.tips', 'Tips'),
@@ -315,7 +315,7 @@ export function EventDashboardPage() {
   function goToNextStep() {
     switch (stage.nextStep.action) {
       case 'review-finalize': finalizeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); break;
-      case 'enter-sales': setActiveTab(2); tabsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); break;
+      case 'enter-sales': setActiveTab(1); tabsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); break;
       case 'add-costs': setActiveTab(4); tabsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); break;
       default: setActiveTab(0); tabsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); break; // pull-sales
     }
