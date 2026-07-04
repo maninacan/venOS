@@ -67,16 +67,17 @@ function suggestMatch(catalogItem: CatalogItem, inventoryItems: InventoryItem[])
   return best && best.score >= 0.45 ? best.id : null;
 }
 
-// Searchable recipe picker. Renders its dropdown with position:fixed so it isn't
-// clipped by the modal's scrollable item list.
-function RecipeCombobox({ recipes, value, onChange, disabled, noneLabel, placeholder, noMatchesLabel }: {
-  recipes: RecipeItem[];
+// Searchable picker used for both the Recipe and Inventory columns. Renders its
+// dropdown with position:fixed so it isn't clipped by the modal's scrollable list.
+function Combobox({ options, value, onChange, disabled, noneLabel, placeholder, noMatchesLabel, highlight }: {
+  options: { id: string; label: string }[];
   value: string | null;
   onChange: (id: string | null) => void;
   disabled?: boolean;
   noneLabel: string;
   placeholder: string;
   noMatchesLabel: string;
+  highlight?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -85,8 +86,7 @@ function RecipeCombobox({ recipes, value, onChange, disabled, noneLabel, placeho
   const popRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  const label = (r: RecipeItem) => `${r.name} ($${Number(r.totalCost).toFixed(2)})`;
-  const selected = recipes.find(r => r.id === value) ?? null;
+  const selected = options.find(o => o.id === value) ?? null;
 
   function place() {
     const el = inputRef.current;
@@ -101,7 +101,12 @@ function RecipeCombobox({ recipes, value, onChange, disabled, noneLabel, placeho
       const t = e.target as Node;
       if (!wrapRef.current?.contains(t) && !popRef.current?.contains(t)) closeMenu();
     };
-    const onScroll = () => closeMenu();
+    // Close when the page/modal scrolls (the fixed-position menu would detach),
+    // but NOT when the user is scrolling inside the dropdown list itself.
+    const onScroll = (e: Event) => {
+      if (popRef.current && e.target instanceof Node && popRef.current.contains(e.target)) return;
+      closeMenu();
+    };
     document.addEventListener('mousedown', onDown);
     window.addEventListener('scroll', onScroll, true);
     window.addEventListener('resize', closeMenu);
@@ -112,7 +117,7 @@ function RecipeCombobox({ recipes, value, onChange, disabled, noneLabel, placeho
     };
   }, [open]);
 
-  const filtered = recipes.filter(r => r.name.toLowerCase().includes(query.trim().toLowerCase()));
+  const filtered = options.filter(o => o.label.toLowerCase().includes(query.trim().toLowerCase()));
 
   return (
     <div ref={wrapRef} style={{ position: 'relative' }}>
@@ -120,23 +125,23 @@ function RecipeCombobox({ recipes, value, onChange, disabled, noneLabel, placeho
         ref={inputRef}
         type="text"
         disabled={disabled}
-        value={open ? query : (selected ? label(selected) : '')}
-        placeholder={selected ? label(selected) : placeholder}
+        value={open ? query : (selected ? selected.label : '')}
+        placeholder={selected ? selected.label : placeholder}
         onFocus={openMenu}
         onChange={e => { setQuery(e.target.value); if (!open) { place(); setOpen(true); } }}
         onKeyDown={e => {
           if (e.key === 'Escape') { closeMenu(); (e.target as HTMLInputElement).blur(); }
           else if (e.key === 'Enter' && filtered.length) { onChange(filtered[0].id); closeMenu(); (e.target as HTMLInputElement).blur(); }
         }}
-        style={{ width: '100%', padding: '5px 8px', border: '1px solid #d1d5db', borderRadius: 6, fontSize: '0.83rem', background: disabled ? '#f3f4f6' : '#fff', opacity: disabled ? 0.6 : 1 }}
+        style={{ width: '100%', padding: '5px 8px', border: highlight ? '1.5px solid #f59e0b' : '1px solid #d1d5db', borderRadius: 6, fontSize: '0.83rem', background: disabled ? '#f3f4f6' : highlight ? '#fffbeb' : '#fff', opacity: disabled ? 0.6 : 1 }}
       />
       {open && coords && (
         <div ref={popRef} style={{ position: 'fixed', left: coords.left, top: coords.top, width: coords.width, maxHeight: 220, overflowY: 'auto', background: '#fff', border: '1px solid #d1d5db', borderRadius: 8, boxShadow: '0 8px 24px rgba(0,0,0,0.14)', zIndex: 1000, fontSize: '0.83rem' }}>
           <div onMouseDown={e => { e.preventDefault(); onChange(null); closeMenu(); }}
             style={{ padding: '7px 10px', cursor: 'pointer', color: 'var(--muted)' }}>{noneLabel}</div>
-          {filtered.map(r => (
-            <div key={r.id} onMouseDown={e => { e.preventDefault(); onChange(r.id); closeMenu(); }}
-              style={{ padding: '7px 10px', cursor: 'pointer', background: r.id === value ? '#eff6ff' : '#fff' }}>{label(r)}</div>
+          {filtered.map(o => (
+            <div key={o.id} onMouseDown={e => { e.preventDefault(); onChange(o.id); closeMenu(); }}
+              style={{ padding: '7px 10px', cursor: 'pointer', background: o.id === value ? '#eff6ff' : '#fff' }}>{o.label}</div>
           ))}
           {filtered.length === 0 && <div style={{ padding: '7px 10px', color: 'var(--muted)' }}>{noMatchesLabel}</div>}
         </div>
@@ -285,6 +290,13 @@ export function PosMappingModal({ companyId, onClose }: Props) {
   const unmappedCount = Array.from(mappings.values()).filter(m => !m.inventoryItemId && !m.recipeId).length;
   const suggestedCount = Array.from(mappings.values()).filter(m => m.suggested && (m.inventoryItemId || m.recipeId)).length;
 
+  // Option lists for the two comboboxes — built once, shared by every row.
+  const recipeOptions = recipeItems.map(r => ({ id: r.id, label: `${r.name} ($${Number(r.totalCost).toFixed(2)})` }));
+  const inventoryOptions = inventoryItems.map(i => ({
+    id: i.id,
+    label: t('posMapping.inventoryOption', '{{name}} (${{cost}}/unit)', { name: i.name, cost: Number(i.unitCost).toFixed(4) }),
+  }));
+
   // Rows in display order (unmapped floated to top via the sortedIds snapshot).
   const catalogById = new Map(catalogItems.map(c => [c.posItemId, c]));
   const orderedItems: CatalogItem[] = sortedIds.length
@@ -369,8 +381,8 @@ export function PosMappingModal({ companyId, onClose }: Props) {
                         {displayLabel}
                       </td>
                       <td style={{ padding: '7px 12px', borderBottom: '1px solid #f0f0f0' }}>
-                        <RecipeCombobox
-                          recipes={recipeItems}
+                        <Combobox
+                          options={recipeOptions}
                           value={mapping?.recipeId ?? null}
                           onChange={id => setMapping(item.posItemId, { recipeId: id })}
                           noneLabel={t('posMapping.noRecipe', '— No recipe —')}
@@ -380,24 +392,18 @@ export function PosMappingModal({ companyId, onClose }: Props) {
                       </td>
                       <td style={{ padding: '7px 12px', borderBottom: '1px solid #f0f0f0' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <select
-                            value={mapping?.inventoryItemId ?? ''}
-                            onChange={e => setMapping(item.posItemId, { inventoryItemId: e.target.value || null })}
-                            disabled={!!mapping?.recipeId}
-                            title={mapping?.recipeId ? t('posMapping.recipeOverrides', 'Recipe cost is used when a recipe is selected') : undefined}
-                            style={{
-                              flex: 1, padding: '5px 8px',
-                              border: isSuggested ? '1.5px solid #f59e0b' : '1px solid #d1d5db',
-                              borderRadius: 6, fontSize: '0.83rem',
-                              background: mapping?.recipeId ? '#f3f4f6' : isSuggested ? '#fffbeb' : '#fff',
-                              opacity: mapping?.recipeId ? 0.6 : 1,
-                            }}
-                          >
-                            <option value="">{t('posMapping.notInMenu', '— Not in my menu —')}</option>
-                            {inventoryItems.map(inv => (
-                              <option key={inv.id} value={inv.id}>{t('posMapping.inventoryOption', '{{name}} (${{cost}}/unit)', { name: inv.name, cost: Number(inv.unitCost).toFixed(4) })}</option>
-                            ))}
-                          </select>
+                          <div style={{ flex: 1 }} title={mapping?.recipeId ? t('posMapping.recipeOverrides', 'Recipe cost is used when a recipe is selected') : undefined}>
+                            <Combobox
+                              options={inventoryOptions}
+                              value={mapping?.inventoryItemId ?? null}
+                              onChange={id => setMapping(item.posItemId, { inventoryItemId: id })}
+                              disabled={!!mapping?.recipeId}
+                              highlight={isSuggested && !mapping?.recipeId}
+                              noneLabel={t('posMapping.notInMenu', '— Not in my menu —')}
+                              placeholder={t('posMapping.searchInventory', 'Search inventory…')}
+                              noMatchesLabel={t('posMapping.noInventoryMatches', 'No matching items')}
+                            />
+                          </div>
                           {isSuggested && !mapping?.recipeId && (
                             <span style={{ background: '#fef3c7', color: '#92400e', borderRadius: 99, padding: '1px 7px', fontSize: '0.72rem', fontWeight: 600, whiteSpace: 'nowrap' }}>{t('posMapping.suggestedBadge', 'suggested')}</span>
                           )}

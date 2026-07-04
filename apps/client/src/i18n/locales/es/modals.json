@@ -89,6 +89,8 @@
     "colPosItem": "Artículo del POS",
     "colInventoryItem": "Tu artículo de inventario",
     "notInMenu": "— No está en mi menú —",
+    "searchInventory": "Buscar inventario…",
+    "noInventoryMatches": "No hay artículos coincidentes",
     "inventoryOption": "{{name}} (${{cost}}/unidad)",
     "suggestedBadge": "sugerido",
     "cancel": "Cancelar",
