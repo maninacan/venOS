@@ -14,11 +14,11 @@
   "integrations": {
     "eyebrow": "Integraciones",
     "posName": "{{name}} POS",
-    "connected": "✓ Conectado",
-    "connectedWithLocation": "✓ Conectado — {{location}}",
+    "connected": "Conectado",
+    "connectedWithLocation": "Conectado — {{location}}",
     "notConnected": "No conectado",
     "comingSoon": "Próximamente",
-    "manageMappings": "🗺 Administrar asignaciones del POS",
+    "manageMappings": "Administrar asignaciones del POS",
     "disconnect": "Desconectar {{name}}",
     "toastGuidLabel": "GUID del restaurante de Toast",
     "toastGuidPlaceholder": "p. ej. 1a2b3c4d-…",
@@ -28,13 +28,13 @@
     "connectHelpLabor": "Conecta tu cuenta de {{name}} para sincronizar automáticamente ventas, ubicaciones y personal.",
     "connectHelpNoLabor": "Conecta tu cuenta de {{name}} para sincronizar automáticamente ventas y ubicaciones.",
     "comingSoonMessage": "La compatibilidad con {{name}} estará disponible próximamente.",
-    "reconnect": "🔄 Reconectar {{name}}",
+    "reconnect": "Reconectar {{name}}",
     "reauthWarning": "Tu conexión de {{name}} dejó de funcionar (puede haber caducado o sido revocada). Reconéctala para seguir sincronizando ventas y mano de obra."
   },
   "taxjar": {
     "name": "TaxJar",
     "blurb": "Consulta automática de tasas de impuestos estatales y locales por código postal",
-    "connected": "✓ Conectado",
+    "connected": "Conectado",
     "notConnected": "No conectado",
     "ownerOnly": "Solo el propietario de la empresa puede administrar la conexión con TaxJar.",
     "disconnect": "Desconectar TaxJar",
@@ -59,7 +59,7 @@
     "joinCodeHelp": "Compártelo con tu equipo",
     "colEmail": "Correo electrónico",
     "colRole": "Rol",
-    "owner": "👑 Propietario",
+    "owner": "Propietario",
     "member": "Miembro",
     "remove": "Quitar",
     "inviteLabel": "Invitar a un miembro por correo",
@@ -96,7 +96,7 @@
     "thisCompany": "esta empresa"
   },
   "toast": {
-    "posConnected": "✅ ¡POS conectado correctamente! Tus ubicaciones ya están disponibles.",
+    "posConnected": "¡POS conectado correctamente! Tus ubicaciones ya están disponibles.",
     "posFailed": "Falló la conexión con el POS. Inténtalo de nuevo.",
     "connectFailed": "No se pudo conectar {{name}}",
     "toastConnected": "Toast conectado.",

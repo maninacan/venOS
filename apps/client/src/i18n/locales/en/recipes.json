@@ -1,5 +1,5 @@
 {
-  "heading": "🍋 Recipes",
+  "heading": "Recipes",
   "subtitle": "Define ingredient costs for each dish. venOS uses these to calculate COGS automatically when you sync Square sales.",
   "aiImport": "AI Import",
   "analyzing": "Analyzing…",
@@ -7,7 +7,7 @@
   "deleteAll": "Delete All",
   "loading": "Loading…",
   "emptyPrefix": "No recipes yet. ",
-  "createFirst": "Create your first recipe →",
+  "createFirst": "Create your first recipe",
   "batchCost": "{{cost}}/batch",
   "ingredientCount_one": "{{count}} ingredient",
   "ingredientCount_other": "{{count}} ingredients",

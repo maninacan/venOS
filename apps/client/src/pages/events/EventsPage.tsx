@@ -185,7 +185,7 @@ export function EventsPage() {
             <p className="text-[#64748b] text-[0.88rem] py-4">{t('list.loading', 'Loading events…')}</p>
           ) : events.length === 0 ? (
             <p className="text-[#64748b] text-[0.88rem] py-4 text-center">
-              {t('list.empty', 'No events found.')} <Link to={`/companies/${companyId}/events/new`} className="text-[#0B2A4A] font-semibold">{t('list.emptyCta', 'Add your first event →')}</Link>
+              {t('list.empty', 'No events found.')} <Link to={`/companies/${companyId}/events/new`} className="text-[#0B2A4A] font-semibold">{t('list.emptyCta', 'Add your first event')} <i className="fa-solid fa-arrow-right" aria-hidden="true" /></Link>
             </p>
           ) : (
             <table className="w-full border-collapse text-[0.87rem]">

@@ -73,7 +73,7 @@ export function BillingPage() {
     <>
       <div className="card">
         <div className="mb-4">
-          <h2 className="mt-0 mb-1 text-[#0B2A4A]">{t('heading', '💳 Billing')}</h2>
+          <h2 className="mt-0 mb-1 text-[#0B2A4A]"><i className="fa-solid fa-credit-card" aria-hidden="true" /> {t('heading', 'Billing')}</h2>
           <p className="text-[#64748b] text-[0.86rem] m-0">{t('subtitle', 'Manage your venOS subscription and payment details.')}</p>
         </div>
 
@@ -117,7 +117,7 @@ export function BillingPage() {
           <ul className="list-none p-0 m-0 mb-5 flex flex-col gap-[9px]">
             {PRO_FEATURES.map(f => (
               <li key={f.key} className="flex gap-[11px] items-start">
-                <span className={featureCheck}>✓</span>
+                <span className={featureCheck}><i className="fa-solid fa-check" aria-hidden="true" /></span>
                 <div className="text-[0.86rem]">
                   <strong className="block font-semibold mb-[1px]">{t(`features.${f.key}.title`, f.title)}</strong>
                   <span className="text-[#64748b] text-[0.82rem]">{t(`features.${f.key}.detail`, f.detail)}</span>

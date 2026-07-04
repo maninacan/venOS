@@ -14,11 +14,11 @@
   "integrations": {
     "eyebrow": "Integrations",
     "posName": "{{name}} POS",
-    "connected": "✓ Connected",
-    "connectedWithLocation": "✓ Connected — {{location}}",
+    "connected": "Connected",
+    "connectedWithLocation": "Connected — {{location}}",
     "notConnected": "Not Connected",
     "comingSoon": "Coming Soon",
-    "manageMappings": "🗺 Manage POS Mappings",
+    "manageMappings": "Manage POS Mappings",
     "disconnect": "Disconnect {{name}}",
     "toastGuidLabel": "Toast Restaurant GUID",
     "toastGuidPlaceholder": "e.g. 1a2b3c4d-…",
@@ -28,13 +28,13 @@
     "connectHelpLabor": "Connect your {{name}} account to automatically sync sales, locations, and labor.",
     "connectHelpNoLabor": "Connect your {{name}} account to automatically sync sales and locations.",
     "comingSoonMessage": "{{name}} support is coming soon.",
-    "reconnect": "🔄 Reconnect {{name}}",
+    "reconnect": "Reconnect {{name}}",
     "reauthWarning": "Your {{name}} connection stopped working (it may have expired or been revoked). Reconnect to keep syncing sales and labor."
   },
   "taxjar": {
     "name": "TaxJar",
     "blurb": "Auto-look-up state & local sales tax rates by ZIP",
-    "connected": "✓ Connected",
+    "connected": "Connected",
     "notConnected": "Not Connected",
     "ownerOnly": "Only the company owner can manage the TaxJar connection.",
     "disconnect": "Disconnect TaxJar",
@@ -59,7 +59,7 @@
     "joinCodeHelp": "Share this with your team",
     "colEmail": "Email",
     "colRole": "Role",
-    "owner": "👑 Owner",
+    "owner": "Owner",
     "member": "Member",
     "remove": "Remove",
     "inviteLabel": "Invite member by email",
@@ -96,7 +96,7 @@
     "thisCompany": "this company"
   },
   "toast": {
-    "posConnected": "✅ POS connected successfully! Your locations are now available.",
+    "posConnected": "POS connected successfully! Your locations are now available.",
     "posFailed": "POS connection failed. Please try again.",
     "connectFailed": "Failed to connect {{name}}",
     "toastConnected": "Toast connected.",

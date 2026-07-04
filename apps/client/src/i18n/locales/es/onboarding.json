@@ -38,7 +38,7 @@
     }
   },
   "checklist": {
-    "setupComplete": "✓ Configuración completa",
+    "setupComplete": "Configuración completa",
     "gettingStarted": "Primeros pasos",
     "counter": "{{done}}/{{total}}",
     "showSetup": "Mostrar configuración ▾",

@@ -1,5 +1,5 @@
 {
-  "heading": "🍋 Recetas",
+  "heading": "Recetas",
   "subtitle": "Define los costos de los ingredientes de cada platillo. venOS los usa para calcular el costo de ventas automáticamente cuando sincronizas las ventas de Square.",
   "aiImport": "Importar con IA",
   "analyzing": "Analizando…",
@@ -7,7 +7,7 @@
   "deleteAll": "Eliminar todo",
   "loading": "Cargando…",
   "emptyPrefix": "Aún no hay recetas. ",
-  "createFirst": "Crea tu primera receta →",
+  "createFirst": "Crea tu primera receta",
   "batchCost": "{{cost}}/lote",
   "ingredientCount_one": "{{count}} ingrediente",
   "ingredientCount_other": "{{count}} ingredientes",

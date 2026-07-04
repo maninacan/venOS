@@ -316,7 +316,7 @@ export function PostEventReportPage() {
   }
 
   if (error || !report) {
-    return <div className="inline-error"><span>⚠️</span><span>{t('report.loadError', 'Could not load report.')} {error?.message}</span></div>;
+    return <div className="inline-error"><span><i className="fa-solid fa-triangle-exclamation" aria-hidden="true" /></span><span>{t('report.loadError', 'Could not load report.')} {error?.message}</span></div>;
   }
 
   const netProfit = Number(summary.netProfit ?? 0);
@@ -351,7 +351,7 @@ export function PostEventReportPage() {
       <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
         <div ref={exportRef} style={{ position: 'relative' }}>
           <button className="btn-primary" onClick={() => setExportOpen(o => !o)} aria-haspopup="menu" aria-expanded={exportOpen}>
-            {t('report.export', '⬇ Export')} <span style={{ fontSize: '0.7em' }}>▾</span>
+            <i className="fa-solid fa-arrow-down" aria-hidden="true" /> {t('report.export', 'Export')} <span style={{ fontSize: '0.7em' }}>▾</span>
           </button>
           {exportOpen && (
             <div
@@ -363,18 +363,18 @@ export function PostEventReportPage() {
                 className="dropdown-item"
                 style={{ display: 'block', width: '100%', textAlign: 'left', background: 'none', border: 0, padding: '9px 12px', borderRadius: 6, cursor: 'pointer', fontSize: '0.88rem', color: 'var(--vv-navy)' }}
                 onClick={() => { setExportOpen(false); downloadPDF(); }}
-              >{t('report.exportPdf', '📄 Export to PDF')}</button>
+              ><i className="fa-solid fa-file-lines" aria-hidden="true" /> {t('report.exportPdf', 'Export to PDF')}</button>
               <button
                 role="menuitem"
                 className="dropdown-item"
                 style={{ display: 'block', width: '100%', textAlign: 'left', background: 'none', border: 0, padding: '9px 12px', borderRadius: 6, cursor: 'pointer', fontSize: '0.88rem', color: 'var(--vv-navy)' }}
                 onClick={() => { setExportOpen(false); downloadCSV(); }}
-              >{t('report.exportCsv', '📊 Export to CSV')}</button>
+              ><i className="fa-solid fa-chart-column" aria-hidden="true" /> {t('report.exportCsv', 'Export to CSV')}</button>
             </div>
           )}
         </div>
-        <button className="btn-secondary" onClick={() => window.print()}>{t('report.print', '🖨 Print')}</button>
-        <Link to={`/companies/${companyId}/events/${eventId}`} className="btn-secondary" style={{ textDecoration: 'none' }}>{t('report.backToDashboard', '⬅ Back to Dashboard')}</Link>
+        <button className="btn-secondary" onClick={() => window.print()}><i className="fa-solid fa-print" aria-hidden="true" /> {t('report.print', 'Print')}</button>
+        <Link to={`/companies/${companyId}/events/${eventId}`} className="btn-secondary" style={{ textDecoration: 'none' }}><i className="fa-solid fa-arrow-left" aria-hidden="true" /> {t('report.backToDashboard', 'Back to Dashboard')}</Link>
       </div>
 
       {/* Report card */}

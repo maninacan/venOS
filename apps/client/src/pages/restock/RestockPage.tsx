@@ -59,7 +59,7 @@ export function RestockPage() {
     setRestockingId(item.id);
     try {
       await restockItem({ variables: { eventId: selectedEventId, eventInventoryId: item.id, quantity: qty } });
-      showToast(t('toast.restocked', '✅ Restocked {{qty}} units of {{name}}', { qty, name: item.item.name }), 'success');
+      showToast(t('toast.restocked', 'Restocked {{qty}} units of {{name}}', { qty, name: item.item.name }), 'success');
       setRestockQty(prev => { const n = { ...prev }; delete n[item.id]; return n; });
       refetch();
     } catch (err) {
@@ -88,12 +88,12 @@ export function RestockPage() {
             </select>
           </div>
           {selectedEventId && (
-            <button className="btn-secondary" onClick={() => refetch()} style={{ marginTop: 20 }}>{t('refresh', '↻ Refresh')}</button>
+            <button className="btn-secondary" onClick={() => refetch()} style={{ marginTop: 20 }}><i className="fa-solid fa-arrows-rotate" aria-hidden="true" /> {t('refresh', 'Refresh')}</button>
           )}
           {selectedEventId && eventInventory.length > 0 && (
             <span style={{ marginTop: 20, fontSize: '0.82rem', color: lowItems.length > 0 ? '#92400e' : 'var(--muted)' }}>
               {lowItems.length > 0
-                ? t('lowWarning', '⚠️ {{count}} items running low', { count: lowItems.length })
+                ? <><i className="fa-solid fa-triangle-exclamation" aria-hidden="true" /> {t('lowWarning', '{{count}} items running low', { count: lowItems.length })}</>
                 : t('itemsTracked', '{{count}} items tracked', { count: eventInventory.length })}
             </span>
           )}
@@ -165,7 +165,7 @@ export function RestockPage() {
                       onClick={() => handleRestock(item)}
                     >
                       {restockingId === item.id && <span className="spinner" />}
-                      <span>{t('markRestocked', '✅ Mark Restocked')}</span>
+                      <span><i className="fa-solid fa-circle-check" aria-hidden="true" /> {t('markRestocked', 'Mark Restocked')}</span>
                     </button>
                   </div>
                 </div>

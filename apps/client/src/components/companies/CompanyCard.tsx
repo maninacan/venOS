@@ -107,11 +107,11 @@ export function CompanyCard({ company, pending }: Props) {
       )}
       <div className="mt-auto flex items-center justify-between">
         <span className={`inline-flex items-center text-[0.75rem] font-semibold px-[9px] py-[2px] rounded-full ${company.plan === 'pro' ? 'bg-[#fef3c7] text-[#92400e]' : 'bg-[#f1f5f9] text-[#64748b]'}`}>
-          {company.plan === 'pro' ? '⚡ Pro' : 'Starter'}
+          {company.plan === 'pro' ? <><i className="fa-solid fa-bolt" aria-hidden="true" /> Pro</> : 'Starter'}
         </span>
         {(company.members?.length ?? 0) > 1 && (
           <span className="text-[0.78rem] text-[#64748b]">
-            👥 {company.members?.length} members
+<i className="fa-solid fa-users" aria-hidden="true" /> {company.members?.length} members
           </span>
         )}
       </div>

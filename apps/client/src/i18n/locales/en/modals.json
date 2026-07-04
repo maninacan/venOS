@@ -1,6 +1,6 @@
 {
   "welcome": {
-    "beta": "🧪 Beta",
+    "beta": "Beta",
     "title": "Welcome to venOS!",
     "intro": "You're helping us build the simplest way for event vendors to know if they actually made money.",
     "focusPrefix": "This beta version is focused on one thing:",
@@ -28,13 +28,13 @@
     },
     "discover": {
       "heading": "What You'll Discover",
-      "item1": "✅ Your true net profit (after tax + fees)",
-      "item2": "✅ Your real labor cost impact",
-      "item3": "✅ Whether the event was worth it",
-      "item4": "✅ Where you lost margin"
+      "item1": "Your true net profit (after tax + fees)",
+      "item2": "Your real labor cost impact",
+      "item3": "Whether the event was worth it",
+      "item4": "Where you lost margin"
     },
     "disclaimer": "This is a beta version. Please report bugs. Financial calculations are based on the data entered or synced. If something looks incorrect, tell us.",
-    "ctaPrimary": "🚀 Let's Go — Create My First Event",
+    "ctaPrimary": "Let's Go — Create My First Event",
     "ctaExplore": "I'll explore on my own"
   },
   "upgrade": {
@@ -83,8 +83,8 @@
   "posMapping": {
     "title": "Match Your POS Menu to Your Recipe Cards",
     "description": "Map each POS item to an inventory item once — venOS calculates costs automatically every sync. Use <2>\"Not in my menu\"</2> for tips, misc charges, etc.",
-    "suggestedLegend": "✨ <1>{{count}} item(s)</1> were auto-matched by name — marked <3>suggested</3>. Review before saving.",
-    "unmappedWarning": "⚠️ <1>{{count}} item(s)</1> have no recipe card — COGS will show as $0 for those.",
+    "suggestedLegend": "<1>{{count}} item(s)</1> were auto-matched by name — marked <3>suggested</3>. Review before saving.",
+    "unmappedWarning": "<1>{{count}} item(s)</1> have no recipe card — COGS will show as $0 for those.",
     "empty": "No POS catalog items found. Make sure your POS is connected and has items.",
     "colPosItem": "POS Item",
     "colInventoryItem": "Your Inventory Item",
@@ -93,9 +93,9 @@
     "suggestedBadge": "suggested",
     "cancel": "Cancel",
     "save": "Save Mappings",
-    "suggestAi": "✨ Suggest with AI",
+    "suggestAi": "Suggest with AI",
     "aiTitle": "Let AI suggest matches for you to review",
-    "aiApplied": "✨ AI suggested {{count}} mapping(s). Review and Save.",
+    "aiApplied": "AI suggested {{count}} mapping(s). Review and Save.",
     "aiNone": "No confident AI matches found. Map the items manually.",
     "aiFailed": "AI suggestion failed. Please try again.",
     "aiWorkingTitle": "Claude is matching your POS items…",
@@ -106,7 +106,7 @@
     "aiStep4": "Scoring match confidence",
     "aiStep5": "Finalizing suggestions",
     "toast": {
-      "saved": "✅ Mappings saved! Cost calculations are now accurate.",
+      "saved": "Mappings saved! Cost calculations are now accurate.",
       "saveFailed": "Failed to save"
     }
   }

@@ -441,7 +441,7 @@ function StateDrillDown({ state, onBack }: { state: string; onBack: () => void }
             onClick={onBack}
             className="flex items-center gap-1.5 text-[0.78rem] font-medium text-[#64748b] hover:text-[#0B2A4A] transition-colors bg-transparent border-0 cursor-pointer p-0 font-[inherit]"
           >
-            ← Back to US
+            <i className="fa-solid fa-arrow-left" aria-hidden="true" /> Back to US
           </button>
           <span className="text-[#dde3f0]">|</span>
           <div>
@@ -591,7 +591,7 @@ function USMap({ eventsByState, onStateClick, onBack }: {
     <div className="bg-white border border-[rgba(11,42,74,0.12)] rounded-xl p-5 shadow-[0_2px_8px_rgba(11,42,74,0.06)]">
       <div className="flex items-start justify-between mb-2">
         <div>
-          <button onClick={onBack} className="text-[0.72rem] font-semibold text-[#0B2A4A] hover:underline mb-1">← Back to world map</button>
+          <button onClick={onBack} className="text-[0.72rem] font-semibold text-[#0B2A4A] hover:underline mb-1"><i className="fa-solid fa-arrow-left" aria-hidden="true" /> Back to world map</button>
           <div className="text-[0.72rem] font-bold uppercase tracking-[0.06em] text-[#64748b]">Event Activity by State</div>
           <div className="text-[0.72rem] text-[#94a3b8] mt-0.5">Derived from event zip codes</div>
         </div>
@@ -785,7 +785,7 @@ function CountryDrillDown({ country, onBack }: { country: string; onBack: () => 
     <div className="bg-white border border-[rgba(11,42,74,0.12)] rounded-xl shadow-[0_2px_8px_rgba(11,42,74,0.06)] overflow-hidden">
       <div className="flex items-center justify-between px-5 py-3 border-b border-[rgba(11,42,74,0.08)]">
         <div className="text-[0.72rem] font-bold uppercase tracking-[0.06em] text-[#64748b]">Companies in {name}</div>
-        <button onClick={onBack} className="text-[0.75rem] font-semibold text-[#0B2A4A] hover:underline">← Back to world map</button>
+        <button onClick={onBack} className="text-[0.75rem] font-semibold text-[#0B2A4A] hover:underline"><i className="fa-solid fa-arrow-left" aria-hidden="true" /> Back to world map</button>
       </div>
 
       {loading ? (

@@ -315,7 +315,7 @@ export function RecipesPage() {
       <div className="card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
           <div>
-            <h2 style={{ margin: '0 0 4px', color: 'var(--vv-navy)' }}>{t('heading', '🍋 Recipes')}{!loading && recipes.length > 0 && <span style={{ color: 'var(--muted)', fontWeight: 400 }}> ({recipes.length})</span>}</h2>
+            <h2 style={{ margin: '0 0 4px', color: 'var(--vv-navy)' }}><i className="fa-solid fa-lemon" aria-hidden="true" /> {t('heading', 'Recipes')}{!loading && recipes.length > 0 && <span style={{ color: 'var(--muted)', fontWeight: 400 }}> ({recipes.length})</span>}</h2>
             <p style={{ margin: 0, color: 'var(--muted)', fontSize: '0.86rem' }}>
               {t('subtitle', 'Define ingredient costs for each dish. venOS uses these to calculate COGS automatically when you sync Square sales.')}
             </p>
@@ -371,7 +371,7 @@ export function RecipesPage() {
         {loading && <p style={{ color: 'var(--muted)', fontSize: '0.88rem' }}>{t('loading', 'Loading…')}</p>}
         {!loading && recipes.length === 0 && (
           <p style={{ color: 'var(--muted)', textAlign: 'center', padding: '32px 0', fontSize: '0.9rem' }}>
-            {t('emptyPrefix', 'No recipes yet. ')}<a href="#" onClick={e => { e.preventDefault(); openNew(); }} style={{ color: 'var(--vv-navy)', fontWeight: 600 }}>{t('createFirst', 'Create your first recipe →')}</a>
+            {t('emptyPrefix', 'No recipes yet. ')}<a href="#" onClick={e => { e.preventDefault(); openNew(); }} style={{ color: 'var(--vv-navy)', fontWeight: 600 }}>{t('createFirst', 'Create your first recipe')} <i className="fa-solid fa-arrow-right" aria-hidden="true" /></a>
           </p>
         )}
 

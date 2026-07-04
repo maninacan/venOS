@@ -28,7 +28,7 @@ export function OnboardingChecklist({ steps, doneCount, total, coreComplete, onS
         className="w-full text-left bg-white rounded-xl border border-[rgba(11,42,74,0.12)] px-4 py-3 mb-4 shadow-[0_4px_12px_rgba(11,42,74,0.08)] cursor-pointer flex items-center justify-between hover:bg-[#f8fafc]"
       >
         <span className="text-[0.9rem] font-semibold text-[#0B2A4A]">
-          {coreComplete ? t('checklist.setupComplete', '✓ Setup complete') : t('checklist.gettingStarted', 'Getting started')} · {t('checklist.counter', '{{done}}/{{total}}', { done: doneCount, total })}
+          {coreComplete ? <><i className="fa-solid fa-check" aria-hidden="true" /> {t('checklist.setupComplete', 'Setup complete')}</> : t('checklist.gettingStarted', 'Getting started')} · {t('checklist.counter', '{{done}}/{{total}}', { done: doneCount, total })}
         </span>
         <span className="text-[0.78rem] text-[#64748b]">{t('checklist.showSetup', 'Show setup ▾')}</span>
       </button>
@@ -54,7 +54,7 @@ export function OnboardingChecklist({ steps, doneCount, total, coreComplete, onS
             <span
               className={`w-5 h-5 rounded-full flex items-center justify-center text-[0.7rem] font-bold shrink-0 ${step.done ? 'bg-[#dcfce7] text-[#166534]' : 'bg-[#f1f5f9] text-[#94a3b8]'}`}
             >
-              {step.done ? '✓' : ''}
+              {step.done ? <i className="fa-solid fa-check" aria-hidden="true" /> : ''}
             </span>
             <div className="min-w-0 flex-1">
               <div className={`text-[0.9rem] font-semibold ${step.done ? 'text-[#94a3b8] line-through' : 'text-[#0B2A4A]'}`}>

@@ -206,7 +206,7 @@ function CompanyDetailModal({ company, onClose, onUpdatePlan }: CompanyDetailMod
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div className="modal-box" style={{ maxWidth: 560 }}>
-        <button type="button" className="modal-close" onClick={onClose} aria-label="Close">✕</button>
+        <button type="button" className="modal-close" onClick={onClose} aria-label="Close"><i className="fa-solid fa-xmark" aria-hidden="true" /></button>
 
         <h2 className="mt-0 mb-1 text-[1.2rem] font-bold text-[#0B2A4A]">{company.name}</h2>
         <p className="m-0 mb-5 text-[0.82rem] text-[#64748b]">Created {formatDate(company.createdAt)}</p>

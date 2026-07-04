@@ -10,10 +10,10 @@
   },
   "events": {
     "heading": "Eventos en curso",
-    "allEvents": "Todos los eventos →",
+    "allEvents": "Todos los eventos",
     "emptyNoEvents": "Aún no hay eventos.",
-    "createFirst": "Crea tu primer evento →",
-    "allFinalized": "Todos los eventos están finalizados. 🎉",
+    "createFirst": "Crea tu primer evento",
+    "allFinalized": "Todos los eventos están finalizados.",
     "phaseDone": "Listo"
   },
   "profit": {
@@ -40,7 +40,7 @@
     "netProfit": "Ganancia neta",
     "laborWarning": "Aún no se ha capturado la mano de obra — la ganancia puede cambiar. Agrega la mano de obra en la tarjeta de Mano de obra de arriba.",
     "forYourRecords": "Para tus registros",
-    "finalizeEvent": "✅ Finalizar evento",
+    "finalizeEvent": "Finalizar evento",
     "tips": "Propinas (se entregan al personal)",
     "salesTaxRemitState": "Impuesto sobre ventas — pagar a {{jurisdiction}} ({{rate}})",
     "salesTaxRemitLocal": "Impuesto sobre ventas — pagar a {{jurisdiction}} ({{rate}})",

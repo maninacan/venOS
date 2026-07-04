@@ -56,27 +56,27 @@ export function UpgradeModal({ context, onClose }: Props) {
           <p className="text-[0.72rem] font-bold uppercase tracking-[0.06em] text-[#64748b] mb-2.5">{t('upgrade.featuresHeading', 'Everything in Pro')}</p>
           <ul className="list-none p-0 m-0 mb-3.5 flex flex-col gap-[9px]">
             <li className="flex gap-[11px] items-start">
-              <span className={`${featureCheck} bg-[#dbeafe] text-[#1d4ed8]`}>✓</span>
+              <span className={`${featureCheck} bg-[#dbeafe] text-[#1d4ed8]`}<i className="fa-solid fa-check" aria-hidden="true" /></span>
               <div className="text-[0.86rem]"><strong className="block font-semibold mb-[1px]">{t('upgrade.features.reports.title', 'Post-Event Reports')}</strong><span className="text-[#64748b] text-[0.82rem]">{t('upgrade.features.reports.description', 'Full profit & loss breakdown, shareable and printable')}</span></div>
             </li>
             <li className="flex gap-[11px] items-start">
-              <span className={`${featureCheck} bg-[#dcfce7] text-[#166534]`}>✓</span>
+              <span className={`${featureCheck} bg-[#dcfce7] text-[#166534]`}<i className="fa-solid fa-check" aria-hidden="true" /></span>
               <div className="text-[0.86rem]"><strong className="block font-semibold mb-[1px]">{t('upgrade.features.unlimited.title', 'Unlimited finalized events')}</strong><span className="text-[#64748b] text-[0.82rem]">{t('upgrade.features.unlimited.description', 'Track every market, festival, and pop-up you run')}</span></div>
             </li>
             <li className="flex gap-[11px] items-start">
-              <span className={`${featureCheck} bg-[#fce7f3] text-[#9d174d]`}>✓</span>
+              <span className={`${featureCheck} bg-[#fce7f3] text-[#9d174d]`}<i className="fa-solid fa-check" aria-hidden="true" /></span>
               <div className="text-[0.86rem]"><strong className="block font-semibold mb-[1px]">{t('upgrade.features.pdf.title', 'PDF export')}</strong><span className="text-[#64748b] text-[0.82rem]">{t('upgrade.features.pdf.description', 'Download branded reports for your records or accountant')}</span></div>
             </li>
             <li className="flex gap-[11px] items-start">
-              <span className={`${featureCheck} bg-[#ede9fe] text-[#6d28d9]`}>✓</span>
+              <span className={`${featureCheck} bg-[#ede9fe] text-[#6d28d9]`}<i className="fa-solid fa-check" aria-hidden="true" /></span>
               <div className="text-[0.86rem]"><strong className="block font-semibold mb-[1px]">{t('upgrade.features.history.title', 'Full event history')}</strong><span className="text-[#64748b] text-[0.82rem]">{t('upgrade.features.history.description', 'Compare events over time to find your most profitable markets')}</span></div>
             </li>
             <li className="flex gap-[11px] items-start">
-              <span className={`${featureCheck} bg-[#f0fdf4] text-[#15803d]`}>✓</span>
+              <span className={`${featureCheck} bg-[#f0fdf4] text-[#15803d]`}<i className="fa-solid fa-check" aria-hidden="true" /></span>
               <div className="text-[0.86rem]"><strong className="block font-semibold mb-[1px]">{t('upgrade.features.sync.title', 'Square POS sync')}</strong><span className="text-[#64748b] text-[0.82rem]">{t('upgrade.features.sync.description', 'Pull real sales data — fees, refunds, and discounts included')}</span></div>
             </li>
             <li className="flex gap-[11px] items-start">
-              <span className={`${featureCheck} bg-[#fff7ed] text-[#c2410c]`}>✓</span>
+              <span className={`${featureCheck} bg-[#fff7ed] text-[#c2410c]`}<i className="fa-solid fa-check" aria-hidden="true" /></span>
               <div className="text-[0.86rem]"><strong className="block font-semibold mb-[1px]">{t('upgrade.features.templates.title', 'Custom form templates')}</strong><span className="text-[#64748b] text-[0.82rem]">{t('upgrade.features.templates.description', 'Design event forms that match exactly how you work')}</span></div>
             </li>
           </ul>

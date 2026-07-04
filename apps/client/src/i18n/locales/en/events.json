@@ -34,7 +34,7 @@
     "addEvent": "+ Add Event",
     "loading": "Loading events…",
     "empty": "No events found.",
-    "emptyCta": "Add your first event →",
+    "emptyCta": "Add your first event",
     "table": {
       "eventName": "Event Name",
       "date": "Date",
@@ -74,9 +74,9 @@
     "createEvent": "Create event",
     "permitDocuments": "Permit Documents",
     "posLocation": "POS Location",
-    "noPosLocations": "📍 No POS locations found",
+    "noPosLocations": "No POS locations found",
     "noPosLocationsBody": "Connect your POS in Settings to link a location and enable automatic sales sync.",
-    "connectPosLink": "Connect your POS in Settings →",
+    "connectPosLink": "Connect your POS in Settings",
     "selectLocation": "Select location…",
     "sectionBasics": "The basics",
     "eventNameLabel": "Event Name *",
@@ -103,9 +103,9 @@
     "employeesPlaceholder": "Expected staff on site",
     "notes": "Notes",
     "notesPlaceholder": "Internal notes for your team",
-    "updateEvent": "💾 Update Event",
-    "duplicateEvent": "📋 Duplicate as New Event",
-    "cancelEdit": "↩ Cancel",
+    "updateEvent": "Update Event",
+    "duplicateEvent": "Duplicate as New Event",
+    "cancelEdit": "Cancel",
     "fewerDays": "Fewer days",
     "moreDays": "More days",
     "timePlaceholder": "-- Time --"
@@ -324,10 +324,10 @@
     "salesTaxRemitState": "Sales tax — remit to {{name}} ({{rate}}%)",
     "salesTaxRemitLocal": "Sales tax — remit to {{name}} ({{rate}}%)",
     "incomeTaxNote": "ⓘ Income taxes are calculated annually — consult your accountant.",
-    "export": "⬇ Export",
-    "exportPdf": "📄 Export to PDF",
-    "exportCsv": "📊 Export to CSV",
-    "print": "🖨 Print",
-    "backToDashboard": "⬅ Back to Dashboard"
+    "export": "Export",
+    "exportPdf": "Export to PDF",
+    "exportCsv": "Export to CSV",
+    "print": "Print",
+    "backToDashboard": "Back to Dashboard"
   }
 }

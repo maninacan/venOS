@@ -29,7 +29,7 @@ export function EventStageStepper({ stage }: { stage: EventStage }) {
                     complete ? 'bg-[#16a34a] text-white' : active ? 'bg-[#0B2A4A] text-white' : 'bg-[#e2e8f0] text-[#94a3b8]'
                   }`}
                 >
-                  {complete ? '✓' : i + 1}
+                  {complete ? <i className="fa-solid fa-check" aria-hidden="true" /> : i + 1}
                 </span>
                 <span className={`text-[0.82rem] font-semibold ${active || complete ? 'text-[#0B2A4A]' : 'text-[#94a3b8]'}`}>
                   {PHASE_LABELS[phase]}

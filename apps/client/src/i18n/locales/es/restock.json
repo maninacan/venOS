@@ -3,9 +3,9 @@
   "subtitle": "Elige un evento y luego marca los artículos como reabastecidos después de rellenarlos. Reabastecer suma la cantidad de nuevo a las existencias de tu almacén.",
   "event": "Evento",
   "selectEvent": "Selecciona un evento…",
-  "refresh": "↻ Actualizar",
-  "lowWarning_one": "⚠️ {{count}} artículo con existencias bajas",
-  "lowWarning_other": "⚠️ {{count}} artículos con existencias bajas",
+  "refresh": "Actualizar",
+  "lowWarning_one": "{{count}} artículo con existencias bajas",
+  "lowWarning_other": "{{count}} artículos con existencias bajas",
   "itemsTracked_one": "{{count}} artículo monitoreado",
   "itemsTracked_other": "{{count}} artículos monitoreados",
   "selectPrompt": "Selecciona un evento arriba para ver su lista de reabastecimiento.",
@@ -14,10 +14,10 @@
   "sold": "Vendido",
   "remaining": "Restante",
   "restockQty": "Cant. a reabastecer",
-  "markRestocked": "✅ Marcar reabastecido",
+  "markRestocked": "Marcar reabastecido",
   "toast": {
     "invalidQty": "Ingresa una cantidad de reabastecimiento válida",
-    "restocked": "✅ Se reabastecieron {{qty}} unidades de {{name}}",
+    "restocked": "Se reabastecieron {{qty}} unidades de {{name}}",
     "restockFailed": "No se pudo reabastecer"
   }
 }

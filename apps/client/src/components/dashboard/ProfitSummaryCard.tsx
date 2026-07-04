@@ -181,7 +181,7 @@ export function ProfitSummaryCard({ eventId, isFinalized, sales, expenses, summa
         {/* Labor warning */}
         {Number(summary.laborFees ?? 0) === 0 && (
           <div className="flex items-center gap-2 bg-[#fffbeb] border border-[#f59e0b] rounded-md px-3 py-2 my-2 text-[0.85rem] text-[#92400e]">
-            <span>⚠️</span>
+            <span><i className="fa-solid fa-triangle-exclamation" aria-hidden="true" /></span>
             <span>{t('profit.laborWarning', 'Labor not yet entered — profit may change. Add labor in the Labor card above.')}</span>
           </div>
         )}
@@ -199,7 +199,7 @@ export function ProfitSummaryCard({ eventId, isFinalized, sales, expenses, summa
               disabled={loading}
             >
               {loading && <span className="spinner" />}
-              <span>{t('profit.finalizeEvent', '✅ Finalize Event')}</span>
+              <span><i className="fa-solid fa-circle-check" aria-hidden="true" /> {t('profit.finalizeEvent', 'Finalize Event')}</span>
             </button>
           )}
         </div>

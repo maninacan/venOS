@@ -35,7 +35,7 @@
     "reload": "Reload",
     "statusMessage": "{{status}} — {{statusText}}",
     "tryAgain": "Try Again",
-    "goBack": "← Go Back"
+    "goBack": "Go Back"
   },
   "toast": {
     "signedOut": "Signed out."

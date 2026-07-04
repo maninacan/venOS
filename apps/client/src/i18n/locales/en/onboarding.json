@@ -38,7 +38,7 @@
     }
   },
   "checklist": {
-    "setupComplete": "✓ Setup complete",
+    "setupComplete": "Setup complete",
     "gettingStarted": "Getting started",
     "counter": "{{done}}/{{total}}",
     "showSetup": "Show setup ▾",

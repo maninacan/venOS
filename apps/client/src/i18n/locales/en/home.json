@@ -10,10 +10,10 @@
   },
   "events": {
     "heading": "Events in progress",
-    "allEvents": "All events →",
+    "allEvents": "All events",
     "emptyNoEvents": "No events yet.",
-    "createFirst": "Create your first event →",
-    "allFinalized": "All events are finalized. 🎉",
+    "createFirst": "Create your first event",
+    "allFinalized": "All events are finalized.",
     "phaseDone": "Done"
   },
   "profit": {
@@ -40,7 +40,7 @@
     "netProfit": "Net Profit",
     "laborWarning": "Labor not yet entered — profit may change. Add labor in the Labor card above.",
     "forYourRecords": "For Your Records",
-    "finalizeEvent": "✅ Finalize Event",
+    "finalizeEvent": "Finalize Event",
     "tips": "Tips (pass-through to staff)",
     "salesTaxRemitState": "Sales tax — remit to {{jurisdiction}} ({{rate}})",
     "salesTaxRemitLocal": "Sales tax — remit to {{jurisdiction}} ({{rate}})",

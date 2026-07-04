@@ -139,7 +139,7 @@ export function AuthPage() {
       {showForgot && (
         <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) setShowForgot(false); }}>
           <div className="modal-box" style={{ maxWidth: 400 }}>
-            <button className="modal-close" onClick={() => setShowForgot(false)}>✕</button>
+            <button className="modal-close" onClick={() => setShowForgot(false)}><i className="fa-solid fa-xmark" aria-hidden="true" /></button>
             <h3 style={{ margin: '0 0 8px' }}>Reset Password</h3>
             <p style={{ fontSize: '0.88rem', color: 'var(--muted)', margin: '0 0 16px' }}>
               Enter your email and we'll send a reset link.

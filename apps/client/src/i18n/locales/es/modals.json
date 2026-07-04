@@ -1,6 +1,6 @@
 {
   "welcome": {
-    "beta": "🧪 Beta",
+    "beta": "Beta",
     "title": "¡Bienvenido a venOS!",
     "intro": "Nos estás ayudando a crear la forma más sencilla para que los vendedores de eventos sepan si realmente ganaron dinero.",
     "focusPrefix": "Esta versión beta se enfoca en una sola cosa:",
@@ -28,13 +28,13 @@
     },
     "discover": {
       "heading": "Lo que descubrirás",
-      "item1": "✅ Tu ganancia neta real (después de impuestos y cuotas)",
-      "item2": "✅ El impacto real del costo de mano de obra",
-      "item3": "✅ Si el evento valió la pena",
-      "item4": "✅ Dónde perdiste margen"
+      "item1": "Tu ganancia neta real (después de impuestos y cuotas)",
+      "item2": "El impacto real del costo de mano de obra",
+      "item3": "Si el evento valió la pena",
+      "item4": "Dónde perdiste margen"
     },
     "disclaimer": "Esta es una versión beta. Por favor reporta errores. Los cálculos financieros se basan en los datos capturados o sincronizados. Si algo parece incorrecto, avísanos.",
-    "ctaPrimary": "🚀 ¡Vamos! Crear mi primer evento",
+    "ctaPrimary": "¡Vamos! Crear mi primer evento",
     "ctaExplore": "Prefiero explorar por mi cuenta"
   },
   "upgrade": {
@@ -83,8 +83,8 @@
   "posMapping": {
     "title": "Vincula el menú de tu POS con tus fichas de receta",
     "description": "Vincula cada artículo del POS con un artículo de inventario una sola vez: venOS calcula los costos automáticamente en cada sincronización. Usa <2>\"No está en mi menú\"</2> para propinas, cargos varios, etc.",
-    "suggestedLegend": "✨ <1>{{count}} artículo(s)</1> se vincularon automáticamente por nombre, marcados como <3>sugerido</3>. Revísalos antes de guardar.",
-    "unmappedWarning": "⚠️ <1>{{count}} artículo(s)</1> no tienen ficha de receta: el costo de ventas se mostrará como $0 para esos.",
+    "suggestedLegend": "<1>{{count}} artículo(s)</1> se vincularon automáticamente por nombre, marcados como <3>sugerido</3>. Revísalos antes de guardar.",
+    "unmappedWarning": "<1>{{count}} artículo(s)</1> no tienen ficha de receta: el costo de ventas se mostrará como $0 para esos.",
     "empty": "No se encontraron artículos en el catálogo del POS. Asegúrate de que tu POS esté conectado y tenga artículos.",
     "colPosItem": "Artículo del POS",
     "colInventoryItem": "Tu artículo de inventario",
@@ -93,9 +93,9 @@
     "suggestedBadge": "sugerido",
     "cancel": "Cancelar",
     "save": "Guardar vínculos",
-    "suggestAi": "✨ Sugerir con IA",
+    "suggestAi": "Sugerir con IA",
     "aiTitle": "Deja que la IA sugiera coincidencias para que las revises",
-    "aiApplied": "✨ La IA sugirió {{count}} vínculo(s). Revisa y guarda.",
+    "aiApplied": "La IA sugirió {{count}} vínculo(s). Revisa y guarda.",
     "aiNone": "No se encontraron coincidencias de IA confiables. Vincula los artículos manualmente.",
     "aiFailed": "La sugerencia de IA falló. Inténtalo de nuevo.",
     "aiWorkingTitle": "Claude está vinculando tus artículos del POS…",
@@ -106,7 +106,7 @@
     "aiStep4": "Evaluando la confianza de las coincidencias",
     "aiStep5": "Finalizando las sugerencias",
     "toast": {
-      "saved": "✅ ¡Vínculos guardados! Los cálculos de costos ahora son precisos.",
+      "saved": "¡Vínculos guardados! Los cálculos de costos ahora son precisos.",
       "saveFailed": "No se pudo guardar"
     }
   }

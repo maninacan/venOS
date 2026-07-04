@@ -235,7 +235,7 @@ export function PosMappingModal({ companyId, onClose }: Props) {
       setMappings(next);
       showToast(
         applied > 0
-          ? t('posMapping.aiApplied', '✨ AI suggested {{count}} mapping(s). Review and Save.', { count: applied })
+          ? t('posMapping.aiApplied', 'AI suggested {{count}} mapping(s). Review and Save.', { count: applied })
           : t('posMapping.aiNone', 'No confident AI matches found. Map the items manually.'),
         applied > 0 ? 'success' : 'info',
         5000,
@@ -259,7 +259,7 @@ export function PosMappingModal({ companyId, onClose }: Props) {
         recipeId: m.recipeId,
       }));
       await saveMappings({ variables: { companyId, mappings: mapsArray } });
-      showToast(t('posMapping.toast.saved', '✅ Mappings saved! Cost calculations are now accurate.'), 'success', 5000);
+      showToast(t('posMapping.toast.saved', 'Mappings saved! Cost calculations are now accurate.'), 'success', 5000);
       onClose();
     } catch (err) {
       showToast(err instanceof Error ? err.message : t('posMapping.toast.saveFailed', 'Failed to save'), 'error');
@@ -297,8 +297,8 @@ export function PosMappingModal({ companyId, onClose }: Props) {
         {/* Auto-suggest legend */}
         {suggestedCount > 0 && (
           <div style={{ padding: '8px 26px', background: '#fffbeb', borderBottom: '1px solid #fde68a', fontSize: '0.8rem', color: '#78350f' }}>
-            <Trans t={t} i18nKey="posMapping.suggestedLegend" count={suggestedCount} values={{ count: suggestedCount }} defaults="✨ <1>{{count}} item(s)</1> were auto-matched by name — marked <3>suggested</3>. Review before saving.">
-              ✨ <strong>{{ count: suggestedCount }} item(s)</strong> were auto-matched by name — marked <span style={{ background: '#fef3c7', borderRadius: 4, padding: '1px 5px', fontWeight: 600 }}>suggested</span>. Review before saving.
+<i className="fa-solid fa-wand-magic-sparkles" aria-hidden="true" /> <Trans t={t} i18nKey="posMapping.suggestedLegend" count={suggestedCount} values={{ count: suggestedCount }} defaults="<1>{{count}} item(s)</1> were auto-matched by name — marked <3>suggested</3>. Review before saving.">
+              <strong>{{ count: suggestedCount }} item(s)</strong> were auto-matched by name — marked <span style={{ background: '#fef3c7', borderRadius: 4, padding: '1px 5px', fontWeight: 600 }}>suggested</span>. Review before saving.
             </Trans>
           </div>
         )}
@@ -306,8 +306,8 @@ export function PosMappingModal({ companyId, onClose }: Props) {
         {/* Unmapped warning */}
         {unmappedCount > 0 && (
           <div style={{ padding: '8px 26px', background: '#fff7ed', borderBottom: '1px solid #fed7aa', fontSize: '0.8rem', color: '#c2410c' }}>
-            <Trans t={t} i18nKey="posMapping.unmappedWarning" count={unmappedCount} values={{ count: unmappedCount }} defaults="⚠️ <1>{{count}} item(s)</1> have no recipe card — COGS will show as $0 for those.">
-              ⚠️ <strong>{{ count: unmappedCount }} item(s)</strong> have no recipe card — COGS will show as $0 for those.
+<i className="fa-solid fa-triangle-exclamation" aria-hidden="true" /> <Trans t={t} i18nKey="posMapping.unmappedWarning" count={unmappedCount} values={{ count: unmappedCount }} defaults="<1>{{count}} item(s)</1> have no recipe card — COGS will show as $0 for those.">
+              <strong>{{ count: unmappedCount }} item(s)</strong> have no recipe card — COGS will show as $0 for those.
             </Trans>
           </div>
         )}
@@ -395,7 +395,7 @@ export function PosMappingModal({ companyId, onClose }: Props) {
             disabled={aiLoading || loading || catalogItems.length === 0}
             title={t('posMapping.aiTitle', 'Let AI suggest matches for you to review')}
           >
-            {aiLoading && <span className="spinner" />} <span>{t('posMapping.suggestAi', '✨ Suggest with AI')}</span>
+            {aiLoading && <span className="spinner" />} <span><i className="fa-solid fa-wand-magic-sparkles" aria-hidden="true" /> {t('posMapping.suggestAi', 'Suggest with AI')}</span>
           </button>
           <div style={{ display: 'flex', gap: 10 }}>
             <button className="btn-secondary" onClick={onClose}>{t('posMapping.cancel', 'Cancel')}</button>

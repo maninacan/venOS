@@ -97,14 +97,14 @@ export function HomePage() {
       <div className="bg-white rounded-xl border border-[rgba(11,42,74,0.12)] shadow-[0_4px_12px_rgba(11,42,74,0.08)] overflow-hidden">
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#f1f5f9]">
           <h3 className="m-0 text-[1.05rem] font-bold text-[#0B2A4A]">{t('events.heading', 'Events in progress')}</h3>
-          <Link to={`/companies/${companyId}/events`} className="text-[0.82rem] text-[#0085b0] no-underline font-semibold">{t('events.allEvents', 'All events →')}</Link>
+          <Link to={`/companies/${companyId}/events`} className="text-[0.82rem] text-[#0085b0] no-underline font-semibold">{t('events.allEvents', 'All events')} <i className="fa-solid fa-arrow-right" aria-hidden="true" /></Link>
         </div>
 
         {activeEvents.length === 0 ? (
           <div className="px-5 py-8 text-center text-[#64748b] text-[0.88rem]">
             {events.length === 0
-              ? <>{t('events.emptyNoEvents', 'No events yet.')} <Link to={`/companies/${companyId}/events/new`} className="text-[#0B2A4A] font-semibold no-underline">{t('events.createFirst', 'Create your first event →')}</Link></>
-              : t('events.allFinalized', 'All events are finalized. 🎉')}
+              ? <>{t('events.emptyNoEvents', 'No events yet.')} <Link to={`/companies/${companyId}/events/new`} className="text-[#0B2A4A] font-semibold no-underline">{t('events.createFirst', 'Create your first event')} <i className="fa-solid fa-arrow-right" aria-hidden="true" /></Link></>
+              : <>{t('events.allFinalized', 'All events are finalized.')} <i className="fa-solid fa-party-horn" aria-hidden="true" /></>}
           </div>
         ) : (
           <ul className="list-none m-0 p-0">

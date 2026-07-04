@@ -35,7 +35,7 @@
     "reload": "Recargar",
     "statusMessage": "{{status}} — {{statusText}}",
     "tryAgain": "Intentar de nuevo",
-    "goBack": "← Regresar"
+    "goBack": "Regresar"
   },
   "toast": {
     "signedOut": "Sesión cerrada."

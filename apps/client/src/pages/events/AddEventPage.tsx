@@ -346,9 +346,9 @@ export function AddEventPage() {
         <label style={{ fontWeight: 600, fontSize: '0.85rem' }}>{t('form.posLocation', 'POS Location')}</label>
         {posLocations.length === 0 ? (
           <div style={{ background: '#eff6ff', border: '1px dashed #93c5fd', borderRadius: 8, padding: '12px 14px', margin: '6px 0 4px', fontSize: '0.85rem' }}>
-            <div style={{ fontWeight: 700, color: 'var(--vv-navy)' }}>{t('form.noPosLocations', '📍 No POS locations found')}</div>
+            <div style={{ fontWeight: 700, color: 'var(--vv-navy)' }}><i className="fa-solid fa-location-dot" aria-hidden="true" /> {t('form.noPosLocations', 'No POS locations found')}</div>
             <div style={{ color: '#3b6fb0' }}>{t('form.noPosLocationsBody', 'Connect your POS in Settings to link a location and enable automatic sales sync.')}</div>
-            <a href={`/companies/${companyId}/settings`} style={{ color: '#0085b0', fontWeight: 600 }}>{t('form.connectPosLink', 'Connect your POS in Settings →')}</a>
+            <a href={`/companies/${companyId}/settings`} style={{ color: '#0085b0', fontWeight: 600 }}>{t('form.connectPosLink', 'Connect your POS in Settings')} <i className="fa-solid fa-arrow-right" aria-hidden="true" /></a>
           </div>
         ) : (
           <select value={form.posLocationId} onChange={e => setField('posLocationId', e.target.value)} style={{ marginTop: 6 }}>
@@ -443,10 +443,10 @@ export function AddEventPage() {
 
         <div style={{ display: 'flex', gap: 10, marginTop: 8, flexWrap: 'wrap' }}>
           <button type="submit" className="btn-primary" disabled={loading}>
-            {loading && <span className="spinner" />} <span>{t('form.updateEvent', '💾 Update Event')}</span>
+            {loading && <span className="spinner" />} <span><i className="fa-solid fa-floppy-disk" aria-hidden="true" /> {t('form.updateEvent', 'Update Event')}</span>
           </button>
           <button type="button" className="btn-secondary" onClick={() => navigate(`/companies/${companyId}/events/${eventId}`)}>
-            {t('form.cancelEdit', '↩ Cancel')}
+            <i className="fa-solid fa-arrow-turn-up" aria-hidden="true" /> {t('form.cancelEdit', 'Cancel')}
           </button>
         </div>
       </form>

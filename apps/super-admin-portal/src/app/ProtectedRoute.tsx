@@ -26,7 +26,7 @@ export function ProtectedRoute({ children }: Props) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="card text-center" style={{ padding: 48, maxWidth: 400 }}>
-          <div className="text-[2rem] mb-3">🔒</div>
+          <div className="text-[2rem] mb-3"><i className="fa-solid fa-lock" aria-hidden="true" /></div>
           <h2 className="text-[#0B2A4A]">Access Denied</h2>
           <p className="text-[#64748b]">You don't have super admin access.</p>
         </div>

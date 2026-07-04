@@ -159,7 +159,7 @@ export function EventDashboardPage() {
   if (error || !report) {
     return (
       <div className="inline-error">
-        <span>⚠️</span>
+        <span><i className="fa-solid fa-triangle-exclamation" aria-hidden="true" /></span>
         <span>{t('dashboard.loadError', 'Could not load event.')} {error?.message}</span>
         <button className="inline-error-retry" onClick={() => refetch()}>{t('dashboard.retry', 'Retry')}</button>
       </div>
@@ -415,7 +415,7 @@ export function EventDashboardPage() {
 
       {!showData && (
         <div className="bg-white rounded-xl border border-[rgba(11,42,74,0.12)] shadow-[0_4px_12px_rgba(11,42,74,0.08)] px-5 py-8 mb-2.5 text-center">
-          <div className="text-[2rem] mb-2">📅</div>
+          <div className="text-[2rem] mb-2"><i className="fa-solid fa-calendar-days" aria-hidden="true" /></div>
           <h3 className="m-0 mb-1 text-[1.05rem] font-bold text-[#0B2A4A]">{t('dashboard.planningMode', 'Planning mode')}</h3>
           <p className="m-0 mb-4 text-[0.86rem] text-[#64748b]">{t('dashboard.planningModeDesc', 'Sales, labor, and profit show up after the event. Use this time to finalize the details.')}</p>
           <button className="btn-secondary" onClick={() => setForceShowData(true)}>{t('dashboard.enterDataAnyway', 'Enter data anyway')}</button>

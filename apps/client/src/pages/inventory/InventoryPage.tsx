@@ -288,7 +288,7 @@ export function InventoryPage() {
       <BackToSetupButton />
       <div className="card">
         <div className="mb-4">
-          <h2 className="mt-0 mb-1 text-[#0B2A4A]">{t('heading', '📦 My Inventory')}{!loading && items.length > 0 && <span className="text-[#64748b] font-normal"> ({items.length})</span>}</h2>
+          <h2 className="mt-0 mb-1 text-[#0B2A4A]"><i className="fa-solid fa-box" aria-hidden="true" /> {t('heading', 'My Inventory')}{!loading && items.length > 0 && <span className="text-[#64748b] font-normal"> ({items.length})</span>}</h2>
           <p className="text-[#64748b] text-[0.86rem] m-0">{t('subtitle', 'Upload your product catalog once — venOS tracks stock and calculates COGS automatically after every Square sync.')}</p>
         </div>
 

@@ -34,7 +34,7 @@
     "addEvent": "+ Agregar evento",
     "loading": "Cargando eventos…",
     "empty": "No se encontraron eventos.",
-    "emptyCta": "Agrega tu primer evento →",
+    "emptyCta": "Agrega tu primer evento",
     "table": {
       "eventName": "Nombre del evento",
       "date": "Fecha",
@@ -74,9 +74,9 @@
     "createEvent": "Crear evento",
     "permitDocuments": "Documentos de permisos",
     "posLocation": "Ubicación del punto de venta",
-    "noPosLocations": "📍 No se encontraron ubicaciones de punto de venta",
+    "noPosLocations": "No se encontraron ubicaciones de punto de venta",
     "noPosLocationsBody": "Conecta tu punto de venta en Configuración para vincular una ubicación y habilitar la sincronización automática de ventas.",
-    "connectPosLink": "Conecta tu punto de venta en Configuración →",
+    "connectPosLink": "Conecta tu punto de venta en Configuración",
     "selectLocation": "Selecciona una ubicación…",
     "sectionBasics": "Lo básico",
     "eventNameLabel": "Nombre del evento *",
@@ -103,9 +103,9 @@
     "employeesPlaceholder": "Personal previsto en el sitio",
     "notes": "Notas",
     "notesPlaceholder": "Notas internas para tu equipo",
-    "updateEvent": "💾 Actualizar evento",
-    "duplicateEvent": "📋 Duplicar como nuevo evento",
-    "cancelEdit": "↩ Cancelar",
+    "updateEvent": "Actualizar evento",
+    "duplicateEvent": "Duplicar como nuevo evento",
+    "cancelEdit": "Cancelar",
     "fewerDays": "Menos días",
     "moreDays": "Más días",
     "timePlaceholder": "-- Hora --"
@@ -324,10 +324,10 @@
     "salesTaxRemitState": "Impuesto sobre ventas — remitir a {{name}} ({{rate}}%)",
     "salesTaxRemitLocal": "Impuesto sobre ventas — remitir a {{name}} ({{rate}}%)",
     "incomeTaxNote": "ⓘ Los impuestos sobre la renta se calculan anualmente — consulta a tu contador.",
-    "export": "⬇ Exportar",
-    "exportPdf": "📄 Exportar a PDF",
-    "exportCsv": "📊 Exportar a CSV",
-    "print": "🖨 Imprimir",
-    "backToDashboard": "⬅ Volver al panel"
+    "export": "Exportar",
+    "exportPdf": "Exportar a PDF",
+    "exportCsv": "Exportar a CSV",
+    "print": "Imprimir",
+    "backToDashboard": "Volver al panel"
   }
 }

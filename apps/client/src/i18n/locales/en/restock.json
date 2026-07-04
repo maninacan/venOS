@@ -3,9 +3,9 @@
   "subtitle": "Pick an event, then mark items restocked after refilling. Restocking adds quantity back to your warehouse stock.",
   "event": "Event",
   "selectEvent": "Select an event…",
-  "refresh": "↻ Refresh",
-  "lowWarning_one": "⚠️ {{count}} item running low",
-  "lowWarning_other": "⚠️ {{count}} items running low",
+  "refresh": "Refresh",
+  "lowWarning_one": "{{count}} item running low",
+  "lowWarning_other": "{{count}} items running low",
   "itemsTracked_one": "{{count}} item tracked",
   "itemsTracked_other": "{{count}} items tracked",
   "selectPrompt": "Select an event above to see its restock list.",
@@ -14,10 +14,10 @@
   "sold": "Sold",
   "remaining": "Remaining",
   "restockQty": "Restock qty",
-  "markRestocked": "✅ Mark Restocked",
+  "markRestocked": "Mark Restocked",
   "toast": {
     "invalidQty": "Enter a valid restock quantity",
-    "restocked": "✅ Restocked {{qty}} units of {{name}}",
+    "restocked": "Restocked {{qty}} units of {{name}}",
     "restockFailed": "Failed to restock"
   }
 }

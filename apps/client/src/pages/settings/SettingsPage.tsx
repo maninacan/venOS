@@ -164,7 +164,7 @@ export function SettingsPage() {
   useEffect(() => {
     const pos = searchParams.get('pos');
     if (pos === 'connected') {
-      showToast(t('toast.posConnected', '✅ POS connected successfully! Your locations are now available.'), 'success', 6000);
+      showToast(t('toast.posConnected', 'POS connected successfully! Your locations are now available.'), 'success', 6000);
       setSearchParams({});
       refetch();
       // Launched from the getting-started checklist (the ?setup=1 marker is lost
@@ -449,9 +449,9 @@ export function SettingsPage() {
             </div>
             <span className={`inline-flex items-center gap-1 px-2.5 py-[3px] rounded-full text-[0.74rem] font-semibold ml-auto ${posStatus?.connected ? 'bg-[#dcfce7] text-[#15803d]' : 'bg-[#f1f5f9] text-[#64748b]'}`}>
               {posStatus?.connected
-                ? posStatus.locationName
-                  ? t('integrations.connectedWithLocation', '✓ Connected — {{location}}', { location: posStatus.locationName })
-                  : t('integrations.connected', '✓ Connected')
+                ? <><i className="fa-solid fa-check" aria-hidden="true" /> {posStatus.locationName
+                  ? t('integrations.connectedWithLocation', 'Connected — {{location}}', { location: posStatus.locationName })
+                  : t('integrations.connected', 'Connected')}</>
                 : posMeta.implemented ? t('integrations.notConnected', 'Not Connected') : t('integrations.comingSoon', 'Coming Soon')}
             </span>
           </div>
@@ -461,17 +461,17 @@ export function SettingsPage() {
               {posStatus.needsReauth && provider !== 'toast' && (
                 <div style={{ marginTop: 14, borderRadius: 10, border: '1px solid #fde68a', background: '#fffbeb', padding: '12px 14px' }}>
                   <p style={{ margin: '0 0 10px', fontSize: '0.84rem', color: '#92400e' }}>
-                    ⚠️ {t('integrations.reauthWarning', 'Your {{name}} connection stopped working (it may have expired or been revoked). Reconnect to keep syncing sales and labor.', { name: posMeta.displayName })}
+                    <i className="fa-solid fa-triangle-exclamation" aria-hidden="true" /> {t('integrations.reauthWarning', 'Your {{name}} connection stopped working (it may have expired or been revoked). Reconnect to keep syncing sales and labor.', { name: posMeta.displayName })}
                   </p>
                   <button className="btn-primary" style={{ fontSize: '0.85rem' }} onClick={handleConnectPos} disabled={connectingPos}>
                     {connectingPos && <span className="spinner" />}
-                    <span>{t('integrations.reconnect', '🔄 Reconnect {{name}}', { name: posMeta.displayName })}</span>
+                    <span><i className="fa-solid fa-arrows-rotate" aria-hidden="true" /> {t('integrations.reconnect', 'Reconnect {{name}}', { name: posMeta.displayName })}</span>
                   </button>
                 </div>
               )}
               <div style={{ marginTop: 14, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 <button className="btn-secondary" style={{ fontSize: '0.85rem' }} onClick={() => setShowPosMappings(true)}>
-                  {t('integrations.manageMappings', '🗺 Manage POS Mappings')}
+                  <i className="fa-solid fa-map" aria-hidden="true" /> {t('integrations.manageMappings', 'Manage POS Mappings')}
                 </button>
                 <button className="btn-danger-subtle" style={{ fontSize: '0.85rem' }} onClick={handleDisconnectPos}>
                   {t('integrations.disconnect', 'Disconnect {{name}}', { name: posMeta.displayName })}
@@ -529,7 +529,7 @@ export function SettingsPage() {
               <p className="m-0 text-[0.8rem] text-[#64748b]">{t('taxjar.blurb', 'Auto-look-up state & local sales tax rates by ZIP')}</p>
             </div>
             <span className={`inline-flex items-center gap-1 px-2.5 py-[3px] rounded-full text-[0.74rem] font-semibold ml-auto ${info?.taxjarConnected ? 'bg-[#dcfce7] text-[#15803d]' : 'bg-[#f1f5f9] text-[#64748b]'}`}>
-              {info?.taxjarConnected ? t('taxjar.connected', '✓ Connected') : t('taxjar.notConnected', 'Not Connected')}
+              {info?.taxjarConnected ? <><i className="fa-solid fa-check" aria-hidden="true" /> {t('taxjar.connected', 'Connected')}</> : t('taxjar.notConnected', 'Not Connected')}
             </span>
           </div>
 
@@ -641,7 +641,7 @@ export function SettingsPage() {
                 <tr key={m.userId}>
                   <td style={{ padding: '6px 8px', borderBottom: '1px solid #f1f5f9' }}>{m.email}</td>
                   <td style={{ padding: '6px 8px', borderBottom: '1px solid #f1f5f9', color: 'var(--muted)', textTransform: 'capitalize' }}>
-                    {m.role === 'owner' ? t('team.owner', '👑 Owner') : t('team.member', 'Member')}
+                    {m.role === 'owner' ? <><i className="fa-solid fa-crown" aria-hidden="true" /> {t('team.owner', 'Owner')}</> : t('team.member', 'Member')}
                   </td>
                   <td style={{ padding: '6px 8px', borderBottom: '1px solid #f1f5f9' }}>
                     {m.role !== 'owner' && (

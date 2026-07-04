@@ -1,5 +1,14 @@
 export type ToastType = 'info' | 'success' | 'warning' | 'error';
 
+// FontAwesome icon per toast type — rendered automatically so callers no longer
+// embed ✅/⚠️/❌ emojis in their message strings.
+const TOAST_ICONS: Record<ToastType, string> = {
+  info: 'fa-circle-info',
+  success: 'fa-circle-check',
+  warning: 'fa-triangle-exclamation',
+  error: 'fa-circle-xmark',
+};
+
 let _container: HTMLDivElement | null = null;
 
 function getContainer(): HTMLDivElement {
@@ -20,6 +29,11 @@ export function showToast(
   const container = getContainer();
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
+
+  const icon = document.createElement('i');
+  icon.className = `fa-solid ${TOAST_ICONS[type]} toast-icon`;
+  icon.setAttribute('aria-hidden', 'true');
+  toast.appendChild(icon);
 
   const msg = document.createElement('span');
   msg.textContent = message;
