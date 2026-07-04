@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, Fragment } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation } from '@apollo/client/react';
 import { gql } from '@apollo/client/core';
@@ -63,6 +63,20 @@ export function RecipesPage() {
   const [name, setName] = useState('');
   const [ingredients, setIngredients] = useState<Ingredient[]>([emptyIngredient()]);
   const [saving, setSaving] = useState(false);
+
+  // Card vs. tabular view — persisted so the choice sticks across visits.
+  const [viewMode, setViewMode] = useState<'cards' | 'table'>(
+    () => (localStorage.getItem('recipesViewMode') === 'table' ? 'table' : 'cards')
+  );
+  useEffect(() => { localStorage.setItem('recipesViewMode', viewMode); }, [viewMode]);
+
+  // Which table rows are expanded to show their ingredient sub-rows.
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const toggleRow = (id: string) => setExpandedRows(prev => {
+    const next = new Set(prev);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    return next;
+  });
 
   // AI import state
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -307,6 +321,25 @@ export function RecipesPage() {
             </p>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {recipes.length > 0 && (
+              <div style={{ display: 'inline-flex', border: '1px solid #d1d5db', borderRadius: 8, overflow: 'hidden' }} role="group" aria-label={t('viewToggle', 'View')}>
+                {(['cards', 'table'] as const).map(mode => (
+                  <button
+                    key={mode}
+                    onClick={() => setViewMode(mode)}
+                    title={mode === 'cards' ? t('viewCards', 'Card view') : t('viewTable', 'Table view')}
+                    aria-pressed={viewMode === mode}
+                    style={{
+                      border: 'none', cursor: 'pointer', padding: '6px 12px', fontSize: '0.85rem',
+                      background: viewMode === mode ? 'var(--vv-navy)' : '#fff',
+                      color: viewMode === mode ? '#fff' : 'var(--muted)',
+                    }}
+                  >
+                    <i className={mode === 'cards' ? 'fa-solid fa-table-cells-large' : 'fa-solid fa-table-list'} />
+                  </button>
+                ))}
+              </div>
+            )}
             <button className="btn-secondary" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
               <i className={uploading ? 'fa-solid fa-spinner fa-spin' : 'fa-solid fa-wand-magic-sparkles'} />
               {uploading ? ` ${t('analyzing', 'Analyzing…')}` : ` ${t('aiImport', 'AI Import')}`}
@@ -342,41 +375,109 @@ export function RecipesPage() {
           </p>
         )}
 
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(270px,1fr))] gap-3.5 mt-3.5">
-          {recipes.map(recipe => (
-            <div key={recipe.id} className="bg-white border border-[rgba(11,42,74,0.12)] rounded-xl p-4 transition-shadow hover:shadow-[0_4px_12px_rgba(11,42,74,0.08)]">
-              <div className="text-[0.97rem] font-bold text-[#0B2A4A] mb-1">{recipe.name}</div>
-              <div className="text-[0.82rem] text-[#64748b]">{t('batchCost', '{{cost}}/batch', { cost: fmtCost(Number(recipe.totalCost)) })} · {t('ingredientCount', '{{count}} ingredients', { count: recipe.ingredients.length })}</div>
-              <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
-                <button className="btn-secondary" style={{ fontSize: '0.8rem', padding: '4px 10px' }} onClick={() => openEdit(recipe)}><i className="fa-solid fa-pen-to-square" /> {t('edit', 'Edit')}</button>
-                <button className="btn-danger-subtle" style={{ fontSize: '0.8rem', padding: '4px 10px' }} onClick={() => handleDelete(recipe.id, recipe.name)}><i className="fa-solid fa-trash" /></button>
+        {recipes.length > 0 && viewMode === 'cards' && (
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(270px,1fr))] gap-3.5 mt-3.5">
+            {recipes.map(recipe => (
+              <div key={recipe.id} className="bg-white border border-[rgba(11,42,74,0.12)] rounded-xl p-4 transition-shadow hover:shadow-[0_4px_12px_rgba(11,42,74,0.08)]">
+                <div className="text-[0.97rem] font-bold text-[#0B2A4A] mb-1">{recipe.name}</div>
+                <div className="text-[0.82rem] text-[#64748b]">{t('batchCost', '{{cost}}/batch', { cost: fmtCost(Number(recipe.totalCost)) })} · {t('ingredientCount', '{{count}} ingredients', { count: recipe.ingredients.length })}</div>
+                <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
+                  <button className="btn-secondary" style={{ fontSize: '0.8rem', padding: '4px 10px' }} onClick={() => openEdit(recipe)}><i className="fa-solid fa-pen-to-square" /> {t('edit', 'Edit')}</button>
+                  <button className="btn-danger-subtle" style={{ fontSize: '0.8rem', padding: '4px 10px' }} onClick={() => handleDelete(recipe.id, recipe.name)}><i className="fa-solid fa-trash" /></button>
+                </div>
+                {recipe.ingredients.length > 0 && (
+                  <details style={{ marginTop: 8 }}>
+                    <summary style={{ fontSize: '0.78rem', color: 'var(--muted)', cursor: 'pointer' }}>{t('ingredientsSummary', 'Ingredients ({{count}})', { count: recipe.ingredients.length })}</summary>
+                    <table style={{ width: '100%', fontSize: '0.8rem', marginTop: 6, borderCollapse: 'collapse' }}>
+                      <thead><tr style={{ background: '#f8fafc' }}>
+                        <th style={{ textAlign: 'left', padding: '3px 6px' }}>{t('table.name', 'Name')}</th>
+                        <th style={{ textAlign: 'right', padding: '3px 6px' }}>{t('table.qty', 'Qty')}</th>
+                        <th style={{ textAlign: 'right', padding: '3px 6px' }}>{t('table.unitCost', 'Unit Cost')}</th>
+                        <th style={{ textAlign: 'right', padding: '3px 6px' }}>{t('table.total', 'Total')}</th>
+                      </tr></thead>
+                      <tbody>
+                        {recipe.ingredients.map((ing, i) => (
+                          <tr key={i}>
+                            <td style={{ padding: '3px 6px' }}>{ing.name}{ing.unit ? ` (${ing.unit})` : ''}</td>
+                            <td style={{ padding: '3px 6px', textAlign: 'right' }}>{ing.quantity}</td>
+                            <td style={{ padding: '3px 6px', textAlign: 'right' }}>{fmtCost(Number(ing.unitCost))}</td>
+                            <td style={{ padding: '3px 6px', textAlign: 'right', fontWeight: 600 }}>{fmtCost(Number(ing.quantity) * Number(ing.unitCost))}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </details>
+                )}
               </div>
-              {recipe.ingredients.length > 0 && (
-                <details style={{ marginTop: 8 }}>
-                  <summary style={{ fontSize: '0.78rem', color: 'var(--muted)', cursor: 'pointer' }}>{t('ingredientsSummary', 'Ingredients ({{count}})', { count: recipe.ingredients.length })}</summary>
-                  <table style={{ width: '100%', fontSize: '0.8rem', marginTop: 6, borderCollapse: 'collapse' }}>
-                    <thead><tr style={{ background: '#f8fafc' }}>
-                      <th style={{ textAlign: 'left', padding: '3px 6px' }}>{t('table.name', 'Name')}</th>
-                      <th style={{ textAlign: 'right', padding: '3px 6px' }}>{t('table.qty', 'Qty')}</th>
-                      <th style={{ textAlign: 'right', padding: '3px 6px' }}>{t('table.unitCost', 'Unit Cost')}</th>
-                      <th style={{ textAlign: 'right', padding: '3px 6px' }}>{t('table.total', 'Total')}</th>
-                    </tr></thead>
-                    <tbody>
-                      {recipe.ingredients.map((ing, i) => (
-                        <tr key={i}>
-                          <td style={{ padding: '3px 6px' }}>{ing.name}{ing.unit ? ` (${ing.unit})` : ''}</td>
-                          <td style={{ padding: '3px 6px', textAlign: 'right' }}>{ing.quantity}</td>
-                          <td style={{ padding: '3px 6px', textAlign: 'right' }}>{fmtCost(Number(ing.unitCost))}</td>
-                          <td style={{ padding: '3px 6px', textAlign: 'right', fontWeight: 600 }}>{fmtCost(Number(ing.quantity) * Number(ing.unitCost))}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </details>
-              )}
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
+
+        {recipes.length > 0 && viewMode === 'table' && (
+          <div className="table-container" style={{ marginTop: 14, overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.88rem' }}>
+              <thead>
+                <tr style={{ background: '#f9fafb', textAlign: 'left' }}>
+                  <th style={{ padding: '8px 12px', borderBottom: '1px solid #e5e7eb' }}>{t('recipeTable.name', 'Recipe')}</th>
+                  <th style={{ padding: '8px 12px', borderBottom: '1px solid #e5e7eb', textAlign: 'right' }}>{t('recipeTable.ingredients', 'Ingredients')}</th>
+                  <th style={{ padding: '8px 12px', borderBottom: '1px solid #e5e7eb', textAlign: 'right' }}>{t('recipeTable.cost', 'Cost / Batch')}</th>
+                  <th style={{ padding: '8px 12px', borderBottom: '1px solid #e5e7eb', textAlign: 'right' }}>{t('recipeTable.actions', 'Actions')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recipes.map(recipe => {
+                  const hasIngredients = recipe.ingredients.length > 0;
+                  const isOpen = expandedRows.has(recipe.id);
+                  return (
+                    <Fragment key={recipe.id}>
+                      <tr
+                        onClick={() => hasIngredients && toggleRow(recipe.id)}
+                        style={{ borderBottom: isOpen ? 'none' : '1px solid #f0f0f0', cursor: hasIngredients ? 'pointer' : 'default' }}
+                      >
+                        <td style={{ padding: '8px 12px', fontWeight: 600, color: 'var(--vv-navy)' }}>
+                          {hasIngredients && (
+                            <i
+                              className="fa-solid fa-chevron-right"
+                              style={{ marginRight: 8, fontSize: '0.72rem', color: 'var(--muted)', transition: 'transform 0.15s', transform: isOpen ? 'rotate(90deg)' : 'none' }}
+                            />
+                          )}
+                          {recipe.name}
+                        </td>
+                        <td style={{ padding: '8px 12px', textAlign: 'right' }}>{recipe.ingredients.length}</td>
+                        <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 600, color: 'var(--vv-navy)' }}>{fmtCost(Number(recipe.totalCost))}</td>
+                        <td style={{ padding: '8px 12px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                          <button className="btn-secondary" style={{ fontSize: '0.8rem', padding: '4px 10px', marginRight: 6 }} onClick={e => { e.stopPropagation(); openEdit(recipe); }}><i className="fa-solid fa-pen-to-square" /> {t('edit', 'Edit')}</button>
+                          <button className="btn-danger-subtle" style={{ fontSize: '0.8rem', padding: '4px 10px' }} onClick={e => { e.stopPropagation(); handleDelete(recipe.id, recipe.name); }}><i className="fa-solid fa-trash" /></button>
+                        </td>
+                      </tr>
+                      {isOpen && (
+                        <>
+                          <tr style={{ background: '#f8fafc' }}>
+                            <td style={{ padding: '4px 12px 4px 32px', fontSize: '0.74rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t('table.name', 'Name')}</td>
+                            <td style={{ padding: '4px 12px', textAlign: 'right', fontSize: '0.74rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t('table.qty', 'Qty')}</td>
+                            <td style={{ padding: '4px 12px', textAlign: 'right', fontSize: '0.74rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t('table.unitCost', 'Unit Cost')}</td>
+                            <td style={{ padding: '4px 12px', textAlign: 'right', fontSize: '0.74rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{t('table.total', 'Total')}</td>
+                          </tr>
+                          {recipe.ingredients.map((ing, i) => {
+                            const last = i === recipe.ingredients.length - 1;
+                            return (
+                              <tr key={i} style={{ background: '#f8fafc', borderBottom: last ? '1px solid #f0f0f0' : undefined }}>
+                                <td style={{ padding: '4px 12px 4px 32px', color: '#334155' }}>{ing.name}{ing.unit ? ` (${ing.unit})` : ''}</td>
+                                <td style={{ padding: '4px 12px', textAlign: 'right', color: '#475569' }}>{ing.quantity}</td>
+                                <td style={{ padding: '4px 12px', textAlign: 'right', color: '#475569' }}>{fmtCost(Number(ing.unitCost))}</td>
+                                <td style={{ padding: '4px 12px', textAlign: 'right', fontWeight: 600 }}>{fmtCost(Number(ing.quantity) * Number(ing.unitCost))}</td>
+                              </tr>
+                            );
+                          })}
+                        </>
+                      )}
+                    </Fragment>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Recipe form modal */}

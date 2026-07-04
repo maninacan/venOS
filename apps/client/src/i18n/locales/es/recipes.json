@@ -13,11 +13,20 @@
   "ingredientCount_other": "{{count}} ingredientes",
   "edit": "Editar",
   "ingredientsSummary": "Ingredientes ({{count}})",
+  "viewToggle": "Vista",
+  "viewCards": "Vista de tarjetas",
+  "viewTable": "Vista de tabla",
   "table": {
     "name": "Nombre",
     "qty": "Cant.",
     "unitCost": "Costo unitario",
     "total": "Total"
+  },
+  "recipeTable": {
+    "name": "Receta",
+    "ingredients": "Ingredientes",
+    "cost": "Costo / lote",
+    "actions": "Acciones"
   },
   "form": {
     "newTitle": "Nueva receta",
