@@ -120,8 +120,9 @@ async function buildEventReport(eventId: string) {
     inventorySales: (inventorySales ?? []).map((r: Record<string, unknown>) => ({
       name: r['name'],
       quantitySold: r['quantitySold'],
-      unitPrice: r['unitPrice'],
+      unitCost: r['unitCost'],
       totalCost: r['totalCost'],
+      revenue: r['revenue'],
       recipeName: r['recipeId'] ? recipeNameById.get(r['recipeId'] as string) ?? null : null,
     })),
     laborEntries: (laborRows ?? []).map((r: Record<string, unknown>) => ({

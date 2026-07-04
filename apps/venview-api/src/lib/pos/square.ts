@@ -167,7 +167,7 @@ export const squareProvider: PosProvider = {
     const amt = (m: unknown): number => Number((m as { amount?: number | bigint } | null)?.amount ?? 0);
 
     let grossSales = 0, discounts = 0, tips = 0, taxCollected = 0, refunds = 0;
-    const itemMap = new Map<string, { name: string; qty: number; catalogObjectId: string | null }>();
+    const itemMap = new Map<string, { name: string; qty: number; catalogObjectId: string | null; revenue: number }>();
     for (const order of allOrders) {
       // Gross = true item sales (pre-discount/return/tax/tip), summed per line
       // item from gross_sales_money (fallback total_money, then base_price × qty).
@@ -185,7 +185,15 @@ export const squareProvider: PosProvider = {
         grossSales += cents / 100;
         // Key by variation id when present (distinct cost per variation); else by name.
         const key = catalogObjectId ?? name;
-        if (name) itemMap.set(key, { name, qty: (itemMap.get(key)?.qty ?? 0) + qty, catalogObjectId });
+        if (name) {
+          const prev = itemMap.get(key);
+          itemMap.set(key, {
+            name,
+            qty: (prev?.qty ?? 0) + qty,
+            catalogObjectId,
+            revenue: (prev?.revenue ?? 0) + cents / 100,
+          });
+        }
       }
       discounts += amt(order['total_discount_money']) / 100;
       tips += amt(order['total_tip_money']) / 100;

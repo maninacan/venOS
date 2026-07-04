@@ -34,7 +34,7 @@ const GET_REPORT = gql`
         posFees cogs grossProfit totalExpenses netProfit
         tips stateFoodTax laborFees additionalFeesTotal mileageReimbursement
       }
-      inventorySales { name quantitySold unitPrice totalCost recipeName }
+      inventorySales { name quantitySold unitCost totalCost revenue recipeName }
       laborEntries { id employeeId name hours wage total }
       supplies { id name quantity unitCost total }
       additionalFees { id label amount isDiscount calcType pctBase }
@@ -194,33 +194,54 @@ export function EventDashboardPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.86rem' }}>
               <thead><tr style={{ background: '#f3f4f6', textAlign: 'left' }}>
                 <th style={{ padding: '6px 8px' }}>{t('dashboard.invItem', 'Item')}</th>
-                <th style={{ padding: '6px 8px' }}>{t('dashboard.invQtySold', 'Qty Sold')}</th>
+                <th style={{ padding: '6px 8px', textAlign: 'right' }}>{t('dashboard.invQtySold', 'Qty Sold')}</th>
+                <th style={{ padding: '6px 8px', textAlign: 'right' }}>{t('dashboard.invRevenue', 'Revenue')}</th>
                 <th style={{ padding: '6px 8px' }}>{t('dashboard.recipeCol', 'Recipe')}</th>
-                <th style={{ padding: '6px 8px' }}>{t('dashboard.invUnitCost', 'Unit Cost')}</th>
-                <th style={{ padding: '6px 8px' }}>{t('dashboard.invTotalCogs', 'Total COGS')}</th>
+                <th style={{ padding: '6px 8px', textAlign: 'right' }}>{t('dashboard.invUnitCost', 'Unit Cost')}</th>
+                <th style={{ padding: '6px 8px', textAlign: 'right' }}>{t('dashboard.invTotalCogs', 'Total COGS')}</th>
+                <th style={{ padding: '6px 8px', textAlign: 'right' }}>{t('dashboard.invMargin', 'Margin')}</th>
               </tr></thead>
               <tbody>
                 {inventorySales.map((r: Record<string, unknown>, i: number) => {
                   const costed = r['totalCost'] != null;
+                  const rev = r['revenue'] != null ? Number(r['revenue']) : null;
+                  const cost = Number(r['totalCost'] ?? 0);
+                  const margin = rev != null ? rev - cost : null;
                   return (
                     <tr key={i}>
                       <td style={{ padding: '6px 8px' }}>{r['name'] as string}</td>
-                      <td style={{ padding: '6px 8px' }}>{Number(r['quantitySold'])}</td>
+                      <td style={{ padding: '6px 8px', textAlign: 'right' }}>{Number(r['quantitySold'])}</td>
+                      <td style={{ padding: '6px 8px', textAlign: 'right' }}>{rev != null ? fmt(rev) : '—'}</td>
                       <td style={{ padding: '6px 8px' }}>
                         {r['recipeName']
                           ? (r['recipeName'] as string)
                           : <span style={{ color: 'var(--muted)' }}>{costed ? t('dashboard.recipeFromInventory', 'inventory cost') : t('dashboard.recipeNone', '— unmatched')}</span>}
                       </td>
-                      <td style={{ padding: '6px 8px' }}>{r['unitPrice'] != null ? fmt(r['unitPrice'] as number) : '—'}</td>
-                      <td style={{ padding: '6px 8px' }}>{fmt(Number(r['totalCost'] ?? 0))}</td>
+                      <td style={{ padding: '6px 8px', textAlign: 'right' }}>{r['unitCost'] != null ? fmt(r['unitCost'] as number) : '—'}</td>
+                      <td style={{ padding: '6px 8px', textAlign: 'right' }}>{fmt(cost)}</td>
+                      <td style={{ padding: '6px 8px', textAlign: 'right', color: margin != null && margin < 0 ? 'var(--danger)' : undefined }}>
+                        {margin != null ? fmt(margin) : '—'}
+                      </td>
                     </tr>
                   );
                 })}
               </tbody>
-              <tfoot><tr style={{ borderTop: '2px solid var(--vv-border)', fontWeight: 700 }}>
-                <td style={{ padding: '6px 8px' }} colSpan={4}>{t('dashboard.totalCogsLabel', 'Total COGS')}</td>
-                <td style={{ padding: '6px 8px' }}>{fmt(inventorySales.reduce((s: number, r: Record<string, unknown>) => s + Number(r['totalCost'] ?? 0), 0))}</td>
-              </tr></tfoot>
+              {(() => {
+                const totRev = inventorySales.reduce((s: number, r: Record<string, unknown>) => s + Number(r['revenue'] ?? 0), 0);
+                const totCogs = inventorySales.reduce((s: number, r: Record<string, unknown>) => s + Number(r['totalCost'] ?? 0), 0);
+                const anyRevenue = (inventorySales as Array<Record<string, unknown>>).some(r => r['revenue'] != null);
+                return (
+                  <tfoot><tr style={{ borderTop: '2px solid var(--vv-border)', fontWeight: 700 }}>
+                    <td style={{ padding: '6px 8px' }}>{t('dashboard.totalsLabel', 'Totals')}</td>
+                    <td style={{ padding: '6px 8px' }} />
+                    <td style={{ padding: '6px 8px', textAlign: 'right' }}>{anyRevenue ? fmt(totRev) : '—'}</td>
+                    <td style={{ padding: '6px 8px' }} />
+                    <td style={{ padding: '6px 8px' }} />
+                    <td style={{ padding: '6px 8px', textAlign: 'right' }}>{fmt(totCogs)}</td>
+                    <td style={{ padding: '6px 8px', textAlign: 'right' }}>{anyRevenue ? fmt(totRev - totCogs) : '—'}</td>
+                  </tr></tfoot>
+                );
+              })()}
             </table>
           </div>
           {(() => {

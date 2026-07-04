@@ -226,8 +226,11 @@ export const typeDefs = `#graphql
   type InventorySaleRow {
     name: String
     quantitySold: Float
-    unitPrice: Float
+    "Per-unit cost of goods (from the mapped recipe or inventory item)."
+    unitCost: Float
     totalCost: Float
+    "Gross revenue this item sold for (from the POS), when available."
+    revenue: Float
     "Name of the recipe this item's COGS came from, when matched via a recipe."
     recipeName: String
   }

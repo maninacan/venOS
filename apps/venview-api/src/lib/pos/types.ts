@@ -38,7 +38,7 @@ export interface PosSalesPull {
   processingFees: number;   // provider processing fees (stored in SalesSummary.squareFees)
   totalCollected: number;
   taxCollected: number;
-  items: Array<{ name: string; qty: number; catalogObjectId?: string | null }>;
+  items: Array<{ name: string; qty: number; catalogObjectId?: string | null; revenue?: number }>;
   orderCount: number;
 }
 

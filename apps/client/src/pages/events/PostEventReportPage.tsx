@@ -30,7 +30,7 @@ const GET_REPORT = gql`
         posFees cogs grossProfit totalExpenses netProfit
         tips stateFoodTax laborFees additionalFeesTotal mileageReimbursement
       }
-      inventorySales { name quantitySold unitPrice totalCost }
+      inventorySales { name quantitySold unitCost totalCost }
       laborEntries { id name hours wage total }
       supplies { id name quantity unitCost total }
     }
@@ -489,7 +489,7 @@ export function PostEventReportPage() {
                   <tr key={i}>
                     <td style={{ padding: '4px 8px', borderBottom: '1px solid #f1f5f9' }}>{r['name'] as string}</td>
                     <td style={{ padding: '4px 8px', textAlign: 'right', borderBottom: '1px solid #f1f5f9' }}>{Number(r['quantitySold'])}</td>
-                    <td style={{ padding: '4px 8px', textAlign: 'right', borderBottom: '1px solid #f1f5f9' }}>{r['unitPrice'] != null ? fmt(r['unitPrice'] as number) : '—'}</td>
+                    <td style={{ padding: '4px 8px', textAlign: 'right', borderBottom: '1px solid #f1f5f9' }}>{r['unitCost'] != null ? fmt(r['unitCost'] as number) : '—'}</td>
                     <td style={{ padding: '4px 8px', textAlign: 'right', borderBottom: '1px solid #f1f5f9' }}>{fmt(r['totalCost'] as number)}</td>
                   </tr>
                 ))}

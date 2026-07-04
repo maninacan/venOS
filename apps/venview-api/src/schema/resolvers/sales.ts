@@ -219,7 +219,15 @@ export const salesResolvers = {
       for (const item of pull.items) {
         const { unitCost, recipeId } = costLookup.resolve({ name: item.name, catalogObjectId: item.catalogObjectId });
         if (unitCost == null) unmatchedCount++;
-        inventoryRows.push({ eventID: eventId, name: item.name, quantitySold: item.qty, unitPrice: unitCost, totalCost: unitCost != null ? unitCost * item.qty : null, recipeId });
+        inventoryRows.push({
+          eventID: eventId,
+          name: item.name,
+          quantitySold: item.qty,
+          unitCost,
+          totalCost: unitCost != null ? unitCost * item.qty : null,
+          revenue: item.revenue != null ? +Number(item.revenue).toFixed(2) : null,
+          recipeId,
+        });
       }
 
       const netSales = pull.grossSales - pull.refunds - pull.discounts;
@@ -354,7 +362,8 @@ export const salesResolvers = {
       try {
         return await suggestMappings(catalog, recipes, inventory);
       } catch (err) {
-        logger.error('posMappingRecommendations: AI suggestion failed', { companyId, error: err });
+        const detail = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
+        logger.error('posMappingRecommendations: AI suggestion failed', { companyId, detail, error: err });
         throw new Error('Could not generate AI suggestions. Please try again.');
       }
     },

@@ -71,19 +71,32 @@ export async function suggestMappings(
   let text = '';
   for (let attempt = 0; ; attempt++) {
     try {
-      const res = await anthropic.messages.create({
-        model: MODEL,
-        max_tokens: 8000,
-        system: SYSTEM,
-        messages: [{ role: 'user', content: JSON.stringify(payload) }],
-      });
+      // Stream the response: this catalog can be large and the generation can run
+      // well past a minute, which trips connection/proxy timeouts on a plain
+      // (buffered) messages.create. Streaming keeps the connection alive and lets
+      // the SDK assemble the final message for us.
+      const res = await anthropic.messages
+        .stream({
+          model: MODEL,
+          max_tokens: 16000,
+          system: SYSTEM,
+          messages: [{ role: 'user', content: JSON.stringify(payload) }],
+        })
+        .finalMessage();
+      if (res.stop_reason === 'max_tokens') {
+        logger.warn('suggestMappings: response hit max_tokens; suggestions may be truncated', {
+          posItems: payload.posItems.length,
+        });
+      }
       text = res.content.filter(b => b.type === 'text').map(b => (b as { text: string }).text).join('');
       break;
     } catch (err) {
+      const detail = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
       if (attempt >= MAX_ATTEMPTS - 1 || !isTransient(err)) {
-        logger.error('suggestMappings: Anthropic call failed', { error: err });
+        logger.error('suggestMappings: Anthropic call failed', { attempt, detail, error: err });
         throw err;
       }
+      logger.warn('suggestMappings: transient Anthropic error, retrying', { attempt, detail });
     }
   }
 
