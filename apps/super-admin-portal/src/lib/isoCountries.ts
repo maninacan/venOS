@@ -207,3 +207,14 @@ export const ISO_COUNTRIES: Record<string, { num: string; name: string }> = {
 export function countryNameFromA2(code: string): string {
   return ISO_COUNTRIES[code]?.name ?? code;
 }
+
+// Reverse lookup keyed by the normalized numeric code (parseInt drops leading zeros),
+// so it matches world-atlas geo.id regardless of zero-padding.
+const NUM_TO_A2: Record<string, string> = Object.fromEntries(
+  Object.entries(ISO_COUNTRIES).map(([a2, v]) => [String(parseInt(v.num, 10)), a2])
+);
+
+export function a2FromGeoId(id: string | number | undefined): string | null {
+  if (id == null) return null;
+  return NUM_TO_A2[String(parseInt(String(id), 10))] ?? null;
+}

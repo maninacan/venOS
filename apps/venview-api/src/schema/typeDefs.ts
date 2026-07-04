@@ -563,6 +563,14 @@ export const typeDefs = `#graphql
     count: Int!
   }
 
+  type CompanyCountryRow {
+    id: ID!
+    name: String!
+    plan: String!
+    eventCount: Int!
+    memberCount: Int!
+  }
+
   type CompanyLocation {
     id: ID!
     name: String!
@@ -642,6 +650,8 @@ export const typeDefs = `#graphql
     adminCompanies: [AdminCompanyDetail!]!
     adminDashboard: AdminDashboard!
     companiesInState(state: String!): [CompanyLocation!]!
+    "Companies with events in a country (ISO 3166-1 alpha-2), ranked by event count."
+    companiesInCountry(country: String!): [CompanyCountryRow!]!
     waitlistSignups: [WaitlistSignup!]!
   }
 

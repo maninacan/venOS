@@ -295,6 +295,42 @@ export const adminResolvers = {
       return results.sort((a, b) => b.eventCount - a.eventCount);
     },
 
+    // Companies with events in a given country (ISO alpha-2). Events predating the
+    // country field count as 'US'. No lat/lng — non-US locations aren't geocoded —
+    // so this is a ranked list, not a marker map.
+    companiesInCountry: async (_: unknown, { country }: { country: string }, ctx: AppContext) => {
+      requireAuth(ctx);
+      if (!ctx.isSuperAdmin) throw new Error('Forbidden');
+
+      const target = (country ?? '').trim().toUpperCase();
+      const [{ data: companies }, { data: members }, { data: events }] = await Promise.all([
+        supabase.from('Companies').select('id, name, plan'),
+        supabase.from('CompanyMembers').select('companyId, userId'),
+        supabase.from('EventInfo').select('companyId, country'),
+      ]);
+
+      const eventCountByCompany = new Map<string, number>();
+      for (const e of (events ?? []) as Array<{ companyId: string; country?: string | null }>) {
+        const c = (e.country ?? '').trim().toUpperCase() || 'US';
+        if (c !== target) continue;
+        eventCountByCompany.set(e.companyId, (eventCountByCompany.get(e.companyId) ?? 0) + 1);
+      }
+
+      const memberCount = new Map<string, number>();
+      for (const m of (members ?? []) as Array<{ companyId: string; userId: string }>) {
+        memberCount.set(m.companyId, (memberCount.get(m.companyId) ?? 0) + 1);
+      }
+
+      return ((companies ?? []) as Array<{ id: string; name: string; plan: string }>)
+        .map(co => ({
+          id: co.id, name: co.name, plan: co.plan,
+          eventCount: eventCountByCompany.get(co.id) ?? 0,
+          memberCount: memberCount.get(co.id) ?? 0,
+        }))
+        .filter(r => r.eventCount > 0)
+        .sort((a, b) => b.eventCount - a.eventCount);
+    },
+
     adminUsers: async (_: unknown, __: unknown, ctx: AppContext) => {
       requireAuth(ctx);
       if (!ctx.isSuperAdmin) throw new Error('Forbidden');

@@ -16,7 +16,7 @@ import {
 } from 'recharts';
 import { ComposableMap, Geographies, Geography, Marker } from 'react-simple-maps';
 import { scaleLinear } from 'd3-scale';
-import { ISO_COUNTRIES, countryNameFromA2 } from '../../lib/isoCountries';
+import { ISO_COUNTRIES, countryNameFromA2, a2FromGeoId } from '../../lib/isoCountries';
 
 const GET_DASHBOARD = gql`
   query GetAdminDashboard {
@@ -572,9 +572,10 @@ function StateDrillDown({ state, onBack }: { state: string; onBack: () => void }
 // ── US state choropleth ───────────────────────────────────────────────────────
 const US_TOPO_URL = 'https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json';
 
-function USMap({ eventsByState, onStateClick }: {
+function USMap({ eventsByState, onStateClick, onBack }: {
   eventsByState: { state: string; count: number }[];
   onStateClick: (state: string) => void;
+  onBack: () => void;
 }) {
   const [tooltip, setTooltip] = useState<{ state: string; count: number; x: number; y: number } | null>(null);
 
@@ -590,6 +591,7 @@ function USMap({ eventsByState, onStateClick }: {
     <div className="bg-white border border-[rgba(11,42,74,0.12)] rounded-xl p-5 shadow-[0_2px_8px_rgba(11,42,74,0.06)]">
       <div className="flex items-start justify-between mb-2">
         <div>
+          <button onClick={onBack} className="text-[0.72rem] font-semibold text-[#0B2A4A] hover:underline mb-1">← Back to world map</button>
           <div className="text-[0.72rem] font-bold uppercase tracking-[0.06em] text-[#64748b]">Event Activity by State</div>
           <div className="text-[0.72rem] text-[#94a3b8] mt-0.5">Derived from event zip codes</div>
         </div>
@@ -673,7 +675,10 @@ function USMap({ eventsByState, onStateClick }: {
 // ── World map (event activity by country) ─────────────────────────────────────
 const WORLD_TOPO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json';
 
-function WorldMap({ eventsByCountry }: { eventsByCountry: { country: string; count: number }[] }) {
+function WorldMap({ eventsByCountry, onCountryClick }: {
+  eventsByCountry: { country: string; count: number }[];
+  onCountryClick: (code: string) => void;
+}) {
   const [tooltip, setTooltip] = useState<{ name: string; count: number; x: number; y: number } | null>(null);
 
   // Aggregate counts by ISO numeric code (matches world-atlas geo.id, compared numerically).
@@ -707,15 +712,17 @@ function WorldMap({ eventsByCountry }: { eventsByCountry: { country: string; cou
                 const count = countByNum.get(parseInt(geo.id as string, 10)) ?? 0;
                 const fill = count > 0 ? colorScale(count) : '#f1f5f9';
                 const name = geo.properties['name'] as string;
+                const code = a2FromGeoId(geo.id);
                 return (
                   <Geography
                     key={geo.rsmKey}
                     geography={geo}
+                    onClick={() => code && onCountryClick(code)}
                     onMouseEnter={(evt: React.MouseEvent) => setTooltip({ name, count, x: evt.clientX, y: evt.clientY })}
                     onMouseLeave={() => setTooltip(null)}
                     style={{
-                      default: { fill, stroke: '#fff', strokeWidth: 0.4, outline: 'none' },
-                      hover:   { fill: count > 0 ? '#19B37A' : '#e2e8f0', stroke: '#fff', strokeWidth: 0.4, outline: 'none' },
+                      default: { fill, stroke: '#fff', strokeWidth: 0.4, outline: 'none', cursor: code ? 'pointer' : 'default' },
+                      hover:   { fill: count > 0 ? '#19B37A' : '#e2e8f0', stroke: '#fff', strokeWidth: 0.4, outline: 'none', cursor: code ? 'pointer' : 'default' },
                       pressed: { fill: count > 0 ? '#166534' : '#cbd5e1', stroke: '#fff', strokeWidth: 0.4, outline: 'none' },
                     }}
                   />
@@ -757,6 +764,58 @@ function WorldMap({ eventsByCountry }: { eventsByCountry: { country: string; cou
   );
 }
 
+// ── Country drill-down (companies with events in a country) ───────────────────
+const GET_COMPANIES_IN_COUNTRY = gql`
+  query CompaniesInCountry($country: String!) {
+    companiesInCountry(country: $country) { id name plan eventCount memberCount }
+  }
+`;
+
+interface CompanyCountryRow { id: string; name: string; plan: string; eventCount: number; memberCount: number }
+
+function CountryDrillDown({ country, onBack }: { country: string; onBack: () => void }) {
+  const { data, loading } = useQuery<{ companiesInCountry: CompanyCountryRow[] }>(
+    GET_COMPANIES_IN_COUNTRY,
+    { variables: { country } }
+  );
+  const companies = data?.companiesInCountry ?? [];
+  const name = countryNameFromA2(country);
+
+  return (
+    <div className="bg-white border border-[rgba(11,42,74,0.12)] rounded-xl shadow-[0_2px_8px_rgba(11,42,74,0.06)] overflow-hidden">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-[rgba(11,42,74,0.08)]">
+        <div className="text-[0.72rem] font-bold uppercase tracking-[0.06em] text-[#64748b]">Companies in {name}</div>
+        <button onClick={onBack} className="text-[0.75rem] font-semibold text-[#0B2A4A] hover:underline">← Back to world map</button>
+      </div>
+
+      {loading ? (
+        <div className="px-5 py-10 flex items-center justify-center">
+          <span className="spinner spinner-dark" style={{ width: 22, height: 22, borderWidth: 2 }} />
+        </div>
+      ) : companies.length > 0 ? (
+        <div className="divide-y divide-[rgba(11,42,74,0.06)] max-h-72 overflow-y-auto">
+          {companies.map(c => (
+            <div key={c.id} className="flex items-center gap-3 px-5 py-2.5">
+              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${c.plan === 'pro' ? 'bg-[#fbbf24]' : 'bg-[#0B2A4A]'}`} />
+              <span className="text-[0.84rem] font-medium text-[#0B2A4A] flex-1 truncate">{c.name}</span>
+              <span className="text-[0.75rem] text-[#64748b] shrink-0 tabular-nums">
+                {c.eventCount} event{c.eventCount !== 1 ? 's' : ''}
+              </span>
+              <span className="text-[0.75rem] text-[#94a3b8] shrink-0 tabular-nums">
+                {c.memberCount} member{c.memberCount !== 1 ? 's' : ''}
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="px-5 py-8 text-center text-[0.84rem] text-[#94a3b8]">
+          No companies with event history found in {name}.
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Section header ────────────────────────────────────────────────────────────
 function SectionHeader({ children }: { children: React.ReactNode }) {
   return (
@@ -773,7 +832,7 @@ export function DashboardPage() {
   const { data, loading } = useQuery<{ adminDashboard: Dashboard }>(GET_DASHBOARD);
   const d = data?.adminDashboard;
   const [selectedState, setSelectedState] = useState<string | null>(null);
-  const [geoView, setGeoView] = useState<'us' | 'world'>('us');
+  const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
 
   return (
     <>
@@ -873,26 +932,24 @@ export function DashboardPage() {
           />
 
           {/* ── Geography ───────────────────────────────────────────────────── */}
-          <div className="flex items-center justify-between">
-            <SectionHeader>Geography</SectionHeader>
-            <div className="inline-flex rounded-lg border border-[#e2e8f0] overflow-hidden text-[0.75rem] font-semibold">
-              {(['us', 'world'] as const).map(v => (
-                <button
-                  key={v}
-                  onClick={() => setGeoView(v)}
-                  className={`px-3 py-1.5 ${geoView === v ? 'bg-[#0B2A4A] text-white' : 'bg-white text-[#64748b] hover:bg-[#f1f5f9]'}`}
-                >
-                  {v === 'us' ? 'United States' : 'World'}
-                </button>
-              ))}
-            </div>
-          </div>
-          {geoView === 'world' ? (
-            <WorldMap eventsByCountry={d.eventsByCountry} />
-          ) : selectedState ? (
-            <StateDrillDown state={selectedState} onBack={() => setSelectedState(null)} />
+          <SectionHeader>Geography</SectionHeader>
+          {/* World map is home. Click a country to drill in: the US opens the
+              detailed state map (which drills into companies-by-state); every
+              other country opens a companies list. */}
+          {!selectedCountry ? (
+            <WorldMap eventsByCountry={d.eventsByCountry} onCountryClick={setSelectedCountry} />
+          ) : selectedCountry === 'US' ? (
+            selectedState ? (
+              <StateDrillDown state={selectedState} onBack={() => setSelectedState(null)} />
+            ) : (
+              <USMap
+                eventsByState={d.eventsByState}
+                onStateClick={setSelectedState}
+                onBack={() => setSelectedCountry(null)}
+              />
+            )
           ) : (
-            <USMap eventsByState={d.eventsByState} onStateClick={setSelectedState} />
+            <CountryDrillDown country={selectedCountry} onBack={() => setSelectedCountry(null)} />
           )}
 
           {d.topZipCodes.length > 0 && (
