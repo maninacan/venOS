@@ -22,6 +22,7 @@ const GET_EVENT = gql`
       eventLocation zipCode country permits eventHost coordinator employees notes
       posLocationId numDays
       days { id dayNumber date startTime endTime }
+      sales { stateTaxRate localTaxRate }
     }
   }
 `;
@@ -38,6 +39,18 @@ const CREATE_EVENT = gql`
 const UPDATE_EVENT = gql`
   mutation UpdateEvent($id: ID!, $input: UpdateEventInput!) {
     updateEvent(id: $id, input: $input) { id }
+  }
+`;
+// Manual state/local rate override (flags taxOverride so auto-lookup won't clobber).
+const SET_EVENT_TAX_RATES = gql`
+  mutation SetEventTaxRates($eventId: ID!, $stateTaxRate: Float!, $localTaxRate: Float!) {
+    setEventTaxRates(eventId: $eventId, stateTaxRate: $stateTaxRate, localTaxRate: $localTaxRate) { taxRate }
+  }
+`;
+// Clear the override and re-look-up rates from the ZIP.
+const REFRESH_EVENT_TAX_RATES = gql`
+  mutation RefreshEventTaxRates($eventId: ID!) {
+    refreshEventTaxRates(eventId: $eventId) { taxRate }
   }
 `;
 
@@ -112,6 +125,14 @@ export function AddEventPage() {
 
   const [createEvent] = useMutation(CREATE_EVENT);
   const [updateEvent] = useMutation(UPDATE_EVENT);
+  const [setEventTaxRates] = useMutation(SET_EVENT_TAX_RATES);
+  const [refreshEventTaxRates] = useMutation(REFRESH_EVENT_TAX_RATES);
+
+  // Sales tax rates (percent strings; blank = auto-calculate from ZIP). Kept
+  // separate from the event form because they save via their own mutation.
+  const [stateTaxPct, setStateTaxPct] = useState('');
+  const [localTaxPct, setLocalTaxPct] = useState('');
+  const initialTaxRef = useRef<{ state: string; local: string }>({ state: '', local: '' });
 
   // New events default to the company's default country (user can still change it).
   useEffect(() => {
@@ -141,6 +162,14 @@ export function AddEventPage() {
     setDays((ev.days ?? []).map((d: { dayNumber: number; date: string; startTime: string; endTime: string }) => ({
       dayNumber: d.dayNumber, eventDate: d.date ?? '', startTime: d.startTime ?? '', endTime: d.endTime ?? '',
     })));
+    // A zero rate means "not set" → show blank so blank consistently reads as
+    // "auto-calculate from ZIP". Non-zero rates are stored as decimals.
+    const pct = (r: unknown) => (Number(r ?? 0) > 0 ? +(Number(r) * 100).toFixed(4) + '' : '');
+    const state = pct(ev.sales?.stateTaxRate);
+    const local = pct(ev.sales?.localTaxRate);
+    setStateTaxPct(state);
+    setLocalTaxPct(local);
+    initialTaxRef.current = { state, local };
   }, [editData]);
 
   // Keep the day rows in sync with numDays + start date
@@ -228,6 +257,28 @@ export function AddEventPage() {
     } finally { setLoading(false); }
   }
 
+  // Persist a tax-rate change, but only if the user actually touched the fields
+  // (so we never clobber an existing auto-lookup on an unrelated save):
+  //   both cleared → drop the override and re-look-up from the ZIP
+  //   otherwise    → store the entered state/local rates as a manual override
+  async function applyTaxRateChange(targetEventId: string) {
+    const init = initialTaxRef.current;
+    const unchanged = stateTaxPct.trim() === init.state && localTaxPct.trim() === init.local;
+    if (unchanged) return;
+
+    if (!stateTaxPct.trim() && !localTaxPct.trim()) {
+      await refreshEventTaxRates({ variables: { eventId: targetEventId } });
+      return;
+    }
+    await setEventTaxRates({
+      variables: {
+        eventId: targetEventId,
+        stateTaxRate: (parseFloat(stateTaxPct) || 0) / 100,
+        localTaxRate: (parseFloat(localTaxPct) || 0) / 100,
+      },
+    });
+  }
+
   // ── Edit flow ──────────────────────────────────────────────────────────────
   async function handleUpdate(e: FormEvent) {
     e.preventDefault();
@@ -236,6 +287,7 @@ export function AddEventPage() {
     try {
       await updateEvent({ variables: { id: eventId, input: buildInput() } });
       await uploadPermits(eventId);
+      await applyTaxRateChange(eventId);
       showToast(t('toast.eventUpdated', 'Event updated!'), 'success');
       navigate(`/companies/${companyId}/events/${eventId}`);
     } catch (err) {
@@ -416,6 +468,20 @@ export function AddEventPage() {
           <select value={form.country} onChange={e => setField('country', e.target.value)}>
             {COUNTRIES.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
           </select>
+        </div>
+        <div className="form-group">
+          <label>{t('form.salesTaxRates', 'Sales tax rates')}</label>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: 130 }}>
+              <div style={{ fontSize: '0.78rem', color: 'var(--muted)', marginBottom: 4 }}>{t('form.stateRate', 'State rate %')}</div>
+              <input type="number" step="0.001" min="0" value={stateTaxPct} onChange={e => setStateTaxPct(e.target.value)} placeholder={t('form.autoPlaceholder', 'Auto')} />
+            </div>
+            <div style={{ flex: 1, minWidth: 130 }}>
+              <div style={{ fontSize: '0.78rem', color: 'var(--muted)', marginBottom: 4 }}>{t('form.localRate', 'Local rate %')}</div>
+              <input type="number" step="0.001" min="0" value={localTaxPct} onChange={e => setLocalTaxPct(e.target.value)} placeholder={t('form.autoPlaceholder', 'Auto')} />
+            </div>
+          </div>
+          <p style={{ fontSize: '0.8rem', color: 'var(--muted)', margin: '4px 0 0' }}>{t('form.taxRatesHelp', 'Leave blank to auto-calculate from the ZIP above. Entering a rate here overrides the automatic lookup.')}</p>
         </div>
         <div className="form-group">
           <label>{t('form.permits', 'Permits')}</label>

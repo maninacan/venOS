@@ -179,8 +179,13 @@ export function EventDashboardPage() {
     { label: t('dashboard.meta.notes', 'Notes'), value: event?.notes },
   ].filter(f => f.value);
 
+  // Pre-event vs post-event: before the event happens (and before any sales),
+  // show a planning view rather than the reconcile/profit data.
+  const isUpcoming = deriveEventTiming(event ?? {}) === 'upcoming';
+  const showData = !isUpcoming || hasSales(sales) || forceShowData;
+
   // Event-data tabs (Cost of Goods → Sales Tax)
-  const tabs: Array<{ title: string; headerRight?: ReactNode; content: ReactNode }> = [
+  const tabs: Array<{ id?: string; title: string; headerRight?: ReactNode; content: ReactNode }> = [
     {
       title: t('dashboard.tabs.costOfGoods', 'Cost of Goods'),
       content: inventorySales.length === 0 ? (
@@ -298,11 +303,16 @@ export function EventDashboardPage() {
       content: <AdjustmentForm eventId={eventId!} field="tips" label={t('dashboard.tipsLabel', 'Tips (pass-through)')} currentValue={Number(sales.tips ?? 0)} onSaved={refetch} />,
     },
     {
+      id: 'tax',
       title: t('dashboard.tabs.salesTax', 'Sales Tax'),
       content: <TaxSection eventId={eventId!} hasPos={!!event?.posLocationId} taxes={taxes} onSaved={refetch} />,
     },
   ];
-  const active = tabs[Math.min(activeTab, tabs.length - 1)];
+  // In planning mode (upcoming event, no sales yet) the reconcile tabs are hidden,
+  // but sales tax rates can be set ahead of time — so keep the Sales Tax tab
+  // reachable even then.
+  const visibleTabs = showData ? tabs : tabs.filter(tb => tb.id === 'tax');
+  const active = visibleTabs[Math.min(activeTab, visibleTabs.length - 1)];
 
   // Lifecycle stage + the single recommended next action for this event.
   const stage = deriveEventStage({
@@ -320,11 +330,6 @@ export function EventDashboardPage() {
       default: setActiveTab(0); tabsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); break; // pull-sales
     }
   }
-
-  // Pre-event vs post-event: before the event happens (and before any sales),
-  // show a planning view rather than the reconcile/profit data.
-  const isUpcoming = deriveEventTiming(event ?? {}) === 'upcoming';
-  const showData = !isUpcoming || hasSales(sales) || forceShowData;
 
   // Pull-sales buttons for each connected integration. Only show a source when
   // its company-level connection exists; add future POS integrations here.
@@ -422,43 +427,42 @@ export function EventDashboardPage() {
         </div>
       )}
 
-      {showData && (
-        <>
-          {/* ── Reconcile: event data tabs (Cost of Goods → Sales Tax) ── */}
-          <div ref={tabsRef} className="bg-white rounded-xl border border-[rgba(11,42,74,0.12)] overflow-hidden mb-2.5 shadow-[0_4px_12px_rgba(11,42,74,0.08)]">
-            <div className="flex bg-[#f8fafc] border-b border-[rgba(11,42,74,0.12)]" role="tablist">
-              {tabs.map((t, i) => (
-                <button
-                  key={t.title}
-                  type="button"
-                  role="tab"
-                  aria-selected={activeTab === i}
-                  onClick={() => setActiveTab(i)}
-                  className={`flex-1 min-w-0 px-2 py-2.5 text-[0.85rem] font-semibold break-words text-center border-0 bg-transparent cursor-pointer border-b-2 transition-colors ${activeTab === i ? 'text-[#0B2A4A] border-[#0B2A4A]' : 'text-[#64748b] border-transparent hover:text-[#0B2A4A]'}`}
-                >
-                  {t.title}
-                </button>
-              ))}
-            </div>
-            <div className="px-[18px] pt-3.5 pb-[18px]">
-              {active.headerRight && <div className="flex justify-end mb-3">{active.headerRight}</div>}
-              {active.content}
-            </div>
-          </div>
+      {/* ── Reconcile: event data tabs (Cost of Goods → Sales Tax) ──
+          In planning mode only the Sales Tax tab shows, so rates can be set early. */}
+      <div ref={tabsRef} className="bg-white rounded-xl border border-[rgba(11,42,74,0.12)] overflow-hidden mb-2.5 shadow-[0_4px_12px_rgba(11,42,74,0.08)]">
+        <div className="flex bg-[#f8fafc] border-b border-[rgba(11,42,74,0.12)]" role="tablist">
+          {visibleTabs.map((t, i) => (
+            <button
+              key={t.title}
+              type="button"
+              role="tab"
+              aria-selected={activeTab === i}
+              onClick={() => setActiveTab(i)}
+              className={`flex-1 min-w-0 px-2 py-2.5 text-[0.85rem] font-semibold break-words text-center border-0 bg-transparent cursor-pointer border-b-2 transition-colors ${activeTab === i ? 'text-[#0B2A4A] border-[#0B2A4A]' : 'text-[#64748b] border-transparent hover:text-[#0B2A4A]'}`}
+            >
+              {t.title}
+            </button>
+          ))}
+        </div>
+        <div className="px-[18px] pt-3.5 pb-[18px]">
+          {active.headerRight && <div className="flex justify-end mb-3">{active.headerRight}</div>}
+          {active.content}
+        </div>
+      </div>
 
-          {/* Finalize: Event Profit Summary */}
-          <div ref={finalizeRef}>
-            <ProfitSummaryCard
-              eventId={eventId!}
-              isFinalized={Boolean(event?.isFinalized)}
-              sales={sales}
-              expenses={expenses}
-              summary={summary}
-              taxes={taxes}
-              onFinalized={refetch}
-            />
-          </div>
-        </>
+      {showData && (
+        /* Finalize: Event Profit Summary */
+        <div ref={finalizeRef}>
+          <ProfitSummaryCard
+            eventId={eventId!}
+            isFinalized={Boolean(event?.isFinalized)}
+            sales={sales}
+            expenses={expenses}
+            summary={summary}
+            taxes={taxes}
+            onFinalized={refetch}
+          />
+        </div>
       )}
     </>
   );
