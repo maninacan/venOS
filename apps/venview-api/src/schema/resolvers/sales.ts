@@ -430,17 +430,11 @@ export const salesResolvers = {
         return [];
       }
 
-      const [{ data: recipeCards }, { data: invRows }] = await Promise.all([
-        supabase.from('RecipeCards').select('id, name, RecipeIngredients(quantity, unitCost)').eq('companyId', companyId),
-        supabase.from('VendorInventory').select('id, itemName, unitCost').eq('companyId', companyId),
-      ]);
-
-      const recipes = (recipeCards ?? []).map((r: Record<string, unknown>) => ({
-        id: r['id'] as string,
-        name: r['name'] as string,
-        totalCost: ((r['RecipeIngredients'] as Array<Record<string, unknown>> | null) ?? [])
-          .reduce((s, i) => s + Number(i['quantity'] ?? 0) * Number(i['unitCost'] ?? 0), 0),
-      }));
+      // Modifiers are single ingredients (a pump of syrup, a scoop of whip), so
+      // they map to INVENTORY items, not whole recipes. Pass no recipes to the
+      // suggester so it only proposes inventory matches.
+      const { data: invRows } = await supabase
+        .from('VendorInventory').select('id, itemName, unitCost').eq('companyId', companyId);
       const inventory = (invRows ?? []).map((i: Record<string, unknown>) => ({
         id: i['id'] as string,
         name: i['itemName'] as string,
@@ -451,7 +445,7 @@ export const salesResolvers = {
       // suggester applies; map the suggestions back to posModifierId.
       const catalog = modifiers.map(m => ({ posItemId: m.posModifierId, posItemName: m.posModifierName }));
       try {
-        const suggestions = await suggestMappings(catalog, recipes, inventory);
+        const suggestions = await suggestMappings(catalog, [], inventory);
         return suggestions.map(s => ({
           posModifierId: s.posItemId,
           recipeId: s.recipeId,

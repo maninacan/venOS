@@ -16,7 +16,7 @@ const GET_AI_RECOMMENDATIONS = gql`
 const GET_DATA = gql`
   query GetPosModifierMappingData($companyId: ID!) {
     posModifierCatalog(companyId: $companyId) { posModifierId posModifierName price }
-    recipes(companyId: $companyId) { id name totalCost }
+    inventory(companyId: $companyId) { id name unitCost }
     posModifierMappings(companyId: $companyId) { posModifierId inventoryItemId recipeId }
   }
 `;
@@ -27,10 +27,10 @@ const SAVE_MAPPINGS = gql`
 `;
 
 interface CatalogItem { posModifierId: string; posModifierName: string; price?: number | null; }
-interface RecipeItem { id: string; name: string; totalCost: number; }
-// inventoryItemId is retained (loaded and saved back) so modifiers previously
-// mapped to inventory aren't wiped — but it can no longer be set from this modal.
-// Modifiers map to recipes only here.
+interface InventoryOption { id: string; name: string; unitCost: number; }
+// A modifier is a single ingredient (a pump of syrup, a scoop of whip), so it
+// maps to one inventory item. recipeId is retained (loaded/saved back) so any
+// recipe mapping created elsewhere isn't wiped, but it can't be set here.
 interface Mapping { posModifierId: string; inventoryItemId: string | null; recipeId: string | null; suggested?: boolean; }
 
 interface Props {
@@ -66,7 +66,7 @@ export function PosModifierMappingModal({ companyId, onClose }: Props) {
   }, [aiLoading]);
 
   const catalogItems: CatalogItem[] = data?.posModifierCatalog ?? [];
-  const recipeItems: RecipeItem[] = data?.recipes ?? [];
+  const inventoryItems: InventoryOption[] = data?.inventory ?? [];
   const existingMaps: Array<{ posModifierId: string; inventoryItemId: string | null; recipeId: string | null }> = data?.posModifierMappings ?? [];
 
   // Initialize mappings from saved values.
@@ -97,7 +97,7 @@ export function PosModifierMappingModal({ companyId, onClose }: Props) {
     });
   }
 
-  const isUnmapped = (m?: Mapping) => !m?.recipeId;
+  const isUnmapped = (m?: Mapping) => !m?.inventoryItemId;
 
   // Order catalog rows with unmapped items first; Array.sort is stable so items
   // within each group keep their original catalog order.
@@ -121,14 +121,14 @@ export function PosModifierMappingModal({ companyId, onClose }: Props) {
       for (const rec of recs) {
         const cur = next.get(rec.posModifierId) ?? { posModifierId: rec.posModifierId, inventoryItemId: null, recipeId: null };
         // Respect deliberate user choices — only fill blanks or replace prior suggestions.
-        const userConfirmed = !cur.suggested && cur.recipeId;
+        const userConfirmed = !cur.suggested && cur.inventoryItemId;
         if (userConfirmed) continue;
-        // Modifiers map to recipes only — ignore inventory-only recommendations.
-        if (!rec.recipeId) continue;
+        // Modifiers map to inventory items — ignore recipe-only recommendations.
+        if (!rec.inventoryId) continue;
         next.set(rec.posModifierId, {
           posModifierId: rec.posModifierId,
-          recipeId: rec.recipeId,
-          inventoryItemId: cur.inventoryItemId ?? null,
+          inventoryItemId: rec.inventoryId,
+          recipeId: cur.recipeId ?? null,
           suggested: true,
         });
         applied += 1;
@@ -167,11 +167,14 @@ export function PosModifierMappingModal({ companyId, onClose }: Props) {
     } finally { setSaving(false); }
   }
 
-  const unmappedCount = Array.from(mappings.values()).filter(m => !m.recipeId).length;
-  const suggestedCount = Array.from(mappings.values()).filter(m => m.suggested && m.recipeId).length;
+  const unmappedCount = Array.from(mappings.values()).filter(m => !m.inventoryItemId).length;
+  const suggestedCount = Array.from(mappings.values()).filter(m => m.suggested && m.inventoryItemId).length;
 
-  // Recipe options for the combobox — built once, shared by every row.
-  const recipeOptions = recipeItems.map(r => ({ id: r.id, label: `${r.name} ($${Number(r.totalCost).toFixed(2)})` }));
+  // Inventory options for the combobox — built once, shared by every row.
+  const inventoryOptions = inventoryItems.map(i => ({
+    id: i.id,
+    label: t('posModifierMapping.inventoryOption', '{{name}} (${{cost}}/unit)', { name: i.name, cost: Number(i.unitCost).toFixed(2) }),
+  }));
 
   // Rows in display order (unmapped floated to top via the sortedIds snapshot).
   const catalogById = new Map(catalogItems.map(c => [c.posModifierId, c]));
@@ -181,8 +184,8 @@ export function PosModifierMappingModal({ companyId, onClose }: Props) {
 
   const aiSteps = [
     t('posModifierMapping.aiStep1', 'Reading your POS modifiers'),
-    t('posModifierMapping.aiStep2', 'Comparing modifiers to your recipes'),
-    t('posModifierMapping.aiStep3', 'Matching against inventory'),
+    t('posModifierMapping.aiStep2', 'Comparing modifiers to your inventory'),
+    t('posModifierMapping.aiStep3', 'Matching ingredient costs'),
     t('posModifierMapping.aiStep4', 'Scoring match confidence'),
     t('posModifierMapping.aiStep5', 'Finalizing suggestions'),
   ];
@@ -195,11 +198,11 @@ export function PosModifierMappingModal({ companyId, onClose }: Props) {
         {/* Header */}
         <div style={{ padding: '22px 26px 14px', borderBottom: '1px solid #e5e7eb' }}>
           <h2 style={{ margin: '0 0 6px', fontSize: '1.15rem', fontWeight: 700, color: 'var(--vv-navy)' }}>
-            {t('posModifierMapping.title', 'Match Your POS Modifiers to Your Recipe Cards')}
+            {t('posModifierMapping.title', 'Match Your POS Modifiers to Your Inventory')}
           </h2>
           <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--muted)', lineHeight: 1.5 }}>
-            <Trans t={t} i18nKey="posModifierMapping.description" defaults='Map each modifier (flavor add-ons, whip, …) to the recipe for its ingredients — venOS adds that cost to every drink the modifier is on, so COGS stays accurate without a separate menu item per flavor. Choose <2>"No recipe"</2> for free or no-cost modifiers.'>
-              Map each modifier (flavor add-ons, whip, …) to the recipe for its ingredients — venOS adds that cost to every drink the modifier is on, so COGS stays accurate without a separate menu item per flavor. Choose <em>"No recipe"</em> for free or no-cost modifiers.
+            <Trans t={t} i18nKey="posModifierMapping.description" defaults='Map each modifier (flavor add-ons, whip, …) to the inventory item it uses — venOS adds that ingredient’s cost to every drink the modifier is on, so COGS stays accurate without a separate menu item per flavor. Choose <2>"No inventory item"</2> for free or no-cost modifiers.'>
+              Map each modifier (flavor add-ons, whip, …) to the inventory item it uses — venOS adds that ingredient’s cost to every drink the modifier is on, so COGS stays accurate without a separate menu item per flavor. Choose <em>"No inventory item"</em> for free or no-cost modifiers.
             </Trans>
           </p>
         </div>
@@ -216,8 +219,8 @@ export function PosModifierMappingModal({ companyId, onClose }: Props) {
         {/* Unmapped warning */}
         {unmappedCount > 0 && (
           <div style={{ padding: '8px 26px', background: '#fff7ed', borderBottom: '1px solid #fed7aa', fontSize: '0.8rem', color: '#c2410c' }}>
-<i className="fa-solid fa-triangle-exclamation" aria-hidden="true" /> <Trans t={t} i18nKey="posModifierMapping.unmappedWarning" count={unmappedCount} values={{ count: unmappedCount }} defaults="<1>{{count}} modifier(s)</1> have no recipe card — their cost won’t be added to COGS.">
-              <strong>{{ count: unmappedCount }} modifier(s)</strong> have no recipe card — their cost won’t be added to COGS.
+<i className="fa-solid fa-triangle-exclamation" aria-hidden="true" /> <Trans t={t} i18nKey="posModifierMapping.unmappedWarning" count={unmappedCount} values={{ count: unmappedCount }} defaults="<1>{{count}} modifier(s)</1> have no inventory item — their cost won’t be added to COGS.">
+              <strong>{{ count: unmappedCount }} modifier(s)</strong> have no inventory item — their cost won’t be added to COGS.
             </Trans>
           </div>
         )}
@@ -237,7 +240,7 @@ export function PosModifierMappingModal({ companyId, onClose }: Props) {
               <thead>
                 <tr style={{ background: '#f9fafb' }}>
                   <th style={{ padding: '9px 12px', textAlign: 'left', fontSize: '0.72rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb', width: '45%' }}>{t('posModifierMapping.colModifier', 'Modifier')}</th>
-                  <th style={{ padding: '9px 12px', textAlign: 'left', fontSize: '0.72rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>{t('posModifierMapping.colRecipe', 'Recipe (COGS)')}</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', fontSize: '0.72rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>{t('posModifierMapping.colInventory', 'Inventory Item (COGS)')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -256,16 +259,16 @@ export function PosModifierMappingModal({ companyId, onClose }: Props) {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                           <div style={{ flex: 1 }}>
                             <Combobox
-                              options={recipeOptions}
-                              value={mapping?.recipeId ?? null}
-                              onChange={id => setMapping(item.posModifierId, { recipeId: id })}
-                              highlight={isSuggested && !!mapping?.recipeId}
-                              noneLabel={t('posModifierMapping.noRecipe', '— No recipe —')}
-                              placeholder={t('posModifierMapping.searchRecipes', 'Search recipes…')}
-                              noMatchesLabel={t('posModifierMapping.noMatches', 'No matching recipes')}
+                              options={inventoryOptions}
+                              value={mapping?.inventoryItemId ?? null}
+                              onChange={id => setMapping(item.posModifierId, { inventoryItemId: id })}
+                              highlight={isSuggested && !!mapping?.inventoryItemId}
+                              noneLabel={t('posModifierMapping.noInventory', '— No inventory item —')}
+                              placeholder={t('posModifierMapping.searchInventory', 'Search inventory…')}
+                              noMatchesLabel={t('posModifierMapping.noMatches', 'No matching items')}
                             />
                           </div>
-                          {isSuggested && mapping?.recipeId && (
+                          {isSuggested && mapping?.inventoryItemId && (
                             <span style={{ background: '#fef3c7', color: '#92400e', borderRadius: 99, padding: '1px 7px', fontSize: '0.72rem', fontWeight: 600, whiteSpace: 'nowrap' }}>{t('posModifierMapping.suggestedBadge', 'suggested')}</span>
                           )}
                         </div>
@@ -308,7 +311,7 @@ export function PosModifierMappingModal({ companyId, onClose }: Props) {
               <span>{t('posModifierMapping.aiWorkingTitle', 'Claude is matching your POS modifiers…')}</span>
             </h3>
             <p style={{ margin: 0, color: 'var(--muted)', fontSize: '0.83rem', display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span>{t('posModifierMapping.aiWorkingNote', 'Analyzing {{count}} modifiers against your recipes and inventory. This can take a minute or two.', { count: catalogItems.length })}</span>
+              <span>{t('posModifierMapping.aiWorkingNote', 'Analyzing {{count}} modifiers against your inventory. This can take a minute or two.', { count: catalogItems.length })}</span>
               <span style={{ fontFamily: 'monospace', fontVariantNumeric: 'tabular-nums', fontSize: '0.88rem', color: 'var(--vv-navy)', fontWeight: 600 }}>
                 {`${Math.floor(aiElapsed / 60)}:${String(aiElapsed % 60).padStart(2, '0')}`}
               </span>
