@@ -80,6 +80,37 @@
     "secureNote": "Pagamento seguro com tecnologia da Stripe · cancele quando quiser",
     "ctaLater": "Talvez mais tarde"
   },
+  "posModifierMapping": {
+    "title": "Vincule os modificadores do seu POS às suas fichas técnicas",
+    "description": "Vincule cada modificador (saborizantes, chantilly, …) à ficha técnica dos seus ingredientes — o venOS soma esse custo a cada bebida que leva o modificador, mantendo o CMV preciso sem criar um item de menu para cada sabor. Escolha <2>\"Sem ficha\"</2> para modificadores gratuitos ou sem custo.",
+    "suggestedLegend": "<1>{{count}} modificador(es)</1> foram vinculados pela IA — marcados como <3>sugerido</3>. Revise antes de salvar.",
+    "unmappedWarning": "<1>{{count}} modificador(es)</1> não têm ficha técnica — o custo deles não será somado ao CMV.",
+    "empty": "Nenhum modificador do POS encontrado. Verifique se o seu POS está conectado e tem modificadores configurados.",
+    "colModifier": "Modificador",
+    "colRecipe": "Ficha técnica (CMV)",
+    "noRecipe": "— Sem ficha —",
+    "searchRecipes": "Buscar fichas técnicas…",
+    "noMatches": "Nenhuma ficha correspondente",
+    "suggestedBadge": "sugerido",
+    "cancel": "Cancelar",
+    "save": "Salvar vínculos",
+    "suggestAi": "Sugerir com IA",
+    "aiTitle": "Deixe a IA sugerir correspondências para você revisar",
+    "aiApplied": "A IA sugeriu {{count}} vínculo(s). Revise e salve.",
+    "aiNone": "Nenhuma correspondência confiável encontrada. Vincule os modificadores manualmente.",
+    "aiFailed": "A sugestão da IA falhou. Tente novamente.",
+    "aiWorkingTitle": "O Claude está vinculando os modificadores do seu POS…",
+    "aiWorkingNote": "Analisando {{count}} modificadores em relação às suas fichas técnicas e ao estoque. Isso pode levar um ou dois minutos.",
+    "aiStep1": "Lendo os modificadores do seu POS",
+    "aiStep2": "Comparando modificadores com suas fichas técnicas",
+    "aiStep3": "Cruzando com o estoque",
+    "aiStep4": "Pontuando a confiança da correspondência",
+    "aiStep5": "Finalizando sugestões",
+    "toast": {
+      "saved": "Vínculos de modificadores salvos! Os cálculos de custo agora estão precisos.",
+      "saveFailed": "Falha ao salvar"
+    }
+  },
   "posMapping": {
     "title": "Vincule o menu do seu POS às suas fichas técnicas",
     "description": "Vincule cada item do POS à receita que o compõe — o venOS usa o custo dos ingredientes da receita para calcular o CMV automaticamente em cada sincronização. Escolha <2>\"Sem receita\"</2> para gorjetas, taxas e outros itens que não fazem parte do menu.",

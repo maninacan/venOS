@@ -7,6 +7,7 @@ import { useCurrentCompany } from '../../hooks/useCurrentCompany';
 import { BackToSetupButton } from '../../components/guidance/BackToSetupButton';
 import { showToast, useAuth } from '@org/data';
 import { PosMappingModal } from '../../components/modals/PosMappingModal';
+import { PosModifierMappingModal } from '../../components/modals/PosModifierMappingModal';
 import { LanguageRegionCard } from '../../components/settings/LanguageRegionCard';
 import { COUNTRIES } from '../../lib/countries';
 
@@ -113,6 +114,7 @@ export function SettingsPage() {
   });
 
   const [showPosMappings, setShowPosMappings] = useState(false);
+  const [showModifierMappings, setShowModifierMappings] = useState(false);
   const [companyForm, setCompanyForm] = useState({ name: '', phone: '', contactName: '', vendorCategory: '', email: '', defaultCountry: 'US' });
   const [savingCompany, setSavingCompany] = useState(false);
   const [connectingPos, setConnectingPos] = useState(false);
@@ -473,6 +475,9 @@ export function SettingsPage() {
                 <button className="btn-secondary" style={{ fontSize: '0.85rem' }} onClick={() => setShowPosMappings(true)}>
                   <i className="fa-solid fa-map" aria-hidden="true" /> {t('integrations.manageMappings', 'Manage POS Mappings')}
                 </button>
+                <button className="btn-secondary" style={{ fontSize: '0.85rem' }} onClick={() => setShowModifierMappings(true)}>
+                  <i className="fa-solid fa-layer-group" aria-hidden="true" /> {t('integrations.manageModifierMappings', 'Manage Modifier Mappings')}
+                </button>
                 <button className="btn-danger-subtle" style={{ fontSize: '0.85rem' }} onClick={handleDisconnectPos}>
                   {t('integrations.disconnect', 'Disconnect {{name}}', { name: posMeta.displayName })}
                 </button>
@@ -806,6 +811,9 @@ export function SettingsPage() {
 
       {showPosMappings && companyId && (
         <PosMappingModal companyId={companyId} onClose={() => setShowPosMappings(false)} />
+      )}
+      {showModifierMappings && companyId && (
+        <PosModifierMappingModal companyId={companyId} onClose={() => setShowModifierMappings(false)} />
       )}
     </>
   );

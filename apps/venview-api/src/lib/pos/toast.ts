@@ -2,7 +2,7 @@ import { getToastRestaurantGuid, getToastRestaurantName, toastGet } from '../toa
 import {
   buildDateWindow, PosUnsupportedError,
   type PosProvider, type PosTokens, type PosLocation, type PosCatalogItem,
-  type PosSalesPull, type PosLaborPull, type PosEvent,
+  type PosModifierCatalogItem, type PosSalesPull, type PosLaborPull, type PosEvent,
 } from './types.js';
 
 // Toast connects via a restaurant GUID entered in Settings (client-credentials
@@ -52,6 +52,12 @@ export const toastProvider: PosProvider = {
     const items: PosCatalogItem[] = [];
     for (const menu of menus?.menus ?? []) collectMenuItems(menu, items);
     return items;
+  },
+
+  // Modifier costing is Square-only for now; Toast selections carry nested
+  // modifiers but extraction isn't wired yet, so expose no modifier catalog.
+  listModifierCatalog(): Promise<PosModifierCatalogItem[]> {
+    return Promise.resolve([]);
   },
 
   async pullSales(companyId, event: PosEvent): Promise<PosSalesPull> {

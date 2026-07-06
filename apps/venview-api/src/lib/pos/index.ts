@@ -14,6 +14,7 @@ function stub(key: PosProviderKey, displayName: string, capabilities: PosCapabil
     exchangeCode: notReady,
     listLocations: notReady,
     listCatalog: notReady,
+    listModifierCatalog: notReady,
     pullSales: notReady,
     pullLabor: notReady,
   };

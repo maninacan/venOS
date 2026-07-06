@@ -218,17 +218,48 @@ export const salesResolvers = {
         recipeCost: m['recipeId'] ? recipeCostById.get(m['recipeId'] as string) ?? null : null,
       })));
 
+      // Modifier COGS: modifiers (flavor add-ons, whip, …) map to their own
+      // recipe/inventory cost. Their upcharge is already in the line's revenue,
+      // so we add COST only, folded into the parent line's totalCost. Reuses the
+      // same lookup, keyed on the modifier's catalog object id / name.
+      const { data: modifierMappings } = await supabase
+        .from('PosModifierMapping')
+        .select('posModifierId, posModifierName, inventoryId, recipeId, VendorInventory(itemName, unitCost)')
+        .eq('companyId', companyId);
+      const modifierLookup = buildCostLookup((modifierMappings ?? []).map((m: Record<string, unknown>) => ({
+        posItemId: m['posModifierId'] as string | null,
+        posItemName: m['posModifierName'] as string | null,
+        unitCost: (m['VendorInventory'] as Record<string, unknown> | null)?.['unitCost'] as number | null,
+        recipeId: m['recipeId'] as string | null,
+        recipeCost: m['recipeId'] ? recipeCostById.get(m['recipeId'] as string) ?? null : null,
+      })));
+
       const inventoryRows: Array<Record<string, unknown>> = [];
       let unmatchedCount = 0;
+      let unmatchedModifierCount = 0;
       for (const item of pull.items) {
         const { unitCost, recipeId } = costLookup.resolve({ name: item.name, catalogObjectId: item.catalogObjectId });
         if (unitCost == null) unmatchedCount++;
+
+        // Sum mapped modifier costs for this line (unit cost × applied qty).
+        let modifierCost = 0;
+        for (const mod of item.modifiers ?? []) {
+          const modResolved = modifierLookup.resolve({ name: mod.name, catalogObjectId: mod.catalogObjectId });
+          if (modResolved.unitCost == null) { unmatchedModifierCount++; continue; }
+          modifierCost += modResolved.unitCost * mod.qty;
+        }
+
+        const baseCost = unitCost != null ? unitCost * item.qty : 0;
+        // totalCost is the full line COGS; null only when neither base nor
+        // modifier cost is known (so an unmapped line stays unmatched, not $0).
+        const hasAnyCost = unitCost != null || modifierCost > 0;
         inventoryRows.push({
           eventID: eventId,
           name: item.name,
           quantitySold: item.qty,
           unitCost,
-          totalCost: unitCost != null ? unitCost * item.qty : null,
+          totalCost: hasAnyCost ? +Number(baseCost + modifierCost).toFixed(4) : null,
+          modifierCost: modifierCost > 0 ? +Number(modifierCost).toFixed(4) : null,
           revenue: item.revenue != null ? +Number(item.revenue).toFixed(2) : null,
           recipeId,
         });
@@ -259,7 +290,8 @@ export const salesResolvers = {
       await supabase.from('InventorySales').delete().eq('eventID', eventId);
       if (inventoryRows.length > 0) await supabase.from('InventorySales').insert(inventoryRows);
 
-      return { success: true, message: `Synced ${pull.orderCount} orders. ${unmatchedCount} item(s) missing inventory cost.`, unmatchedCount };
+      const modMsg = unmatchedModifierCount > 0 ? ` ${unmatchedModifierCount} modifier(s) missing cost.` : '';
+      return { success: true, message: `Synced ${pull.orderCount} orders. ${unmatchedCount} item(s) missing inventory cost.${modMsg}`, unmatchedCount };
     },
 
     // Pull labor from the company's POS provider (only if it supports labor).
@@ -368,6 +400,68 @@ export const salesResolvers = {
       } catch (err) {
         const detail = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
         logger.error('posMappingRecommendations: AI suggestion failed', { companyId, detail, error: err });
+        throw new Error('Could not generate AI suggestions. Please try again.');
+      }
+    },
+
+    posModifierCatalog: async (_: unknown, { companyId }: { companyId: string }, ctx: AppContext) => {
+      requireAuth(ctx);
+      await requireCompanyMember(companyId, ctx.user!.id);
+      const provider = await companyProvider(companyId);
+      if (!provider || !provider.implemented) return [];
+      try { return await provider.listModifierCatalog(companyId); } catch (err) {
+        logger.error('posModifierCatalog: failed to fetch modifier catalog', { companyId, error: err });
+        return [];
+      }
+    },
+
+    // AI-suggested modifier→recipe/inventory mappings. Read-only: returns
+    // suggestions for the user to review and accept; saves nothing. Reuses the
+    // item-mapping suggester by shaping each modifier as a catalog item.
+    posModifierMappingRecommendations: async (_: unknown, { companyId }: { companyId: string }, ctx: AppContext) => {
+      requireAuth(ctx);
+      await requireCompanyMember(companyId, ctx.user!.id);
+      const provider = await companyProvider(companyId);
+      if (!provider || !provider.implemented) return [];
+
+      let modifiers;
+      try { modifiers = await provider.listModifierCatalog(companyId); } catch (err) {
+        logger.error('posModifierMappingRecommendations: failed to fetch modifier catalog', { companyId, error: err });
+        return [];
+      }
+
+      const [{ data: recipeCards }, { data: invRows }] = await Promise.all([
+        supabase.from('RecipeCards').select('id, name, RecipeIngredients(quantity, unitCost)').eq('companyId', companyId),
+        supabase.from('VendorInventory').select('id, itemName, unitCost').eq('companyId', companyId),
+      ]);
+
+      const recipes = (recipeCards ?? []).map((r: Record<string, unknown>) => ({
+        id: r['id'] as string,
+        name: r['name'] as string,
+        totalCost: ((r['RecipeIngredients'] as Array<Record<string, unknown>> | null) ?? [])
+          .reduce((s, i) => s + Number(i['quantity'] ?? 0) * Number(i['unitCost'] ?? 0), 0),
+      }));
+      const inventory = (invRows ?? []).map((i: Record<string, unknown>) => ({
+        id: i['id'] as string,
+        name: i['itemName'] as string,
+        unitCost: Number(i['unitCost'] ?? 0),
+      }));
+
+      // Shape modifiers as CatalogItemLite (posItemId = modifier id) so the same
+      // suggester applies; map the suggestions back to posModifierId.
+      const catalog = modifiers.map(m => ({ posItemId: m.posModifierId, posItemName: m.posModifierName }));
+      try {
+        const suggestions = await suggestMappings(catalog, recipes, inventory);
+        return suggestions.map(s => ({
+          posModifierId: s.posItemId,
+          recipeId: s.recipeId,
+          inventoryId: s.inventoryId,
+          confidence: s.confidence,
+          reason: s.reason,
+        }));
+      } catch (err) {
+        const detail = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
+        logger.error('posModifierMappingRecommendations: AI suggestion failed', { companyId, detail, error: err });
         throw new Error('Could not generate AI suggestions. Please try again.');
       }
     },

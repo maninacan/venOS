@@ -4,7 +4,7 @@ import { getSquareClient, getSquareBaseUrl, getSquareToken } from '../square.js'
 import {
   buildDateWindow,
   type PosProvider, type PosTokens, type PosLocation, type PosCatalogItem,
-  type PosSalesPull, type PosLaborPull, type PosEvent,
+  type PosModifierCatalogItem, type PosSalesPull, type PosLaborPull, type PosEvent,
 } from './types.js';
 
 const SQUARE_APP_ID = process.env['SQUARE_APP_ID'] ?? '';
@@ -115,6 +115,27 @@ export const squareProvider: PosProvider = {
     return items;
   },
 
+  async listModifierCatalog(companyId): Promise<PosModifierCatalogItem[]> {
+    const client = await getSquareClient(companyId);
+    const mods: PosModifierCatalogItem[] = [];
+    // MODIFIER_LIST objects hold the individual MODIFIER children; iterate the
+    // lists and emit one entry per modifier (its id is what appears on line items).
+    const page = await client.catalog.list({ types: 'MODIFIER_LIST' });
+    for await (const obj of page) {
+      const catalogObj = obj as unknown as Record<string, unknown>;
+      const listData = catalogObj['modifierListData'] as Record<string, unknown> | null;
+      for (const m of (listData?.['modifiers'] ?? []) as Array<Record<string, unknown>>) {
+        const modData = m['modifierData'] as Record<string, unknown> | null;
+        mods.push({
+          posModifierId: m['id'] as string,
+          posModifierName: (modData?.['name'] as string) ?? '',
+          price: Number((modData?.['priceMoney'] as { amount?: bigint } | null)?.amount ?? 0) / 100,
+        });
+      }
+    }
+    return mods;
+  },
+
   async pullSales(companyId, event: PosEvent): Promise<PosSalesPull> {
     const locationId = event.posLocationId;
     if (!locationId) throw new Error('Event has no POS location linked. Edit the event and select a location first.');
@@ -167,7 +188,8 @@ export const squareProvider: PosProvider = {
     const amt = (m: unknown): number => Number((m as { amount?: number | bigint } | null)?.amount ?? 0);
 
     let grossSales = 0, discounts = 0, tips = 0, taxCollected = 0, refunds = 0;
-    const itemMap = new Map<string, { name: string; qty: number; catalogObjectId: string | null; revenue: number }>();
+    type PulledMod = { name: string; catalogObjectId: string | null; qty: number };
+    const itemMap = new Map<string, { name: string; qty: number; catalogObjectId: string | null; revenue: number; modifiers: PulledMod[] }>();
     for (const order of allOrders) {
       // Gross = true item sales (pre-discount/return/tax/tip), summed per line
       // item from gross_sales_money (fallback total_money, then base_price × qty).
@@ -183,6 +205,16 @@ export const squareProvider: PosProvider = {
           : tmAmt != null ? Number(tmAmt)
           : Number(bpAmt ?? 0) * qty;
         grossSales += cents / 100;
+        // Modifiers (flavor add-ons, whip, …): their upcharge is already inside
+        // gross_sales_money above, so we capture COST only. Applied count = line
+        // qty × the modifier's own quantity (usually 1).
+        const mods: PulledMod[] = [];
+        for (const mod of (item['modifiers'] as Array<Record<string, unknown>> | null) ?? []) {
+          const modName = (mod['name'] as string ?? '').trim();
+          const modId = (mod['catalog_object_id'] as string | undefined) ?? null;
+          const modQty = qty * Number(mod['quantity'] ?? 1);
+          if ((modName || modId) && modQty > 0) mods.push({ name: modName, catalogObjectId: modId, qty: modQty });
+        }
         // Key by variation id when present (distinct cost per variation); else by name.
         const key = catalogObjectId ?? name;
         if (name) {
@@ -192,6 +224,7 @@ export const squareProvider: PosProvider = {
             qty: (prev?.qty ?? 0) + qty,
             catalogObjectId,
             revenue: (prev?.revenue ?? 0) + cents / 100,
+            modifiers: [...(prev?.modifiers ?? []), ...mods],
           });
         }
       }

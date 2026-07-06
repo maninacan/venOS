@@ -19,6 +19,7 @@
     "notConnected": "No conectado",
     "comingSoon": "Próximamente",
     "manageMappings": "Administrar asignaciones del POS",
+    "manageModifierMappings": "Administrar asignaciones de modificadores",
     "disconnect": "Desconectar {{name}}",
     "toastGuidLabel": "GUID del restaurante de Toast",
     "toastGuidPlaceholder": "p. ej. 1a2b3c4d-…",

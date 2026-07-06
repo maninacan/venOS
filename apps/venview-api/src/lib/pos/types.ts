@@ -29,6 +29,12 @@ export interface PosCatalogItem {
   price: number;
 }
 
+export interface PosModifierCatalogItem {
+  posModifierId: string;
+  posModifierName: string;
+  price: number;
+}
+
 // Normalized sales aggregate the provider returns; persistence is shared.
 export interface PosSalesPull {
   grossSales: number;
@@ -38,7 +44,16 @@ export interface PosSalesPull {
   processingFees: number;   // provider processing fees (stored in SalesSummary.squareFees)
   totalCollected: number;
   taxCollected: number;
-  items: Array<{ name: string; qty: number; catalogObjectId?: string | null; revenue?: number }>;
+  items: Array<{
+    name: string;
+    qty: number;
+    catalogObjectId?: string | null;
+    revenue?: number;
+    // Applied modifiers (flavor add-ons, whip, …) whose cost is folded into the
+    // line's COGS. `qty` here is the modifier's applied count (line qty ×
+    // modifier qty). Upcharge revenue is already in the line — cost only.
+    modifiers?: Array<{ name: string; catalogObjectId?: string | null; qty: number }>;
+  }>;
   orderCount: number;
 }
 
@@ -67,6 +82,8 @@ export interface PosProvider {
   revoke?(companyId: string): Promise<void>;
   listLocations(companyId: string): Promise<PosLocation[]>;
   listCatalog(companyId: string): Promise<PosCatalogItem[]>;
+  /** List modifier catalog objects (for modifier→cost mapping). */
+  listModifierCatalog(companyId: string): Promise<PosModifierCatalogItem[]>;
   pullSales(companyId: string, event: PosEvent): Promise<PosSalesPull>;
   pullLabor(companyId: string, event: PosEvent): Promise<PosLaborPull>;
 }

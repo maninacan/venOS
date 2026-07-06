@@ -426,6 +426,14 @@ export const typeDefs = `#graphql
     recipeId: ID
   }
 
+  type PosModifierMapping {
+    id: ID!
+    posModifierId: String!
+    posModifierName: String
+    inventoryItemId: ID
+    recipeId: ID
+  }
+
   type EventInventory {
     id: ID!
     item: InventoryItem!
@@ -461,6 +469,14 @@ export const typeDefs = `#graphql
     recipeId: ID
   }
 
+  input PosModifierMappingInput {
+    posSystem: String!
+    posModifierId: String!
+    posModifierName: String
+    inventoryId: ID
+    recipeId: ID
+  }
+
   # ─── Square ──────────────────────────────────────────────────────────────────
   type PosStatus {
     connected: Boolean!
@@ -485,9 +501,26 @@ export const typeDefs = `#graphql
     price: Float
   }
 
+  type PosModifierCatalogItem {
+    posModifierId: String!
+    posModifierName: String!
+    price: Float
+  }
+
   "An AI-suggested mapping for one POS item — reviewed/accepted by the user before saving."
   type PosMappingRecommendation {
     posItemId: String!
+    recipeId: ID
+    inventoryId: ID
+    "Model confidence in the match, 0.0–1.0."
+    confidence: Float
+    "Short human-readable rationale for the suggested match."
+    reason: String
+  }
+
+  "An AI-suggested mapping for one POS modifier — reviewed/accepted by the user before saving."
+  type PosModifierMappingRecommendation {
+    posModifierId: String!
     recipeId: ID
     inventoryId: ID
     "Model confidence in the match, 0.0–1.0."
@@ -631,6 +664,7 @@ export const typeDefs = `#graphql
     company(id: ID!): Company
     posLocations(companyId: ID!): [PosLocation!]!
     posCatalog(companyId: ID!): [PosCatalogItem!]!
+    posModifierCatalog(companyId: ID!): [PosModifierCatalogItem!]!
 
     events(companyId: ID!, filter: String, search: String, page: Int): [Event!]!
     event(id: ID!): Event
@@ -648,6 +682,9 @@ export const typeDefs = `#graphql
     posMappings(companyId: ID!): [PosMapping!]!
     "AI-suggested POS→recipe/inventory mappings for the user to review (nothing is persisted)."
     posMappingRecommendations(companyId: ID!): [PosMappingRecommendation!]!
+    posModifierMappings(companyId: ID!): [PosModifierMapping!]!
+    "AI-suggested POS modifier→recipe/inventory mappings for the user to review (nothing is persisted)."
+    posModifierMappingRecommendations(companyId: ID!): [PosModifierMappingRecommendation!]!
     eventInventory(eventId: ID!): [EventInventory!]!
 
     adminUsers: [AdminUser!]!
@@ -731,6 +768,7 @@ export const typeDefs = `#graphql
     deleteInventoryItem(id: ID!): Boolean!
     clearInventory(companyId: ID!): Boolean!
     savePosMappings(companyId: ID!, mappings: [PosMappingInput!]!): Boolean!
+    savePosModifierMappings(companyId: ID!, mappings: [PosModifierMappingInput!]!): Boolean!
 
     # Event inventory
     updateEventInventory(eventId: ID!, inventoryItemId: ID!, quantityLoaded: Float!): EventInventory!

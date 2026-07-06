@@ -80,6 +80,37 @@
     "secureNote": "Pago seguro con tecnología de Stripe · cancela cuando quieras",
     "ctaLater": "Quizás más tarde"
   },
+  "posModifierMapping": {
+    "title": "Vincula los modificadores de tu POS con tus fichas de receta",
+    "description": "Vincula cada modificador (saborizantes, crema, …) con la receta de sus ingredientes: venOS suma ese costo a cada bebida que lleva el modificador, para que el COGS siga siendo exacto sin crear un artículo de menú por cada sabor. Elige <2>\"Sin receta\"</2> para modificadores gratuitos o sin costo.",
+    "suggestedLegend": "<1>{{count}} modificador(es)</1> fueron vinculados por IA — marcados como <3>sugerido</3>. Revísalos antes de guardar.",
+    "unmappedWarning": "<1>{{count}} modificador(es)</1> no tienen ficha de receta — su costo no se sumará al COGS.",
+    "empty": "No se encontraron modificadores del POS. Asegúrate de que tu POS esté conectado y tenga modificadores configurados.",
+    "colModifier": "Modificador",
+    "colRecipe": "Receta (COGS)",
+    "noRecipe": "— Sin receta —",
+    "searchRecipes": "Buscar recetas…",
+    "noMatches": "No hay recetas coincidentes",
+    "suggestedBadge": "sugerido",
+    "cancel": "Cancelar",
+    "save": "Guardar asignaciones",
+    "suggestAi": "Sugerir con IA",
+    "aiTitle": "Deja que la IA sugiera coincidencias para que las revises",
+    "aiApplied": "La IA sugirió {{count}} asignación(es). Revisa y guarda.",
+    "aiNone": "No se encontraron coincidencias confiables. Vincula los modificadores manualmente.",
+    "aiFailed": "La sugerencia de IA falló. Inténtalo de nuevo.",
+    "aiWorkingTitle": "Claude está vinculando tus modificadores del POS…",
+    "aiWorkingNote": "Analizando {{count}} modificadores con tus recetas e inventario. Esto puede tardar uno o dos minutos.",
+    "aiStep1": "Leyendo tus modificadores del POS",
+    "aiStep2": "Comparando modificadores con tus recetas",
+    "aiStep3": "Cotejando con el inventario",
+    "aiStep4": "Puntuando la confianza de coincidencia",
+    "aiStep5": "Finalizando sugerencias",
+    "toast": {
+      "saved": "¡Asignaciones de modificadores guardadas! Los cálculos de costos ahora son exactos.",
+      "saveFailed": "No se pudo guardar"
+    }
+  },
   "posMapping": {
     "title": "Vincula el menú de tu POS con tus fichas de receta",
     "description": "Vincula cada artículo del POS con la receta que lo compone: venOS usa el costo de ingredientes de la receta para calcular el COGS automáticamente en cada sincronización. Elige <2>\"Sin receta\"</2> para propinas, cargos y otros conceptos que no son del menú.",

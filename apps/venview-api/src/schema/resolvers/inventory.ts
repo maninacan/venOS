@@ -98,6 +98,21 @@ export const inventoryResolvers = {
       }));
     },
 
+    posModifierMappings: async (_: unknown, { companyId }: { companyId: string }, ctx: AppContext) => {
+      requireAuth(ctx);
+      await requireCompanyMember(companyId, ctx.user!.id);
+      const { data } = await supabase
+        .from('PosModifierMapping')
+        .select('*')
+        .eq('companyId', companyId);
+      // DB stores `inventoryId`; the GraphQL field is `inventoryItemId`.
+      return (data ?? []).map((r: Record<string, unknown>) => ({
+        ...r,
+        inventoryItemId: r['inventoryId'] ?? null,
+        recipeId: r['recipeId'] ?? null,
+      }));
+    },
+
     eventInventory: async (_: unknown, { eventId }: { eventId: string }, ctx: AppContext) => {
       requireAuth(ctx);
       const { data } = await supabase
@@ -230,6 +245,43 @@ export const inventoryResolvers = {
 
       if (toInsert.length > 0) {
         await supabase.from('PosItemMapping').insert(toInsert);
+      }
+      return true;
+    },
+
+    savePosModifierMappings: async (
+      _: unknown,
+      { companyId, mappings }: { companyId: string; mappings: Array<Record<string, unknown>> },
+      ctx: AppContext
+    ) => {
+      requireAuth(ctx);
+      await requireCompanyMember(companyId, ctx.user!.id);
+
+      // The POS system is determined by the company's configured provider —
+      // never trust a client-supplied value.
+      const { data: companyRow } = await supabase
+        .from('Company')
+        .select('posSystem')
+        .eq('id', companyId)
+        .single();
+      const posSystem = companyRow?.posSystem ?? 'square';
+
+      // Delete existing and replace
+      await supabase.from('PosModifierMapping').delete().eq('companyId', companyId);
+
+      const toInsert = mappings
+        .filter(m => m['posModifierId'])
+        .map(m => ({
+          companyId,
+          posSystem,
+          posModifierId: m['posModifierId'],
+          posModifierName: m['posModifierName'],
+          inventoryId: m['inventoryId'] || null,
+          recipeId: m['recipeId'] || null,
+        }));
+
+      if (toInsert.length > 0) {
+        await supabase.from('PosModifierMapping').insert(toInsert);
       }
       return true;
     },
