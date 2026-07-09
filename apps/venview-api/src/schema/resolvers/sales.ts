@@ -346,7 +346,14 @@ export const salesResolvers = {
       await requireCompanyMember(companyId, ctx.user!.id);
       const provider = await companyProvider(companyId);
       if (!provider || !provider.implemented) return [];
-      try { return await provider.listLocations(companyId); } catch (err) {
+      try {
+        const locations = await provider.listLocations(companyId);
+        await markPosNeedsReauth(companyId, provider.key, false);
+        return locations;
+      } catch (err) {
+        // A revoked/expired token surfaces here as an auth error — flag reauth so
+        // the UI prompts a reconnect instead of silently showing zero locations.
+        if (isPosAuthError(err)) await markPosNeedsReauth(companyId, provider.key, true);
         logger.error('posLocations: failed to fetch locations', { companyId, error: err });
         return [];
       }
@@ -357,7 +364,12 @@ export const salesResolvers = {
       await requireCompanyMember(companyId, ctx.user!.id);
       const provider = await companyProvider(companyId);
       if (!provider || !provider.implemented) return [];
-      try { return await provider.listCatalog(companyId); } catch (err) {
+      try {
+        const catalog = await provider.listCatalog(companyId);
+        await markPosNeedsReauth(companyId, provider.key, false);
+        return catalog;
+      } catch (err) {
+        if (isPosAuthError(err)) await markPosNeedsReauth(companyId, provider.key, true);
         logger.error('posCatalog: failed to fetch catalog', { companyId, error: err });
         return [];
       }
