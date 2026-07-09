@@ -16,16 +16,25 @@ const posthogOptions = {
   defaults: '2026-05-30',
 } as const;
 
+// Only enable PostHog when a project token is configured (i.e. prod). In dev the
+// token is unset, so we skip the provider entirely — no analytics and no
+// "You must initialize it manually" warning.
+const posthogKey = import.meta.env['VITE_POSTHOG_PROJECT_TOKEN'];
+
+const app = (
+  <AppErrorBoundary>
+    <App />
+  </AppErrorBoundary>
+);
+
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement,
 );
 
 root.render(
   <StrictMode>
-    <PostHogProvider apiKey={import.meta.env['VITE_POSTHOG_PROJECT_TOKEN']} options={posthogOptions}>
-      <AppErrorBoundary>
-        <App />
-      </AppErrorBoundary>
-    </PostHogProvider>
+    {posthogKey
+      ? <PostHogProvider apiKey={posthogKey} options={posthogOptions}>{app}</PostHogProvider>
+      : app}
   </StrictMode>,
 );
