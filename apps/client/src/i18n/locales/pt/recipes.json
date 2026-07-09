@@ -123,6 +123,8 @@
     "applied": "{{count}} alteração(ões) aplicada(s).",
     "applyFailed": "Falha ao aplicar as alterações",
     "failed": "A otimização falhou. Tente novamente.",
-    "selectSome": "Selecione ao menos uma alteração para aplicar."
+    "selectSome": "Selecione ao menos uma alteração para aplicar.",
+    "confidence": "{{pct}}% de correspondência",
+    "confidenceTitle": "Confiança da correspondência da IA"
   }
 }

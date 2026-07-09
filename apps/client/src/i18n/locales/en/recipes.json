@@ -123,6 +123,8 @@
     "applied": "Applied {{count}} change(s).",
     "applyFailed": "Failed to apply changes",
     "failed": "Optimization failed. Please try again.",
-    "selectSome": "Select at least one change to apply."
+    "selectSome": "Select at least one change to apply.",
+    "confidence": "{{pct}}% match",
+    "confidenceTitle": "AI match confidence"
   }
 }

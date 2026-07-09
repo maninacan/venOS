@@ -835,6 +835,11 @@ export function RecipesPage() {
                               {rec.baseExistingRecipeId == null && rec.baseNewName && (
                                 <span style={{ background: '#eff6ff', color: '#1d4ed8', borderRadius: 99, padding: '1px 7px', fontSize: '0.72rem', fontWeight: 600 }}>{t('optimize.newBase', 'new base')}</span>
                               )}
+                              {rec.confidence != null && (
+                                <span title={t('optimize.confidenceTitle', 'AI match confidence')} style={{ marginLeft: 'auto', color: 'var(--muted)', fontSize: '0.74rem', fontVariantNumeric: 'tabular-nums' }}>
+                                  {t('optimize.confidence', '{{pct}}% match', { pct: Math.round(rec.confidence * 100) })}
+                                </span>
+                              )}
                             </div>
                             {rec.reason && <div style={{ fontSize: '0.78rem', color: 'var(--muted)', marginTop: 4, fontStyle: 'italic' }}>{rec.reason}</div>}
                           </div>
