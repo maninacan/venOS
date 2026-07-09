@@ -62,19 +62,19 @@ export const squareProvider: PosProvider = {
       access_token: string; refresh_token: string; merchant_id: string; expires_at: string;
     };
 
-    // Best-effort: fetch first location for display + its currency.
-    let locationId: string | null = null;
-    let locationName: string | null = null;
+    // Do NOT auto-select a location on connect — the location is chosen per event
+    // (event.posLocationId). We only read the merchant's currency here (account-level,
+    // for display formatting); location stays unset until an event picks one.
     let currency: string | null = null;
     try {
       const locRes = await axios.get(`${getSquareBaseUrl()}/v2/locations`, {
         headers: { Authorization: `Bearer ${access_token}`, 'Square-Version': '2025-01-15' },
       });
       const locs = locRes.data?.locations ?? [];
-      if (locs.length > 0) { locationId = locs[0].id; locationName = locs[0].name; currency = locs[0].currency ?? null; }
+      if (locs.length > 0) currency = locs[0].currency ?? null;
     } catch { /* non-fatal */ }
 
-    return { accessToken: access_token, refreshToken: refresh_token, externalId: merchant_id, locationId, locationName, currency, expiresAt: expires_at };
+    return { accessToken: access_token, refreshToken: refresh_token, externalId: merchant_id, locationId: null, locationName: null, currency, expiresAt: expires_at };
   },
 
   async revoke(companyId) {
