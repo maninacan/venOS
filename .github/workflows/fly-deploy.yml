@@ -35,8 +35,11 @@ jobs:
       - run: npm ci --no-audit --no-fund --legacy-peer-deps
       - name: Determine affected projects
         id: check
+        # Pass the commit message via env (not ${{ }} string-interpolation) so
+        # messages containing parens/quotes/$ can't break or inject into the script.
+        env:
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
         run: |
-          COMMIT_MSG="${{ github.event.head_commit.message }}"
           if [[ "${{ inputs.deploy_all }}" == "true" ]] || echo "$COMMIT_MSG" | grep -q '\[deploy all\]'; then
             echo "api=true" >> "$GITHUB_OUTPUT"
             echo "client=true" >> "$GITHUB_OUTPUT"
