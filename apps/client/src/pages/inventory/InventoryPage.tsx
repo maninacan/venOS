@@ -295,7 +295,7 @@ export function InventoryPage() {
         <div className="flex flex-wrap gap-2.5 mb-3.5 justify-between items-center">
           <div className="flex gap-2 items-center flex-wrap">
             <button className="btn-primary" onClick={() => aiFileInputRef.current?.click()} disabled={aiUploading}>
-              <i className={aiUploading ? 'fa-solid fa-spinner fa-spin' : 'fa-solid fa-wand-magic-sparkles'} />
+              {aiUploading ? <span className="spinner" /> : <i className="fa-solid fa-wand-magic-sparkles" />}
               <span>{aiUploading ? ` ${t('analyzing', 'Analyzing…')}` : ` ${t('aiImport', 'AI Import')}`}</span>
             </button>
             <input
@@ -399,7 +399,9 @@ export function InventoryPage() {
           <div className="modal-box" style={{ maxWidth: 720, display: 'flex', flexDirection: 'column', height: 'min(85vh, 640px)', padding: 0, overflow: 'hidden' }}>
             <div style={{ padding: '24px 28px 12px', flexShrink: 0 }}>
               <h3 style={{ margin: '0 0 4px', color: streamingError ? 'var(--danger)' : 'var(--vv-navy)' }}>
-                <i className={`fa-solid ${streamingError ? 'fa-triangle-exclamation' : 'fa-spinner fa-spin'}`} style={{ marginRight: 8 }} />
+                {streamingError
+                  ? <i className="fa-solid fa-triangle-exclamation" style={{ marginRight: 8 }} />
+                  : <span className="spinner spinner-dark" style={{ width: 16, height: 16, borderWidth: 2, display: 'inline-block', verticalAlign: 'middle', marginRight: 8 }} />}
                 <span>{streamingError ? t('streaming.parseErrorTitle', 'Parse Error — Raw Output') : t('streaming.analyzingTitle', 'Claude is analyzing your file…')}</span>
               </h3>
               <p style={{ margin: 0, color: 'var(--muted)', fontSize: '0.83rem', display: 'flex', alignItems: 'center', gap: 10 }}>

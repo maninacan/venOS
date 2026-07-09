@@ -375,7 +375,7 @@ export function PosModifierMappingModal({ companyId, onClose }: Props) {
                     {done
                       ? <i className="fa-solid fa-circle-check" style={{ color: '#16a34a' }} />
                       : active
-                        ? <i className="fa-solid fa-spinner fa-spin" style={{ color: 'var(--vv-navy)' }} />
+                        ? <span className="spinner spinner-dark" style={{ width: 13, height: 13, borderWidth: 2, display: 'inline-block', verticalAlign: 'middle' }} />
                         : <i className="fa-regular fa-circle" style={{ color: '#cbd5e1' }} />}
                   </span>
                   <span style={{ fontWeight: active ? 600 : 400 }}>{label}</span>
