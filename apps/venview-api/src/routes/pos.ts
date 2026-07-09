@@ -79,6 +79,10 @@ router.post('/pos/toast/connect', async (req: Request, res: Response) => {
       return void res.status(500).json({ error: 'Failed to save Toast connection' });
     }
 
+    // Mark the company's POS provider so provider resolution works (see companyProvider).
+    const { error: sysErr } = await supabase.from('Companies').update({ posSystem: 'toast' }).eq('id', companyId);
+    if (sysErr) logger.error('pos.toast.connect: posSystem update failed', { companyId, error: sysErr.message });
+
     res.json({ success: true, locationName });
   } catch (err) {
     logger.error('pos.toast.connect: error', { error: err });
@@ -121,12 +125,14 @@ async function handleCallback(req: Request, res: Response, providerOverride?: st
     }, { onConflict: 'companyId,provider' });
     if (upsertErr) logger.error('pos.oauth.callback: save failed', { companyId, provider, error: upsertErr.message });
 
-    // Adopt the merchant's POS currency so amounts display like the POS does.
-    if (tokens.currency) {
-      const { error: curErr } = await supabase
-        .from('Companies').update({ currency: tokens.currency }).eq('id', companyId);
-      if (curErr) logger.error('pos.oauth.callback: currency update failed', { companyId, error: curErr.message });
-    }
+    // Mark the company's POS provider (this is what drives provider resolution in
+    // companyProvider — without it, locations/catalog/sync all no-op) and adopt the
+    // merchant's currency so amounts display like the POS does.
+    const companyPatch: Record<string, unknown> = { posSystem: provider };
+    if (tokens.currency) companyPatch['currency'] = tokens.currency;
+    const { error: curErr } = await supabase
+      .from('Companies').update(companyPatch).eq('id', companyId);
+    if (curErr) logger.error('pos.oauth.callback: company update failed', { companyId, error: curErr.message });
 
     res.redirect(`${clientUrl}/companies/${companyId}/settings?pos=connected`);
   } catch (err) {
