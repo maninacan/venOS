@@ -86,5 +86,43 @@
     "saved_one": "{{count}} receita salva!",
     "saved_other": "{{count}} receitas salvas!",
     "savedWithFailures": "{{saved}} salvas, mas {{failed}} falharam. Tente novamente as restantes."
+  },
+  "components": {
+    "title": "Componentes da sub-receita",
+    "help": "Monte esta receita a partir de outra receita, modificadores vinculados ou itens de estoque. O custo deles é somado aos ingredientes acima. Use uma quantidade negativa para remover um ingrediente.",
+    "typeRecipe": "Receita",
+    "typeModifier": "Modificador",
+    "typeInventory": "Estoque",
+    "none": "— Nenhum —",
+    "search": "Buscar…",
+    "noMatches": "Sem correspondências",
+    "amount": "Quantidade",
+    "add": "+ Adicionar componente"
+  },
+  "optimize": {
+    "button": "Otimizar com IA",
+    "tooltip": "Encontre receitas 1-off que na verdade são uma base + complemento e simplifique-as",
+    "title": "Otimizar receitas com IA",
+    "description": "O Claude encontra receitas 1-off que na verdade são uma receita base mais um complemento (ex.: “Limonada – Morango”) e propõe transformá-las em base + complemento. Revise o antes/depois e aceite tudo ou linha por linha. Nada muda até você aplicar.",
+    "scopeLabel": "Quais receitas o Claude deve analisar?",
+    "scopeAll": "Todas as receitas",
+    "scopeMapped": "Apenas receitas vinculadas a um item do POS",
+    "noMapped": "Nenhuma receita vinculada ao POS para analisar.",
+    "working": "O Claude está analisando suas receitas…",
+    "summary": "{{variants}} receita(s) podem ser simplificadas. {{distinct}} parecem distintas — sem alteração.",
+    "selectAll": "Selecionar tudo",
+    "selectNone": "Nenhum",
+    "nothing": "Nenhuma receita 1-off encontrada — suas receitas já parecem distintas.",
+    "before": "Antes",
+    "after": "Depois",
+    "flatCount": "{{n}} ingredientes",
+    "newBase": "nova base",
+    "analyze": "Analisar",
+    "apply": "Aplicar {{count}} alteração(ões)",
+    "cancel": "Cancelar",
+    "applied": "{{count}} alteração(ões) aplicada(s).",
+    "applyFailed": "Falha ao aplicar as alterações",
+    "failed": "A otimização falhou. Tente novamente.",
+    "selectSome": "Selecione ao menos uma alteração para aplicar."
   }
 }

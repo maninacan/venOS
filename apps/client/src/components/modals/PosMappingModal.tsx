@@ -6,8 +6,8 @@ import { showToast } from '@org/data';
 import { Combobox } from '../Combobox';
 
 const GET_AI_RECOMMENDATIONS = gql`
-  query PosMappingRecommendations($companyId: ID!) {
-    posMappingRecommendations(companyId: $companyId) {
+  query PosMappingRecommendations($companyId: ID!, $posItemIds: [String!]) {
+    posMappingRecommendations(companyId: $companyId, posItemIds: $posItemIds) {
       posItemId recipeId inventoryId confidence reason
     }
   }
@@ -108,9 +108,16 @@ export function PosMappingModal({ companyId, onClose }: Props) {
   }
 
   async function handleSuggestAI() {
+    // Only ask the AI about items that are still unmapped — never re-process ones
+    // the user has already mapped (or that were previously suggested).
+    const unmappedIds = Array.from(mappings.values()).filter(m => !m.recipeId).map(m => m.posItemId);
+    if (unmappedIds.length === 0) {
+      showToast(t('posMapping.aiAllMapped', 'All items are already mapped — nothing for AI to match.'), 'info', 5000);
+      return;
+    }
     setAiLoading(true);
     try {
-      const { data, error } = await fetchAiRecommendations({ variables: { companyId } });
+      const { data, error } = await fetchAiRecommendations({ variables: { companyId, posItemIds: unmappedIds } });
       if (error) throw error;
       const recs: Array<{ posItemId: string; recipeId: string | null; inventoryId: string | null }> =
         data?.posMappingRecommendations ?? [];
@@ -289,9 +296,9 @@ export function PosMappingModal({ companyId, onClose }: Props) {
             className="btn-secondary"
             onClick={handleSuggestAI}
             disabled={aiLoading || loading || catalogItems.length === 0}
-            title={t('posMapping.aiTitle', 'Let AI suggest matches for you to review')}
+            title={t('posMapping.aiTitle', 'Let AI suggest matches for the unmapped items — mapped items are left untouched')}
           >
-            {aiLoading && <span className="spinner" />} <span><i className="fa-solid fa-wand-magic-sparkles" aria-hidden="true" /> {t('posMapping.suggestAi', 'Suggest with AI')}</span>
+            {aiLoading && <span className="spinner" />} <span><i className="fa-solid fa-wand-magic-sparkles" aria-hidden="true" /> {t('posMapping.suggestAiUnmapped', 'Suggest unmapped with AI')}</span>
           </button>
           <div style={{ display: 'flex', gap: 10 }}>
             <button className="btn-secondary" onClick={onClose}>{t('posMapping.cancel', 'Cancel')}</button>
@@ -310,10 +317,10 @@ export function PosMappingModal({ companyId, onClose }: Props) {
           <div style={{ padding: '24px 28px 14px' }}>
             <h3 style={{ margin: '0 0 4px', color: 'var(--vv-navy)', fontSize: '1.05rem' }}>
               <i className="fa-solid fa-wand-magic-sparkles fa-fade" style={{ marginRight: 8 }} />
-              <span>{t('posMapping.aiWorkingTitle', 'Claude is matching your POS items…')}</span>
+              <span>{t('posMapping.aiWorkingTitle', 'Claude is matching your unmapped POS items…')}</span>
             </h3>
             <p style={{ margin: 0, color: 'var(--muted)', fontSize: '0.83rem', display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span>{t('posMapping.aiWorkingNote', 'Analyzing {{count}} POS items against your recipes and inventory. This can take a minute or two.', { count: catalogItems.length })}</span>
+              <span>{t('posMapping.aiWorkingNote', 'Analyzing {{count}} unmapped item(s) against your recipes — already-mapped items are left untouched. This can take a minute or two.', { count: unmappedCount })}</span>
               <span style={{ fontFamily: 'monospace', fontVariantNumeric: 'tabular-nums', fontSize: '0.88rem', color: 'var(--vv-navy)', fontWeight: 600 }}>
                 {`${Math.floor(aiElapsed / 60)}:${String(aiElapsed % 60).padStart(2, '0')}`}
               </span>

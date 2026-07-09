@@ -97,12 +97,12 @@
     "cancel": "Cancel",
     "save": "Save Mappings",
     "suggestAi": "Suggest with AI",
-    "aiTitle": "Let AI suggest matches for you to review",
+    "aiTitle": "Let AI suggest matches for the unmapped modifiers — mapped ones are left untouched",
     "aiApplied": "AI suggested {{count}} mapping(s). Review and Save.",
     "aiNone": "No confident AI matches found. Map the modifiers manually.",
     "aiFailed": "AI suggestion failed. Please try again.",
-    "aiWorkingTitle": "Claude is matching your POS modifiers…",
-    "aiWorkingNote": "Analyzing {{count}} modifiers against your inventory. This can take a minute or two.",
+    "aiWorkingTitle": "Claude is matching your unmapped modifiers…",
+    "aiWorkingNote": "Analyzing {{count}} unmapped modifier(s) against your inventory — already-mapped modifiers are left untouched. This can take a minute or two.",
     "aiStep1": "Reading your POS modifiers",
     "aiStep2": "Comparing modifiers to your inventory",
     "aiStep3": "Matching ingredient costs",
@@ -111,7 +111,9 @@
     "toast": {
       "saved": "Modifier mappings saved! Cost calculations are now accurate.",
       "saveFailed": "Failed to save"
-    }
+    },
+    "suggestAiUnmapped": "Suggest unmapped with AI",
+    "aiAllMapped": "All modifiers are already mapped — nothing for AI to match."
   },
   "posMapping": {
     "title": "Match Your POS Menu to Your Recipe Cards",
@@ -129,12 +131,12 @@
     "cancel": "Cancel",
     "save": "Save Mappings",
     "suggestAi": "Suggest with AI",
-    "aiTitle": "Let AI suggest matches for you to review",
+    "aiTitle": "Let AI suggest matches for the unmapped items — mapped items are left untouched",
     "aiApplied": "AI suggested {{count}} mapping(s). Review and Save.",
     "aiNone": "No confident AI matches found. Map the items manually.",
     "aiFailed": "AI suggestion failed. Please try again.",
-    "aiWorkingTitle": "Claude is matching your POS items…",
-    "aiWorkingNote": "Analyzing {{count}} POS items against your recipes and inventory. This can take a minute or two.",
+    "aiWorkingTitle": "Claude is matching your unmapped POS items…",
+    "aiWorkingNote": "Analyzing {{count}} unmapped item(s) against your recipes — already-mapped items are left untouched. This can take a minute or two.",
     "aiStep1": "Reading your POS catalog",
     "aiStep2": "Comparing items to your recipes",
     "aiStep3": "Matching against inventory",
@@ -143,6 +145,8 @@
     "toast": {
       "saved": "Mappings saved! Cost calculations are now accurate.",
       "saveFailed": "Failed to save"
-    }
+    },
+    "suggestAiUnmapped": "Suggest unmapped with AI",
+    "aiAllMapped": "All items are already mapped — nothing for AI to match."
   }
 }

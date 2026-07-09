@@ -1,47 +1,87 @@
 import { useState, useRef, useEffect, Fragment } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useQuery, useMutation } from '@apollo/client/react';
+import { useQuery, useMutation, useLazyQuery } from '@apollo/client/react';
 import { gql } from '@apollo/client/core';
 import { useCurrentCompany } from '../../hooks/useCurrentCompany';
 import { BackToSetupButton } from '../../components/guidance/BackToSetupButton';
 import { showToast } from '@org/data';
 import { useCurrency } from '../../i18n/useCurrency';
 import { formatNumber } from '../../i18n/format';
+import { Combobox } from '../../components/Combobox';
 
 const API_URL = (import.meta.env['VITE_API_URL'] as string) || 'http://localhost:3000';
 
+const COMPONENT_FIELDS = 'id componentType refRecipeId refModifierId refInventoryId quantity name cost';
 const GET_RECIPES = gql`
   query GetRecipes($companyId: ID!) {
     recipes(companyId: $companyId) {
       id name totalCost
       ingredients { id name quantity unitCost unit }
+      components { ${COMPONENT_FIELDS} }
     }
+  }
+`;
+// Options for the sub-recipe component pickers (inventory items + mapped modifiers).
+// Referenceable recipes come from the recipes query above.
+const GET_COMPONENT_OPTIONS = gql`
+  query GetRecipeComponentOptions($companyId: ID!) {
+    inventory(companyId: $companyId) { id name unitCost }
+    posModifierMappings(companyId: $companyId) { id posModifierName inventoryItemId quantity }
+    posMappings(companyId: $companyId) { recipeId }
+  }
+`;
+const OPT_LINE = 'name quantity unitCost unit';
+const GET_OPTIMIZE = gql`
+  query RecipeOptimization($companyId: ID!, $recipeIds: [ID!]) {
+    recipeOptimizationRecommendations(companyId: $companyId, recipeIds: $recipeIds) {
+      recipeId recipeName kind baseFamilyKey baseExistingRecipeId baseNewName
+      baseNewIngredients { ${OPT_LINE} } addonKeepIngredients { ${OPT_LINE} }
+      addonModifierId addonInventoryId addonQuantity
+      baseName addonLabel beforeCost afterCost confidence reason
+    }
+  }
+`;
+const APPLY_OPTIMIZE = gql`
+  mutation ApplyRecipeOptimizations($companyId: ID!, $accepted: [RecipeOptimizationInput!]!) {
+    applyRecipeOptimizations(companyId: $companyId, accepted: $accepted)
   }
 `;
 const CREATE_RECIPE = gql`
   mutation CreateRecipe($companyId: ID!, $input: CreateRecipeInput!) {
-    createRecipe(companyId: $companyId, input: $input) { id name totalCost ingredients { id name quantity unitCost unit } }
+    createRecipe(companyId: $companyId, input: $input) { id name totalCost ingredients { id name quantity unitCost unit } components { ${COMPONENT_FIELDS} } }
   }
 `;
 const CREATE_RECIPES = gql`
   mutation CreateRecipes($companyId: ID!, $inputs: [CreateRecipeInput!]!) {
-    createRecipes(companyId: $companyId, inputs: $inputs) { id name totalCost ingredients { id name quantity unitCost unit } }
+    createRecipes(companyId: $companyId, inputs: $inputs) { id name totalCost ingredients { id name quantity unitCost unit } components { ${COMPONENT_FIELDS} } }
   }
 `;
 const UPDATE_RECIPE = gql`
   mutation UpdateRecipe($id: ID!, $input: CreateRecipeInput!) {
-    updateRecipe(id: $id, input: $input) { id name totalCost ingredients { id name quantity unitCost unit } }
+    updateRecipe(id: $id, input: $input) { id name totalCost ingredients { id name quantity unitCost unit } components { ${COMPONENT_FIELDS} } }
   }
 `;
 const DELETE_RECIPE = gql`
   mutation DeleteRecipe($id: ID!) { deleteRecipe(id: $id) }
 `;
 
+type ComponentType = 'recipe' | 'modifier' | 'inventory';
 interface Ingredient { id?: string; name: string; quantity: number; unitCost: number; unit: string; }
-interface Recipe { id: string; name: string; totalCost: number; ingredients: Ingredient[]; }
+interface Component { componentType: ComponentType; refRecipeId: string | null; refModifierId: string | null; refInventoryId: string | null; quantity: number; }
+interface Recipe { id: string; name: string; totalCost: number; ingredients: Ingredient[]; components?: Array<Component & { id?: string; name?: string; cost?: number }>; }
 interface ImportedRecipe { tempId: string; name: string; ingredients: Ingredient[]; }
+interface OptLine { name: string; quantity: number; unitCost: number; unit: string | null; }
+interface RecipeOptimization {
+  recipeId: string; recipeName: string; kind: 'variant' | 'distinct';
+  baseFamilyKey: string | null; baseExistingRecipeId: string | null; baseNewName: string | null;
+  baseNewIngredients: OptLine[]; addonKeepIngredients: OptLine[];
+  addonModifierId: string | null; addonInventoryId: string | null; addonQuantity: number;
+  baseName: string | null; addonLabel: string | null; beforeCost: number | null; afterCost: number | null;
+  confidence: number | null; reason: string | null;
+}
 
 const emptyIngredient = (): Ingredient => ({ name: '', quantity: 1, unitCost: 0, unit: '' });
+const emptyComponent = (): Component => ({ componentType: 'recipe', refRecipeId: null, refModifierId: null, refInventoryId: null, quantity: 1 });
 
 export function RecipesPage() {
   const { t } = useTranslation('recipes');
@@ -52,6 +92,9 @@ export function RecipesPage() {
     formatNumber(v, { style: 'currency', currency, minimumFractionDigits: 4, maximumFractionDigits: 4 });
   const { companyId } = useCurrentCompany();
   const { data, loading, refetch } = useQuery(GET_RECIPES, { variables: { companyId }, skip: !companyId });
+  const { data: optData } = useQuery(GET_COMPONENT_OPTIONS, { variables: { companyId }, skip: !companyId });
+  const [fetchOptimizations] = useLazyQuery(GET_OPTIMIZE);
+  const [applyOptimizations] = useMutation(APPLY_OPTIMIZE);
   const [createRecipe] = useMutation(CREATE_RECIPE);
   const [createRecipes] = useMutation(CREATE_RECIPES);
   const [updateRecipe] = useMutation(UPDATE_RECIPE);
@@ -62,7 +105,27 @@ export function RecipesPage() {
   const [isNew, setIsNew] = useState(false);
   const [name, setName] = useState('');
   const [ingredients, setIngredients] = useState<Ingredient[]>([emptyIngredient()]);
+  const [components, setComponents] = useState<Component[]>([]);
   const [saving, setSaving] = useState(false);
+
+  // AI "Optimize recipes" state
+  const [showOptimize, setShowOptimize] = useState(false);
+  const [optScope, setOptScope] = useState<'all' | 'mapped'>('all');
+  const [optLoading, setOptLoading] = useState(false);
+  const [optRecs, setOptRecs] = useState<RecipeOptimization[] | null>(null);
+  const [optAccepted, setOptAccepted] = useState<Set<string>>(new Set());
+  const [optApplying, setOptApplying] = useState(false);
+  const [optElapsed, setOptElapsed] = useState(0);
+  const optTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  useEffect(() => {
+    if (optLoading) {
+      setOptElapsed(0);
+      optTimerRef.current = setInterval(() => setOptElapsed(s => s + 1), 1000);
+    } else if (optTimerRef.current) {
+      clearInterval(optTimerRef.current); optTimerRef.current = null;
+    }
+    return () => { if (optTimerRef.current) clearInterval(optTimerRef.current); };
+  }, [optLoading]);
 
   // Card vs. tabular view — persisted so the choice sticks across visits.
   const [viewMode, setViewMode] = useState<'cards' | 'table'>(
@@ -117,6 +180,7 @@ export function RecipesPage() {
     setEditing(null);
     setName('');
     setIngredients([emptyIngredient()]);
+    setComponents([]);
   }
 
   function openEdit(recipe: Recipe) {
@@ -124,6 +188,13 @@ export function RecipesPage() {
     setEditing(recipe);
     setName(recipe.name);
     setIngredients(recipe.ingredients.length > 0 ? recipe.ingredients : [emptyIngredient()]);
+    setComponents((recipe.components ?? []).map(c => ({
+      componentType: c.componentType,
+      refRecipeId: c.refRecipeId ?? null,
+      refModifierId: c.refModifierId ?? null,
+      refInventoryId: c.refInventoryId ?? null,
+      quantity: c.quantity,
+    })));
   }
 
   function closeForm() { setEditing(null); setIsNew(false); }
@@ -134,12 +205,68 @@ export function RecipesPage() {
   function addIngredient() { setIngredients(prev => [...prev, emptyIngredient()]); }
   function removeIngredient(i: number) { setIngredients(prev => prev.filter((_, j) => j !== i)); }
 
-  const totalCost = ingredients.reduce((s, i) => s + (Number(i.quantity) || 0) * (Number(i.unitCost) || 0), 0);
+  function setComponent(i: number, patch: Partial<Component>) {
+    setComponents(prev => prev.map((c, j) => {
+      if (j !== i) return c;
+      const next = { ...c, ...patch };
+      // Changing type clears the other refs so only the active one is set.
+      if (patch.componentType && patch.componentType !== c.componentType) {
+        next.refRecipeId = null; next.refModifierId = null; next.refInventoryId = null;
+      }
+      return next;
+    }));
+  }
+  function addComponent() { setComponents(prev => [...prev, emptyComponent()]); }
+  function removeComponent(i: number) { setComponents(prev => prev.filter((_, j) => j !== i)); }
+
+  // Component option lookups (cost + label) built from the recipes + options queries.
+  const invById = new Map<string, { name: string; unitCost: number }>(
+    ((optData?.inventory ?? []) as Array<{ id: string; name: string; unitCost: number }>).map(i => [i.id, { name: i.name, unitCost: Number(i.unitCost) }]));
+  const modById = new Map<string, { name: string; cost: number }>(
+    ((optData?.posModifierMappings ?? []) as Array<{ id: string; posModifierName: string; inventoryItemId: string | null; quantity: number | null }>).map(m => {
+      const unit = m.inventoryItemId ? invById.get(m.inventoryItemId)?.unitCost ?? 0 : 0;
+      return [m.id, { name: m.posModifierName, cost: unit * (m.quantity == null ? 1 : Number(m.quantity)) }];
+    }));
+  const recipeCostById = new Map<string, { name: string; cost: number }>(
+    ((data?.recipes ?? []) as Recipe[]).map(r => [r.id, { name: r.name, cost: Number(r.totalCost) }]));
+
+  const recipeOptions = ((data?.recipes ?? []) as Recipe[])
+    .filter(r => r.id !== editing?.id) // can't reference the recipe being edited (cycle)
+    .map(r => ({ id: r.id, label: `${r.name} (${fmtCost(Number(r.totalCost))})` }));
+  const modifierOptions = Array.from(modById.entries()).map(([id, m]) => ({ id, label: `${m.name} (${fmtCost(m.cost)}/use)` }));
+  const inventoryOptions = Array.from(invById.entries()).map(([id, i]) => ({ id, label: `${i.name} (${fmtCost(i.unitCost)}/unit)` }));
+
+  // Resolved cost of one component row (null when nothing is picked yet).
+  function componentCost(c: Component): number | null {
+    const q = Number(c.quantity) || 0;
+    if (c.componentType === 'recipe' && c.refRecipeId) return (recipeCostById.get(c.refRecipeId)?.cost ?? 0) * q;
+    if (c.componentType === 'modifier' && c.refModifierId) return (modById.get(c.refModifierId)?.cost ?? 0) * q;
+    if (c.componentType === 'inventory' && c.refInventoryId) return (invById.get(c.refInventoryId)?.unitCost ?? 0) * q;
+    return null;
+  }
+
+  const ingredientsCost = ingredients.reduce((s, i) => s + (Number(i.quantity) || 0) * (Number(i.unitCost) || 0), 0);
+  const componentsCost = components.reduce((s, c) => s + (componentCost(c) ?? 0), 0);
+  const totalCost = ingredientsCost + componentsCost;
 
   async function handleSave() {
     if (!name.trim()) { showToast(t('toast.nameRequired', 'Recipe name required'), 'error'); return; }
     setSaving(true);
-    const input = { name: name.trim(), ingredients: ingredients.filter(i => i.name.trim()).map(({ id: _id, ...i }) => ({ ...i, quantity: Number(i.quantity), unitCost: Number(i.unitCost) })) };
+    // Keep only components with a reference actually selected for their type.
+    const cleanComponents = components
+      .filter(c => (c.componentType === 'recipe' && c.refRecipeId) || (c.componentType === 'modifier' && c.refModifierId) || (c.componentType === 'inventory' && c.refInventoryId))
+      .map(c => ({
+        componentType: c.componentType,
+        refRecipeId: c.componentType === 'recipe' ? c.refRecipeId : null,
+        refModifierId: c.componentType === 'modifier' ? c.refModifierId : null,
+        refInventoryId: c.componentType === 'inventory' ? c.refInventoryId : null,
+        quantity: Number(c.quantity),
+      }));
+    const input = {
+      name: name.trim(),
+      ingredients: ingredients.filter(i => i.name.trim()).map(({ id: _id, ...i }) => ({ ...i, quantity: Number(i.quantity), unitCost: Number(i.unitCost) })),
+      components: cleanComponents,
+    };
     try {
       if (isNew) {
         await createRecipe({ variables: { companyId, input } });
@@ -162,6 +289,68 @@ export function RecipesPage() {
       showToast(t('toast.deleted', 'Recipe deleted'), 'info');
       refetch();
     } catch { showToast(t('toast.deleteFailed', 'Failed to delete'), 'error'); }
+  }
+
+  function openOptimize() { setShowOptimize(true); setOptRecs(null); setOptAccepted(new Set()); setOptScope('all'); }
+  function closeOptimize() { setShowOptimize(false); setOptLoading(false); }
+
+  async function runOptimize() {
+    setOptLoading(true);
+    setOptRecs(null);
+    try {
+      // Scope: all recipes (null) or only those mapped to a POS item.
+      let recipeIds: string[] | null = null;
+      if (optScope === 'mapped') {
+        recipeIds = Array.from(new Set(((optData?.posMappings ?? []) as Array<{ recipeId: string | null }>)
+          .map(m => m.recipeId).filter((id): id is string => !!id)));
+        if (recipeIds.length === 0) {
+          showToast(t('optimize.noMapped', 'No POS-mapped recipes to analyze.'), 'info', 5000);
+          setOptLoading(false); return;
+        }
+      }
+      const { data, error } = await fetchOptimizations({ variables: { companyId, recipeIds } });
+      if (error) throw error;
+      const recs = (data?.recipeOptimizationRecommendations ?? []) as RecipeOptimization[];
+      setOptRecs(recs);
+      // Default-accept every recommended variant; distinct recipes aren't actionable.
+      setOptAccepted(new Set(recs.filter(r => r.kind === 'variant').map(r => r.recipeId)));
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : t('optimize.failed', 'Optimization failed. Please try again.'), 'error');
+    } finally { setOptLoading(false); }
+  }
+
+  const optVariants = (optRecs ?? []).filter(r => r.kind === 'variant');
+  const optDistinctCount = (optRecs ?? []).filter(r => r.kind === 'distinct').length;
+  function toggleAccept(id: string) {
+    setOptAccepted(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
+  }
+  function acceptAll() { setOptAccepted(new Set(optVariants.map(r => r.recipeId))); }
+  function acceptNone() { setOptAccepted(new Set()); }
+
+  async function handleApplyOptimize() {
+    const chosen = optVariants.filter(r => optAccepted.has(r.recipeId));
+    if (chosen.length === 0) { showToast(t('optimize.selectSome', 'Select at least one change to apply.'), 'info'); return; }
+    setOptApplying(true);
+    try {
+      const line = (l: OptLine) => ({ name: l.name, quantity: Number(l.quantity), unitCost: Number(l.unitCost), unit: l.unit ?? null });
+      const accepted = chosen.map(r => ({
+        recipeId: r.recipeId,
+        baseFamilyKey: r.baseFamilyKey,
+        baseExistingRecipeId: r.baseExistingRecipeId,
+        baseNewName: r.baseNewName,
+        baseNewIngredients: r.baseNewIngredients.map(line),
+        addonKeepIngredients: r.addonKeepIngredients.map(line),
+        addonModifierId: r.addonModifierId,
+        addonInventoryId: r.addonInventoryId,
+        addonQuantity: Number(r.addonQuantity),
+      }));
+      await applyOptimizations({ variables: { companyId, accepted } });
+      showToast(t('optimize.applied', 'Applied {{count}} change(s).', { count: chosen.length }), 'success', 5000);
+      refetch();
+      closeOptimize();
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : t('optimize.applyFailed', 'Failed to apply changes'), 'error');
+    } finally { setOptApplying(false); }
   }
 
   async function handleAIUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -353,6 +542,11 @@ export function RecipesPage() {
             />
             <button className="btn-primary" onClick={openNew}>{t('newRecipe', '+ New Recipe')}</button>
             {recipes.length > 0 && (
+              <button className="btn-secondary" onClick={openOptimize} title={t('optimize.tooltip', 'Find 1-off recipes that are really a base + add-on and simplify them')}>
+                <i className="fa-solid fa-wand-magic-sparkles" /> {t('optimize.button', 'Optimize with AI')}
+              </button>
+            )}
+            {recipes.length > 0 && (
               <button
                 className="btn-danger-subtle"
                 style={{ fontSize: '0.78rem', padding: '4px 10px' }}
@@ -482,7 +676,7 @@ export function RecipesPage() {
       {/* Recipe form modal */}
       {(isNew || editing) && (
         <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) closeForm(); }}>
-          <div className="modal-box" style={{ maxWidth: 600 }}>
+          <div className="modal-box" style={{ maxWidth: 680 }}>
             <button className="modal-close" onClick={closeForm}><i className="fa-solid fa-xmark" /></button>
             <h3 style={{ margin: '0 0 16px' }}>{isNew ? t('form.newTitle', 'New Recipe') : t('form.editTitle', 'Edit: {{name}}', { name: editing?.name })}</h3>
 
@@ -515,6 +709,45 @@ export function RecipesPage() {
 
             <button className="btn-secondary" style={{ fontSize: '0.82rem', padding: '5px 12px', marginTop: 6 }} onClick={addIngredient}>{t('form.addIngredient', '+ Add Ingredient')}</button>
 
+            {/* Sub-recipe components: a base recipe, a modifier, or an inventory item, each with an amount. */}
+            <div style={{ margin: '18px 0 4px', fontWeight: 600, fontSize: '0.9rem', color: 'var(--vv-navy)' }}>
+              {t('components.title', 'Sub-recipe components')}
+            </div>
+            <p style={{ margin: '0 0 8px', fontSize: '0.78rem', color: 'var(--muted)', lineHeight: 1.45 }}>
+              {t('components.help', 'Build this recipe from another recipe, mapped modifiers, or inventory items. Their cost is added on top of the ingredients above. Use a negative amount to remove an ingredient.')}
+            </p>
+
+            {components.map((c, i) => {
+              const opts = c.componentType === 'recipe' ? recipeOptions : c.componentType === 'modifier' ? modifierOptions : inventoryOptions;
+              const val = c.componentType === 'recipe' ? c.refRecipeId : c.componentType === 'modifier' ? c.refModifierId : c.refInventoryId;
+              const onPick = (id: string | null) => setComponent(i, c.componentType === 'recipe' ? { refRecipeId: id } : c.componentType === 'modifier' ? { refModifierId: id } : { refInventoryId: id });
+              const cost = componentCost(c);
+              return (
+                <div key={i} style={{ display: 'grid', gridTemplateColumns: '110px 1fr 68px 74px 28px', gap: '4px 8px', marginBottom: 6, alignItems: 'center' }}>
+                  <select value={c.componentType} onChange={e => setComponent(i, { componentType: e.target.value as ComponentType })} style={{ fontSize: '0.82rem', padding: '5px 6px' }}>
+                    <option value="recipe">{t('components.typeRecipe', 'Recipe')}</option>
+                    <option value="modifier">{t('components.typeModifier', 'Modifier')}</option>
+                    <option value="inventory">{t('components.typeInventory', 'Inventory')}</option>
+                  </select>
+                  <Combobox
+                    options={opts}
+                    value={val}
+                    onChange={onPick}
+                    noneLabel={t('components.none', '— None —')}
+                    placeholder={t('components.search', 'Search…')}
+                    noMatchesLabel={t('components.noMatches', 'No matches')}
+                  />
+                  <input type="number" step="any" value={c.quantity} onChange={e => setComponent(i, { quantity: e.target.value === '' ? 0 : Number(e.target.value) })} style={{ textAlign: 'right', fontSize: '0.82rem' }} aria-label={t('components.amount', 'Amount')} />
+                  <span style={{ fontSize: '0.8rem', textAlign: 'right', color: cost != null && cost < 0 ? '#16a34a' : 'var(--muted)' }}>
+                    {cost == null ? '—' : `${cost < 0 ? '-' : ''}${fmtCost(Math.abs(cost))}`}
+                  </span>
+                  <button onClick={() => removeComponent(i)} style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: '1rem', padding: 0 }}><i className="fa-solid fa-xmark" /></button>
+                </div>
+              );
+            })}
+
+            <button className="btn-secondary" style={{ fontSize: '0.82rem', padding: '5px 12px', marginTop: 2 }} onClick={addComponent}>{t('components.add', '+ Add component')}</button>
+
             <div style={{ background: '#f8fafc', borderRadius: 8, padding: '10px 14px', margin: '14px 0', display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
               <span style={{ color: 'var(--muted)' }}>{t('form.estimatedBatchCost', 'Estimated batch cost')}</span>
               <span style={{ fontWeight: 700, color: 'var(--vv-navy)' }}>{fmtCost(totalCost)}</span>
@@ -525,6 +758,106 @@ export function RecipesPage() {
                 {saving && <span className="spinner" />} <span>{t('form.saveRecipe', 'Save Recipe')}</span>
               </button>
               <button className="btn-secondary" onClick={closeForm}>{t('form.cancel', 'Cancel')}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI "Optimize recipes" modal */}
+      {showOptimize && (
+        <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget && !optApplying) closeOptimize(); }}>
+          <div className="modal-box" style={{ maxWidth: 820, display: 'flex', flexDirection: 'column', maxHeight: 'min(88vh, 720px)', padding: 0, overflow: 'hidden' }}>
+            {/* Header */}
+            <div style={{ padding: '22px 26px 14px', borderBottom: '1px solid #e5e7eb', flexShrink: 0 }}>
+              <h3 style={{ margin: '0 0 6px', color: 'var(--vv-navy)' }}>{t('optimize.title', 'Optimize Recipes with AI')}</h3>
+              <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--muted)', lineHeight: 1.5 }}>
+                {t('optimize.description', 'Claude finds 1-off recipes that are really a base recipe plus one add-on (e.g. “Limeade – Strawberry”) and proposes turning them into a base + add-on. Review the before/after and accept all or line by line. Nothing changes until you apply.')}
+              </p>
+            </div>
+
+            {/* Body */}
+            <div style={{ padding: '14px 26px', overflowY: 'auto', flex: 1 }}>
+              {optRecs == null && !optLoading && (
+                <div style={{ padding: '10px 0' }}>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: 8 }}>{t('optimize.scopeLabel', 'Which recipes should Claude analyze?')}</div>
+                  <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: '0.86rem', marginBottom: 6, cursor: 'pointer' }}>
+                    <input type="radio" checked={optScope === 'all'} onChange={() => setOptScope('all')} />
+                    {t('optimize.scopeAll', 'All recipes')}
+                  </label>
+                  <label style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: '0.86rem', cursor: 'pointer' }}>
+                    <input type="radio" checked={optScope === 'mapped'} onChange={() => setOptScope('mapped')} />
+                    {t('optimize.scopeMapped', 'Only recipes mapped to a POS item')}
+                  </label>
+                </div>
+              )}
+
+              {optLoading && (
+                <div style={{ padding: '24px 0', textAlign: 'center', color: 'var(--muted)' }}>
+                  <div><i className="fa-solid fa-wand-magic-sparkles fa-fade" style={{ marginRight: 8 }} />{t('optimize.working', 'Claude is analyzing your recipes…')}</div>
+                  <div style={{ fontFamily: 'monospace', marginTop: 8, color: 'var(--vv-navy)', fontWeight: 600 }}>{`${Math.floor(optElapsed / 60)}:${String(optElapsed % 60).padStart(2, '0')}`}</div>
+                </div>
+              )}
+
+              {optRecs != null && !optLoading && (
+                <>
+                  <div style={{ fontSize: '0.83rem', color: 'var(--muted)', marginBottom: 10 }}>
+                    {t('optimize.summary', '{{variants}} recipe(s) can be simplified. {{distinct}} look distinct — no change.', { variants: optVariants.length, distinct: optDistinctCount })}
+                    {optVariants.length > 0 && (
+                      <span style={{ marginLeft: 8 }}>
+                        <a href="#" onClick={e => { e.preventDefault(); acceptAll(); }} style={{ color: 'var(--vv-navy)', fontWeight: 600 }}>{t('optimize.selectAll', 'Select all')}</a>
+                        {' · '}
+                        <a href="#" onClick={e => { e.preventDefault(); acceptNone(); }} style={{ color: 'var(--vv-navy)', fontWeight: 600 }}>{t('optimize.selectNone', 'None')}</a>
+                      </span>
+                    )}
+                  </div>
+
+                  {optVariants.length === 0 ? (
+                    <div style={{ padding: '18px 0', color: 'var(--muted)', fontSize: '0.88rem' }}>{t('optimize.nothing', 'No 1-off recipes found — your recipes already look distinct.')}</div>
+                  ) : optVariants.map(rec => {
+                    const accepted = optAccepted.has(rec.recipeId);
+                    return (
+                      <div key={rec.recipeId} style={{ border: '1px solid #e5e7eb', borderRadius: 10, padding: '10px 12px', marginBottom: 8, background: accepted ? '#f0fdf4' : '#fff' }}>
+                        <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', cursor: 'pointer' }}>
+                          <input type="checkbox" checked={accepted} onChange={() => toggleAccept(rec.recipeId)} style={{ marginTop: 3 }} />
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--vv-navy)' }}>{rec.recipeName}</div>
+                            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', fontSize: '0.82rem', marginTop: 4, alignItems: 'center' }}>
+                              <span style={{ color: 'var(--muted)' }}>
+                                {t('optimize.before', 'Before')}: {t('optimize.flatCount', '{{n}} ingredients', { n: recipes.find(r => r.id === rec.recipeId)?.ingredients.length ?? 0 })}
+                                {rec.beforeCost != null && ` · ${fmtCost(rec.beforeCost)}`}
+                              </span>
+                              <i className="fa-solid fa-arrow-right" style={{ color: 'var(--muted)' }} />
+                              <span>
+                                <strong>{t('optimize.after', 'After')}:</strong> {rec.baseName}
+                                {rec.addonLabel ? ` + ${rec.addonLabel}` : ''}
+                                {rec.afterCost != null && ` · ${fmtCost(rec.afterCost)}`}
+                              </span>
+                              {rec.baseExistingRecipeId == null && rec.baseNewName && (
+                                <span style={{ background: '#eff6ff', color: '#1d4ed8', borderRadius: 99, padding: '1px 7px', fontSize: '0.72rem', fontWeight: 600 }}>{t('optimize.newBase', 'new base')}</span>
+                              )}
+                            </div>
+                            {rec.reason && <div style={{ fontSize: '0.78rem', color: 'var(--muted)', marginTop: 4, fontStyle: 'italic' }}>{rec.reason}</div>}
+                          </div>
+                        </label>
+                      </div>
+                    );
+                  })}
+                </>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div style={{ padding: '14px 26px', borderTop: '1px solid #e5e7eb', display: 'flex', justifyContent: 'flex-end', gap: 10, background: '#fff', flexShrink: 0 }}>
+              <button className="btn-secondary" onClick={closeOptimize} disabled={optApplying}>{t('optimize.cancel', 'Cancel')}</button>
+              {optRecs == null ? (
+                <button className="btn-primary" onClick={runOptimize} disabled={optLoading}>
+                  {optLoading && <span className="spinner" />} <span>{t('optimize.analyze', 'Analyze')}</span>
+                </button>
+              ) : (
+                <button className="btn-primary" onClick={handleApplyOptimize} disabled={optApplying || optAccepted.size === 0}>
+                  {optApplying && <span className="spinner" />} <span>{t('optimize.apply', 'Apply {{count}} change(s)', { count: optAccepted.size })}</span>
+                </button>
+              )}
             </div>
           </div>
         </div>

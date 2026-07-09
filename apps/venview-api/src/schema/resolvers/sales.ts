@@ -6,6 +6,7 @@ import { lookupTaxRates, lookupStateFallbackRate, type TaxRateLookup } from '../
 import { providerForCompany, type PosEvent } from '../../lib/pos/index.js';
 import { isPosAuthError } from '../../lib/pos/types.js';
 import { buildCostLookup } from '../../lib/pos/matchCost.js';
+import { computeRecipeCosts, loadRecipeCostContext } from '../../lib/recipeCost.js';
 import { suggestMappings } from '../../lib/aiMappingSuggest.js';
 
 // Flag/clear the POS connection so the UI can prompt a reconnect only when a
@@ -195,19 +196,9 @@ export const salesResolvers = {
         .select('posItemId, posItemName, variationName, inventoryId, recipeId, VendorInventory(itemName, unitCost)')
         .eq('companyId', companyId);
 
-      // Precompute each company recipe's total ingredient cost (qty × unitCost).
-      const { data: recipeCards } = await supabase
-        .from('RecipeCards')
-        .select('id, RecipeIngredients(quantity, unitCost)')
-        .eq('companyId', companyId);
-      const recipeCostById = new Map<string, number>();
-      for (const rc of (recipeCards ?? []) as Array<Record<string, unknown>>) {
-        const ings = (rc['RecipeIngredients'] as Array<Record<string, unknown>> | null) ?? [];
-        recipeCostById.set(
-          rc['id'] as string,
-          ings.reduce((sum, i) => sum + Number(i['quantity'] ?? 0) * Number(i['unitCost'] ?? 0), 0)
-        );
-      }
+      // Each company recipe's total cost — composition-aware (own ingredients +
+      // sub-recipe/modifier/inventory components), computed by the shared helper.
+      const recipeCostById = await computeRecipeCosts(companyId);
 
       const costLookup = buildCostLookup((mappings ?? []).map((m: Record<string, unknown>) => ({
         posItemId: m['posItemId'] as string | null,
@@ -374,7 +365,10 @@ export const salesResolvers = {
 
     // AI-suggested POS→recipe/inventory mappings. Read-only: returns suggestions
     // for the user to review and accept in the mapping modal; saves nothing.
-    posMappingRecommendations: async (_: unknown, { companyId }: { companyId: string }, ctx: AppContext) => {
+    // When posItemIds is provided, only those (unmapped) items are sent to the
+    // model — the modal passes the still-unmapped ids so the AI never re-processes
+    // items the user has already mapped.
+    posMappingRecommendations: async (_: unknown, { companyId, posItemIds }: { companyId: string; posItemIds?: string[] | null }, ctx: AppContext) => {
       requireAuth(ctx);
       await requireCompanyMember(companyId, ctx.user!.id);
       const provider = await companyProvider(companyId);
@@ -386,16 +380,26 @@ export const salesResolvers = {
         return [];
       }
 
-      const [{ data: recipeCards }, { data: invRows }] = await Promise.all([
-        supabase.from('RecipeCards').select('id, name, RecipeIngredients(quantity, unitCost)').eq('companyId', companyId),
+      // Restrict to the requested (unmapped) items. An explicit empty list means
+      // nothing to do — skip the model call entirely.
+      if (posItemIds != null) {
+        if (posItemIds.length === 0) return [];
+        const wanted = new Set(posItemIds);
+        catalog = catalog.filter(c => wanted.has(c.posItemId));
+        if (catalog.length === 0) return [];
+      }
+
+      const [{ data: recipeCards }, { data: invRows }, costCtx] = await Promise.all([
+        supabase.from('RecipeCards').select('id, name').eq('companyId', companyId),
         supabase.from('VendorInventory').select('id, itemName, unitCost').eq('companyId', companyId),
+        loadRecipeCostContext(companyId),
       ]);
 
+      // Composition-aware recipe totals for the AI suggester.
       const recipes = (recipeCards ?? []).map((r: Record<string, unknown>) => ({
         id: r['id'] as string,
         name: r['name'] as string,
-        totalCost: ((r['RecipeIngredients'] as Array<Record<string, unknown>> | null) ?? [])
-          .reduce((s, i) => s + Number(i['quantity'] ?? 0) * Number(i['unitCost'] ?? 0), 0),
+        totalCost: costCtx.costById.get(r['id'] as string) ?? 0,
       }));
       const inventory = (invRows ?? []).map((i: Record<string, unknown>) => ({
         id: i['id'] as string,
@@ -426,7 +430,10 @@ export const salesResolvers = {
     // AI-suggested modifier→recipe/inventory mappings. Read-only: returns
     // suggestions for the user to review and accept; saves nothing. Reuses the
     // item-mapping suggester by shaping each modifier as a catalog item.
-    posModifierMappingRecommendations: async (_: unknown, { companyId }: { companyId: string }, ctx: AppContext) => {
+    // When posModifierIds is provided, only those (unmapped) modifiers are sent
+    // to the model — the modal passes the still-unmapped ids so the AI never
+    // re-processes modifiers the user has already mapped.
+    posModifierMappingRecommendations: async (_: unknown, { companyId, posModifierIds }: { companyId: string; posModifierIds?: string[] | null }, ctx: AppContext) => {
       requireAuth(ctx);
       await requireCompanyMember(companyId, ctx.user!.id);
       const provider = await companyProvider(companyId);
@@ -436,6 +443,15 @@ export const salesResolvers = {
       try { modifiers = await provider.listModifierCatalog(companyId); } catch (err) {
         logger.error('posModifierMappingRecommendations: failed to fetch modifier catalog', { companyId, error: err });
         return [];
+      }
+
+      // Restrict to the requested (unmapped) modifiers. An explicit empty list
+      // means nothing to do — skip the model call entirely.
+      if (posModifierIds != null) {
+        if (posModifierIds.length === 0) return [];
+        const wanted = new Set(posModifierIds);
+        modifiers = modifiers.filter(m => wanted.has(m.posModifierId));
+        if (modifiers.length === 0) return [];
       }
 
       // Modifiers are single ingredients (a pump of syrup, a scoop of whip), so

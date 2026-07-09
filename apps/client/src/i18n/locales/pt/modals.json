@@ -97,12 +97,12 @@
     "cancel": "Cancelar",
     "save": "Salvar vínculos",
     "suggestAi": "Sugerir com IA",
-    "aiTitle": "Deixe a IA sugerir correspondências para você revisar",
+    "aiTitle": "Deixe a IA sugerir correspondências para os modificadores não vinculados — os já vinculados não são alterados",
     "aiApplied": "A IA sugeriu {{count}} vínculo(s). Revise e salve.",
     "aiNone": "Nenhuma correspondência confiável encontrada. Vincule os modificadores manualmente.",
     "aiFailed": "A sugestão da IA falhou. Tente novamente.",
-    "aiWorkingTitle": "O Claude está vinculando os modificadores do seu POS…",
-    "aiWorkingNote": "Analisando {{count}} modificadores em relação ao seu estoque. Isso pode levar um ou dois minutos.",
+    "aiWorkingTitle": "O Claude está combinando seus modificadores não vinculados…",
+    "aiWorkingNote": "Analisando {{count}} modificador(es) não vinculado(s) com seu estoque — os já vinculados não são alterados. Isso pode levar um ou dois minutos.",
     "aiStep1": "Lendo os modificadores do seu POS",
     "aiStep2": "Comparando modificadores com seu estoque",
     "aiStep3": "Cruzando custos de ingredientes",
@@ -111,7 +111,9 @@
     "toast": {
       "saved": "Vínculos de modificadores salvos! Os cálculos de custo agora estão precisos.",
       "saveFailed": "Falha ao salvar"
-    }
+    },
+    "suggestAiUnmapped": "Sugerir não vinculados com IA",
+    "aiAllMapped": "Todos os modificadores já estão vinculados — nada para a IA combinar."
   },
   "posMapping": {
     "title": "Vincule o menu do seu POS às suas fichas técnicas",
@@ -129,12 +131,12 @@
     "cancel": "Cancelar",
     "save": "Salvar vínculos",
     "suggestAi": "Sugerir com IA",
-    "aiTitle": "Deixe a IA sugerir vínculos para você revisar",
+    "aiTitle": "Deixe a IA sugerir correspondências para os itens não vinculados — os já vinculados não são alterados",
     "aiApplied": "A IA sugeriu {{count}} vínculo(s). Revise e salve.",
     "aiNone": "Nenhum vínculo confiável foi encontrado pela IA. Vincule os itens manualmente.",
     "aiFailed": "A sugestão da IA falhou. Tente novamente.",
-    "aiWorkingTitle": "O Claude está vinculando os itens do seu POS…",
-    "aiWorkingNote": "Analisando {{count}} itens do POS com base nas suas receitas e no seu estoque. Isso pode levar um ou dois minutos.",
+    "aiWorkingTitle": "O Claude está combinando seus itens do POS não vinculados…",
+    "aiWorkingNote": "Analisando {{count}} item(ns) não vinculado(s) com suas fichas técnicas — os já vinculados não são alterados. Isso pode levar um ou dois minutos.",
     "aiStep1": "Lendo o catálogo do seu POS",
     "aiStep2": "Comparando itens com as suas receitas",
     "aiStep3": "Buscando correspondências no estoque",
@@ -143,6 +145,8 @@
     "toast": {
       "saved": "Vínculos salvos! Os cálculos de custo agora estão precisos.",
       "saveFailed": "Não foi possível salvar"
-    }
+    },
+    "suggestAiUnmapped": "Sugerir não vinculados com IA",
+    "aiAllMapped": "Todos os itens já estão vinculados — nada para a IA combinar."
   }
 }

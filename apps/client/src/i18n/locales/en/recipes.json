@@ -86,5 +86,43 @@
     "saved_one": "Saved {{count}} recipe!",
     "saved_other": "Saved {{count}} recipes!",
     "savedWithFailures": "Saved {{saved}}, but {{failed}} failed. Please retry the rest."
+  },
+  "components": {
+    "title": "Sub-recipe components",
+    "help": "Build this recipe from another recipe, mapped modifiers, or inventory items. Their cost is added on top of the ingredients above. Use a negative amount to remove an ingredient.",
+    "typeRecipe": "Recipe",
+    "typeModifier": "Modifier",
+    "typeInventory": "Inventory",
+    "none": "— None —",
+    "search": "Search…",
+    "noMatches": "No matches",
+    "amount": "Amount",
+    "add": "+ Add component"
+  },
+  "optimize": {
+    "button": "Optimize with AI",
+    "tooltip": "Find 1-off recipes that are really a base + add-on and simplify them",
+    "title": "Optimize Recipes with AI",
+    "description": "Claude finds 1-off recipes that are really a base recipe plus one add-on (e.g. “Limeade – Strawberry”) and proposes turning them into a base + add-on. Review the before/after and accept all or line by line. Nothing changes until you apply.",
+    "scopeLabel": "Which recipes should Claude analyze?",
+    "scopeAll": "All recipes",
+    "scopeMapped": "Only recipes mapped to a POS item",
+    "noMapped": "No POS-mapped recipes to analyze.",
+    "working": "Claude is analyzing your recipes…",
+    "summary": "{{variants}} recipe(s) can be simplified. {{distinct}} look distinct — no change.",
+    "selectAll": "Select all",
+    "selectNone": "None",
+    "nothing": "No 1-off recipes found — your recipes already look distinct.",
+    "before": "Before",
+    "after": "After",
+    "flatCount": "{{n}} ingredients",
+    "newBase": "new base",
+    "analyze": "Analyze",
+    "apply": "Apply {{count}} change(s)",
+    "cancel": "Cancel",
+    "applied": "Applied {{count}} change(s).",
+    "applyFailed": "Failed to apply changes",
+    "failed": "Optimization failed. Please try again.",
+    "selectSome": "Select at least one change to apply."
   }
 }

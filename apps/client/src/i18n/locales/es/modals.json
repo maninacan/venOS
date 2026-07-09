@@ -97,12 +97,12 @@
     "cancel": "Cancelar",
     "save": "Guardar asignaciones",
     "suggestAi": "Sugerir con IA",
-    "aiTitle": "Deja que la IA sugiera coincidencias para que las revises",
+    "aiTitle": "Deja que la IA sugiera coincidencias para los modificadores no asignados — los ya asignados no se tocan",
     "aiApplied": "La IA sugirió {{count}} asignación(es). Revisa y guarda.",
     "aiNone": "No se encontraron coincidencias confiables. Vincula los modificadores manualmente.",
     "aiFailed": "La sugerencia de IA falló. Inténtalo de nuevo.",
-    "aiWorkingTitle": "Claude está vinculando tus modificadores del POS…",
-    "aiWorkingNote": "Analizando {{count}} modificadores con tu inventario. Esto puede tardar uno o dos minutos.",
+    "aiWorkingTitle": "Claude está emparejando tus modificadores no asignados…",
+    "aiWorkingNote": "Analizando {{count}} modificador(es) no asignado(s) con tu inventario — los ya asignados no se tocan. Esto puede tardar uno o dos minutos.",
     "aiStep1": "Leyendo tus modificadores del POS",
     "aiStep2": "Comparando modificadores con tu inventario",
     "aiStep3": "Cotejando costos de ingredientes",
@@ -111,7 +111,9 @@
     "toast": {
       "saved": "¡Asignaciones de modificadores guardadas! Los cálculos de costos ahora son exactos.",
       "saveFailed": "No se pudo guardar"
-    }
+    },
+    "suggestAiUnmapped": "Sugerir no asignados con IA",
+    "aiAllMapped": "Todos los modificadores ya están asignados — nada que la IA deba emparejar."
   },
   "posMapping": {
     "title": "Vincula el menú de tu POS con tus fichas de receta",
@@ -129,12 +131,12 @@
     "cancel": "Cancelar",
     "save": "Guardar vínculos",
     "suggestAi": "Sugerir con IA",
-    "aiTitle": "Deja que la IA sugiera coincidencias para que las revises",
+    "aiTitle": "Deja que la IA sugiera coincidencias para los artículos no asignados — los ya asignados no se tocan",
     "aiApplied": "La IA sugirió {{count}} vínculo(s). Revisa y guarda.",
     "aiNone": "No se encontraron coincidencias de IA confiables. Vincula los artículos manualmente.",
     "aiFailed": "La sugerencia de IA falló. Inténtalo de nuevo.",
-    "aiWorkingTitle": "Claude está vinculando tus artículos del POS…",
-    "aiWorkingNote": "Analizando {{count}} artículos del POS con tus recetas e inventario. Esto puede tardar uno o dos minutos.",
+    "aiWorkingTitle": "Claude está emparejando tus artículos del POS no asignados…",
+    "aiWorkingNote": "Analizando {{count}} artículo(s) no asignado(s) con tus recetas — los ya asignados no se tocan. Esto puede tardar uno o dos minutos.",
     "aiStep1": "Leyendo el catálogo de tu POS",
     "aiStep2": "Comparando artículos con tus recetas",
     "aiStep3": "Buscando coincidencias en el inventario",
@@ -143,6 +145,8 @@
     "toast": {
       "saved": "¡Vínculos guardados! Los cálculos de costos ahora son precisos.",
       "saveFailed": "No se pudo guardar"
-    }
+    },
+    "suggestAiUnmapped": "Sugerir no asignados con IA",
+    "aiAllMapped": "Todos los artículos ya están asignados — nada que la IA deba emparejar."
   }
 }

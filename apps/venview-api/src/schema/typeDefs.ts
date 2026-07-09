@@ -376,6 +376,8 @@ export const typeDefs = `#graphql
     name: String!
     totalCost: Float
     ingredients: [RecipeIngredient!]!
+    "Composed components (a base recipe, a modifier, or an inventory item) that also contribute to cost."
+    components: [RecipeComponent!]!
   }
 
   type RecipeIngredient {
@@ -386,9 +388,24 @@ export const typeDefs = `#graphql
     unit: String
   }
 
+  "A sub-recipe component: a reference to a base recipe, a mapped modifier, or an inventory item, with a quantity (negative = removal)."
+  type RecipeComponent {
+    id: ID!
+    componentType: String!      # 'recipe' | 'modifier' | 'inventory'
+    refRecipeId: ID
+    refModifierId: ID
+    refInventoryId: ID
+    quantity: Float!
+    "Display name of the referenced entity (resolved)."
+    name: String
+    "Resolved cost contribution of this component (resolved)."
+    cost: Float
+  }
+
   input CreateRecipeInput {
     name: String!
     ingredients: [RecipeIngredientInput!]!
+    components: [RecipeComponentInput!]
   }
 
   input RecipeIngredientInput {
@@ -396,6 +413,53 @@ export const typeDefs = `#graphql
     quantity: Float!
     unitCost: Float!
     unit: String
+  }
+
+  input RecipeComponentInput {
+    componentType: String!      # 'recipe' | 'modifier' | 'inventory'
+    refRecipeId: ID
+    refModifierId: ID
+    refInventoryId: ID
+    quantity: Float!
+  }
+
+  "A proposed line (ingredient) for an optimization before/after preview or apply."
+  type RecipeLine { name: String!, quantity: Float!, unitCost: Float!, unit: String }
+  input RecipeLineInput { name: String!, quantity: Float!, unitCost: Float!, unit: String }
+
+  "An AI recipe-optimization recommendation: keep a distinct recipe, or restructure a 1-off variant into base + add-on."
+  type RecipeOptimization {
+    recipeId: ID!
+    recipeName: String!
+    kind: String!               # 'variant' | 'distinct'
+    baseFamilyKey: String
+    baseExistingRecipeId: ID
+    baseNewName: String
+    baseNewIngredients: [RecipeLine!]!
+    addonKeepIngredients: [RecipeLine!]!
+    addonModifierId: ID
+    addonInventoryId: ID
+    addonQuantity: Float!
+    "Display helpers (resolved server-side)."
+    baseName: String
+    addonLabel: String
+    beforeCost: Float
+    afterCost: Float
+    confidence: Float
+    reason: String
+  }
+
+  "Accepted optimization to apply (subset of RecipeOptimization the client sends back)."
+  input RecipeOptimizationInput {
+    recipeId: ID!
+    baseFamilyKey: String
+    baseExistingRecipeId: ID
+    baseNewName: String
+    baseNewIngredients: [RecipeLineInput!]!
+    addonKeepIngredients: [RecipeLineInput!]!
+    addonModifierId: ID
+    addonInventoryId: ID
+    addonQuantity: Float!
   }
 
   # ─── Inventory ───────────────────────────────────────────────────────────────
@@ -679,16 +743,18 @@ export const typeDefs = `#graphql
     employees(companyId: ID!): [Employee!]!
 
     recipes(companyId: ID!): [Recipe!]!
+    "AI recommendations to simplify 1-off recipes into base + add-on. Read-only; nothing is persisted. recipeIds restricts scope (null = all)."
+    recipeOptimizationRecommendations(companyId: ID!, recipeIds: [ID!]): [RecipeOptimization!]!
 
     inventory(companyId: ID!): [InventoryItem!]!
     inventoryAlerts(companyId: ID!): [InventoryAlert!]!
     lowStockItems(companyId: ID!): [InventoryItem!]!
     posMappings(companyId: ID!): [PosMapping!]!
-    "AI-suggested POS→recipe/inventory mappings for the user to review (nothing is persisted)."
-    posMappingRecommendations(companyId: ID!): [PosMappingRecommendation!]!
+    "AI-suggested POS→recipe/inventory mappings for the user to review (nothing is persisted). Pass posItemIds to restrict the AI to only those (unmapped) items."
+    posMappingRecommendations(companyId: ID!, posItemIds: [String!]): [PosMappingRecommendation!]!
     posModifierMappings(companyId: ID!): [PosModifierMapping!]!
-    "AI-suggested POS modifier→recipe/inventory mappings for the user to review (nothing is persisted)."
-    posModifierMappingRecommendations(companyId: ID!): [PosModifierMappingRecommendation!]!
+    "AI-suggested POS modifier→recipe/inventory mappings for the user to review (nothing is persisted). Pass posModifierIds to restrict the AI to only those (unmapped) modifiers."
+    posModifierMappingRecommendations(companyId: ID!, posModifierIds: [String!]): [PosModifierMappingRecommendation!]!
     eventInventory(eventId: ID!): [EventInventory!]!
 
     adminUsers: [AdminUser!]!
@@ -765,6 +831,8 @@ export const typeDefs = `#graphql
     createRecipes(companyId: ID!, inputs: [CreateRecipeInput!]!): [Recipe!]!
     updateRecipe(id: ID!, input: CreateRecipeInput!): Recipe!
     deleteRecipe(id: ID!): Boolean!
+    "Apply accepted recipe-optimization recommendations (creates bases as needed, restructures variants in place)."
+    applyRecipeOptimizations(companyId: ID!, accepted: [RecipeOptimizationInput!]!): Boolean!
 
     # Inventory
     createInventoryItem(companyId: ID!, input: CreateInventoryItemInput!): InventoryItem!
