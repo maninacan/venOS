@@ -432,6 +432,8 @@ export const typeDefs = `#graphql
     posModifierName: String
     inventoryItemId: ID
     recipeId: ID
+    "Amount of the inventory item used per drink; negative removes an ingredient (reduces COGS)."
+    quantity: Float
   }
 
   type EventInventory {
@@ -475,6 +477,8 @@ export const typeDefs = `#graphql
     posModifierName: String
     inventoryId: ID
     recipeId: ID
+    "Amount of the inventory item used per drink; negative removes an ingredient (reduces COGS)."
+    quantity: Float
   }
 
   # ─── Square ──────────────────────────────────────────────────────────────────

@@ -17,7 +17,7 @@ const GET_DATA = gql`
   query GetPosModifierMappingData($companyId: ID!) {
     posModifierCatalog(companyId: $companyId) { posModifierId posModifierName price }
     inventory(companyId: $companyId) { id name unitCost }
-    posModifierMappings(companyId: $companyId) { posModifierId inventoryItemId recipeId }
+    posModifierMappings(companyId: $companyId) { posModifierId inventoryItemId recipeId quantity }
   }
 `;
 const SAVE_MAPPINGS = gql`
@@ -28,10 +28,12 @@ const SAVE_MAPPINGS = gql`
 
 interface CatalogItem { posModifierId: string; posModifierName: string; price?: number | null; }
 interface InventoryOption { id: string; name: string; unitCost: number; }
-// A modifier is a single ingredient (a pump of syrup, a scoop of whip), so it
-// maps to one inventory item. recipeId is retained (loaded/saved back) so any
-// recipe mapping created elsewhere isn't wiped, but it can't be set here.
-interface Mapping { posModifierId: string; inventoryItemId: string | null; recipeId: string | null; suggested?: boolean; }
+// A modifier maps to one inventory item plus the amount used per drink. Cost =
+// amount × unitCost; a NEGATIVE amount removes an ingredient (reduces COGS, e.g.
+// "No SCM" = -1). recipeId is retained (loaded/saved back) so any recipe mapping
+// created elsewhere isn't wiped, but it can't be set here.
+interface Mapping { posModifierId: string; inventoryItemId: string | null; recipeId: string | null; quantity: number; suggested?: boolean; }
+const DEFAULT_QTY = 1;
 
 interface Props {
   companyId: string;
@@ -67,7 +69,7 @@ export function PosModifierMappingModal({ companyId, onClose }: Props) {
 
   const catalogItems: CatalogItem[] = data?.posModifierCatalog ?? [];
   const inventoryItems: InventoryOption[] = data?.inventory ?? [];
-  const existingMaps: Array<{ posModifierId: string; inventoryItemId: string | null; recipeId: string | null }> = data?.posModifierMappings ?? [];
+  const existingMaps: Array<{ posModifierId: string; inventoryItemId: string | null; recipeId: string | null; quantity: number | null }> = data?.posModifierMappings ?? [];
 
   // Initialize mappings from saved values.
   useEffect(() => {
@@ -81,6 +83,7 @@ export function PosModifierMappingModal({ companyId, onClose }: Props) {
         posModifierId: item.posModifierId,
         inventoryItemId: saved?.inventoryItemId ?? null,
         recipeId: saved?.recipeId ?? null,
+        quantity: saved?.quantity ?? DEFAULT_QTY,
         suggested: false,
       });
     }
@@ -91,8 +94,11 @@ export function PosModifierMappingModal({ companyId, onClose }: Props) {
   function setMapping(posModifierId: string, patch: Partial<Mapping>) {
     setMappings(prev => {
       const next = new Map(prev);
-      const cur = next.get(posModifierId) ?? { posModifierId, inventoryItemId: null, recipeId: null };
-      next.set(posModifierId, { ...cur, ...patch, posModifierId, suggested: false });
+      const cur = next.get(posModifierId) ?? { posModifierId, inventoryItemId: null, recipeId: null, quantity: DEFAULT_QTY };
+      // Selecting an inventory item where there was none defaults the amount to 1.
+      const patched = { ...cur, ...patch, posModifierId, suggested: false };
+      if (patch.inventoryItemId && !cur.inventoryItemId && patch.quantity == null) patched.quantity = DEFAULT_QTY;
+      next.set(posModifierId, patched);
       return next;
     });
   }
@@ -119,7 +125,7 @@ export function PosModifierMappingModal({ companyId, onClose }: Props) {
       let applied = 0;
       const next = new Map(mappings);
       for (const rec of recs) {
-        const cur = next.get(rec.posModifierId) ?? { posModifierId: rec.posModifierId, inventoryItemId: null, recipeId: null };
+        const cur = next.get(rec.posModifierId) ?? { posModifierId: rec.posModifierId, inventoryItemId: null, recipeId: null, quantity: DEFAULT_QTY };
         // Respect deliberate user choices — only fill blanks or replace prior suggestions.
         const userConfirmed = !cur.suggested && cur.inventoryItemId;
         if (userConfirmed) continue;
@@ -129,6 +135,8 @@ export function PosModifierMappingModal({ companyId, onClose }: Props) {
           posModifierId: rec.posModifierId,
           inventoryItemId: rec.inventoryId,
           recipeId: cur.recipeId ?? null,
+          // AI can't know the amount used per drink — keep any prior amount, else default.
+          quantity: cur.quantity ?? DEFAULT_QTY,
           suggested: true,
         });
         applied += 1;
@@ -158,6 +166,7 @@ export function PosModifierMappingModal({ companyId, onClose }: Props) {
         posModifierName: catalogItems.find(c => c.posModifierId === m.posModifierId)?.posModifierName ?? '',
         inventoryId: m.inventoryItemId,
         recipeId: m.recipeId,
+        quantity: m.inventoryItemId ? m.quantity : DEFAULT_QTY,
       }));
       await saveMappings({ variables: { companyId, mappings: mapsArray } });
       showToast(t('posModifierMapping.toast.saved', 'Modifier mappings saved! Cost calculations are now accurate.'), 'success', 5000);
@@ -175,6 +184,14 @@ export function PosModifierMappingModal({ companyId, onClose }: Props) {
     id: i.id,
     label: t('posModifierMapping.inventoryOption', '{{name}} (${{cost}}/unit)', { name: i.name, cost: Number(i.unitCost).toFixed(2) }),
   }));
+  const inventoryById = new Map(inventoryItems.map(i => [i.id, i]));
+  // Per-drink modifier cost = amount × the item's unit cost (negative = removal).
+  function perDrinkCost(m?: Mapping): number | null {
+    if (!m?.inventoryItemId) return null;
+    const inv = inventoryById.get(m.inventoryItemId);
+    if (!inv) return null;
+    return Number(inv.unitCost) * (Number.isFinite(m.quantity) ? m.quantity : 0);
+  }
 
   // Rows in display order (unmapped floated to top via the sortedIds snapshot).
   const catalogById = new Map(catalogItems.map(c => [c.posModifierId, c]));
@@ -194,15 +211,15 @@ export function PosModifierMappingModal({ companyId, onClose }: Props) {
   return (
     <>
     <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={{ background: '#fff', borderRadius: 14, width: '100%', maxWidth: 720, boxShadow: '0 8px 32px rgba(0,0,0,0.18)', overflow: 'hidden', margin: '40px 16px' }}>
+      <div style={{ background: '#fff', borderRadius: 14, width: '100%', maxWidth: 820, boxShadow: '0 8px 32px rgba(0,0,0,0.18)', overflow: 'hidden', margin: '40px 16px' }}>
         {/* Header */}
         <div style={{ padding: '22px 26px 14px', borderBottom: '1px solid #e5e7eb' }}>
           <h2 style={{ margin: '0 0 6px', fontSize: '1.15rem', fontWeight: 700, color: 'var(--vv-navy)' }}>
             {t('posModifierMapping.title', 'Match Your POS Modifiers to Your Inventory')}
           </h2>
           <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--muted)', lineHeight: 1.5 }}>
-            <Trans t={t} i18nKey="posModifierMapping.description" defaults='Map each modifier (flavor add-ons, whip, …) to the inventory item it uses — venOS adds that ingredient’s cost to every drink the modifier is on, so COGS stays accurate without a separate menu item per flavor. Choose <2>"No inventory item"</2> for free or no-cost modifiers.'>
-              Map each modifier (flavor add-ons, whip, …) to the inventory item it uses — venOS adds that ingredient’s cost to every drink the modifier is on, so COGS stays accurate without a separate menu item per flavor. Choose <em>"No inventory item"</em> for free or no-cost modifiers.
+            <Trans t={t} i18nKey="posModifierMapping.description" defaults='Map each modifier (flavor add-ons, whip, …) to the inventory item it uses and the amount used per drink — venOS adds that cost to every drink the modifier is on, so COGS stays accurate without a separate menu item per flavor. Use a <2>negative amount</2> for removals (e.g. "No SCM" = -1). Choose "No inventory item" for free modifiers.'>
+              Map each modifier (flavor add-ons, whip, …) to the inventory item it uses and the amount used per drink — venOS adds that cost to every drink the modifier is on, so COGS stays accurate without a separate menu item per flavor. Use a <em>negative amount</em> for removals (e.g. "No SCM" = -1). Choose "No inventory item" for free modifiers.
             </Trans>
           </p>
         </div>
@@ -239,8 +256,9 @@ export function PosModifierMappingModal({ companyId, onClose }: Props) {
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: '#f9fafb' }}>
-                  <th style={{ padding: '9px 12px', textAlign: 'left', fontSize: '0.72rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb', width: '45%' }}>{t('posModifierMapping.colModifier', 'Modifier')}</th>
-                  <th style={{ padding: '9px 12px', textAlign: 'left', fontSize: '0.72rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>{t('posModifierMapping.colInventory', 'Inventory Item (COGS)')}</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', fontSize: '0.72rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb', width: '32%' }}>{t('posModifierMapping.colModifier', 'Modifier')}</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', fontSize: '0.72rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>{t('posModifierMapping.colInventory', 'Inventory Item')}</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', fontSize: '0.72rem', fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb', width: '30%' }}>{t('posModifierMapping.colAmount', 'Amount / drink')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -272,6 +290,29 @@ export function PosModifierMappingModal({ companyId, onClose }: Props) {
                             <span style={{ background: '#fef3c7', color: '#92400e', borderRadius: 99, padding: '1px 7px', fontSize: '0.72rem', fontWeight: 600, whiteSpace: 'nowrap' }}>{t('posModifierMapping.suggestedBadge', 'suggested')}</span>
                           )}
                         </div>
+                      </td>
+                      <td style={{ padding: '7px 12px', borderBottom: '1px solid #f0f0f0' }}>
+                        {mapping?.inventoryItemId ? (() => {
+                          const cost = perDrinkCost(mapping);
+                          const costLabel = cost == null ? '' : `${cost < 0 ? '-' : ''}$${Math.abs(cost).toFixed(2)}`;
+                          return (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <input
+                                type="number"
+                                step="any"
+                                value={Number.isFinite(mapping.quantity) ? mapping.quantity : ''}
+                                onChange={e => setMapping(item.posModifierId, { quantity: e.target.value === '' ? NaN : Number(e.target.value) })}
+                                style={{ width: 74, padding: '5px 8px', border: '1px solid #d1d5db', borderRadius: 6, fontSize: '0.83rem' }}
+                                aria-label={t('posModifierMapping.colAmount', 'Amount / drink')}
+                              />
+                              <span style={{ fontSize: '0.8rem', color: cost != null && cost < 0 ? '#16a34a' : 'var(--muted)', whiteSpace: 'nowrap' }}>
+                                = {costLabel}
+                              </span>
+                            </div>
+                          );
+                        })() : (
+                          <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>—</span>
+                        )}
                       </td>
                     </tr>
                   );

@@ -110,6 +110,7 @@ export const inventoryResolvers = {
         ...r,
         inventoryItemId: r['inventoryId'] ?? null,
         recipeId: r['recipeId'] ?? null,
+        quantity: r['quantity'] ?? null,
       }));
     },
 
@@ -278,6 +279,7 @@ export const inventoryResolvers = {
           posModifierName: m['posModifierName'],
           inventoryId: m['inventoryId'] || null,
           recipeId: m['recipeId'] || null,
+          quantity: m['quantity'] == null ? 1 : Number(m['quantity']),
         }));
 
       if (toInsert.length > 0) {

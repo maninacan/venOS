@@ -218,21 +218,26 @@ export const salesResolvers = {
         recipeCost: m['recipeId'] ? recipeCostById.get(m['recipeId'] as string) ?? null : null,
       })));
 
-      // Modifier COGS: modifiers (flavor add-ons, whip, …) map to their own
-      // recipe/inventory cost. Their upcharge is already in the line's revenue,
-      // so we add COST only, folded into the parent line's totalCost. Reuses the
-      // same lookup, keyed on the modifier's catalog object id / name.
+      // Modifier COGS: each modifier (flavor add-ons, whip, …) maps to one
+      // inventory item plus an amount used per drink. Cost per application =
+      // quantity × inventory.unitCost; a NEGATIVE quantity represents a removal
+      // ("No SCM") that reduces COGS. Their upcharge is already in the line's
+      // revenue, so we add COST only, folded into the parent line's totalCost.
+      // We pre-multiply quantity into the mapping's unitCost so the shared
+      // buildCostLookup/resolve returns the per-application cost directly.
       const { data: modifierMappings } = await supabase
         .from('PosModifierMapping')
-        .select('posModifierId, posModifierName, inventoryId, recipeId, VendorInventory(itemName, unitCost)')
+        .select('posModifierId, posModifierName, inventoryId, quantity, VendorInventory(itemName, unitCost)')
         .eq('companyId', companyId);
-      const modifierLookup = buildCostLookup((modifierMappings ?? []).map((m: Record<string, unknown>) => ({
-        posItemId: m['posModifierId'] as string | null,
-        posItemName: m['posModifierName'] as string | null,
-        unitCost: (m['VendorInventory'] as Record<string, unknown> | null)?.['unitCost'] as number | null,
-        recipeId: m['recipeId'] as string | null,
-        recipeCost: m['recipeId'] ? recipeCostById.get(m['recipeId'] as string) ?? null : null,
-      })));
+      const modifierLookup = buildCostLookup((modifierMappings ?? []).map((m: Record<string, unknown>) => {
+        const invUnitCost = (m['VendorInventory'] as Record<string, unknown> | null)?.['unitCost'] as number | null | undefined;
+        const amount = m['quantity'] == null ? 1 : Number(m['quantity']);
+        return {
+          posItemId: m['posModifierId'] as string | null,
+          posItemName: m['posModifierName'] as string | null,
+          unitCost: invUnitCost == null ? null : Number(invUnitCost) * amount,
+        };
+      }));
 
       const inventoryRows: Array<Record<string, unknown>> = [];
       let unmatchedCount = 0;
@@ -241,25 +246,28 @@ export const salesResolvers = {
         const { unitCost, recipeId } = costLookup.resolve({ name: item.name, catalogObjectId: item.catalogObjectId });
         if (unitCost == null) unmatchedCount++;
 
-        // Sum mapped modifier costs for this line (unit cost × applied qty).
+        // Sum mapped modifier costs for this line (per-application cost × applied
+        // count). Can be negative when a modifier removes an ingredient.
         let modifierCost = 0;
+        let anyModifierResolved = false;
         for (const mod of item.modifiers ?? []) {
           const modResolved = modifierLookup.resolve({ name: mod.name, catalogObjectId: mod.catalogObjectId });
           if (modResolved.unitCost == null) { unmatchedModifierCount++; continue; }
+          anyModifierResolved = true;
           modifierCost += modResolved.unitCost * mod.qty;
         }
 
         const baseCost = unitCost != null ? unitCost * item.qty : 0;
-        // totalCost is the full line COGS; null only when neither base nor
-        // modifier cost is known (so an unmapped line stays unmatched, not $0).
-        const hasAnyCost = unitCost != null || modifierCost > 0;
+        // totalCost is the full line COGS; null only when neither the base nor
+        // any modifier cost is known (so an unmapped line stays unmatched, not $0).
+        const hasAnyCost = unitCost != null || anyModifierResolved;
         inventoryRows.push({
           eventID: eventId,
           name: item.name,
           quantitySold: item.qty,
           unitCost,
           totalCost: hasAnyCost ? +Number(baseCost + modifierCost).toFixed(4) : null,
-          modifierCost: modifierCost > 0 ? +Number(modifierCost).toFixed(4) : null,
+          modifierCost: anyModifierResolved ? +Number(modifierCost).toFixed(4) : null,
           revenue: item.revenue != null ? +Number(item.revenue).toFixed(2) : null,
           recipeId,
         });
