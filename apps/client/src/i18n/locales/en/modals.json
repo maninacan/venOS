@@ -113,7 +113,17 @@
       "saveFailed": "Failed to save"
     },
     "suggestAiUnmapped": "Suggest unmapped with AI",
-    "aiAllMapped": "All modifiers are already mapped — nothing for AI to match."
+    "aiAllMapped": "All modifiers are already mapped — nothing for AI to match.",
+    "newItem": "New",
+    "newItemTitle": "Create a new inventory item and map it here",
+    "newItemHeading": "New inventory item",
+    "invName": "Item name *",
+    "invUnitCost": "Unit cost",
+    "invHint": "This item is added to your inventory and mapped to this modifier. Cost per drink = unit cost × amount.",
+    "invAdd": "Add item",
+    "invNameRequired": "Item name is required",
+    "invAdded": "Inventory item added.",
+    "invAddFailed": "Failed to add item"
   },
   "posMapping": {
     "title": "Match Your POS Menu to Your Recipe Cards",
@@ -147,6 +157,10 @@
       "saveFailed": "Failed to save"
     },
     "suggestAiUnmapped": "Suggest unmapped with AI",
-    "aiAllMapped": "All items are already mapped — nothing for AI to match."
+    "aiAllMapped": "All items are already mapped — nothing for AI to match.",
+    "newRecipe": "New",
+    "newRecipeTitle": "Create a new recipe and map it here",
+    "sharedBadge": "shared by {{count}} items",
+    "makeSubRecipe": "Make sub-recipe"
   }
 }

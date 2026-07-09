@@ -25,6 +25,11 @@ const SAVE_MAPPINGS = gql`
     savePosModifierMappings(companyId: $companyId, mappings: $mappings)
   }
 `;
+const CREATE_INVENTORY_ITEM = gql`
+  mutation CreateInventoryItem($companyId: ID!, $input: CreateInventoryItemInput!) {
+    createInventoryItem(companyId: $companyId, input: $input) { id name unitCost }
+  }
+`;
 
 interface CatalogItem { posModifierId: string; posModifierName: string; price?: number | null; }
 interface InventoryOption { id: string; name: string; unitCost: number; }
@@ -42,10 +47,14 @@ interface Props {
 
 export function PosModifierMappingModal({ companyId, onClose }: Props) {
   const { t } = useTranslation('modals');
-  const { data, loading } = useQuery(GET_DATA, { variables: { companyId } });
+  const { data, loading, refetch } = useQuery(GET_DATA, { variables: { companyId } });
   const [saveMappings] = useMutation(SAVE_MAPPINGS);
+  const [createInventoryItem] = useMutation(CREATE_INVENTORY_ITEM);
   const [fetchAiRecommendations] = useLazyQuery(GET_AI_RECOMMENDATIONS);
   const [mappings, setMappings] = useState<Map<string, Mapping>>(new Map());
+  // Inline "quick add inventory item": which modifier row triggered it + form fields.
+  const [invAdd, setInvAdd] = useState<{ posModifierId: string; name: string; unitCost: string } | null>(null);
+  const [invSaving, setInvSaving] = useState(false);
   // Display order of catalog rows. Unmapped items are floated to the top, but the
   // order is snapshotted (on load and after AI-suggest) rather than recomputed on
   // every keystroke, so rows don't jump around while the user is mapping.
@@ -101,6 +110,25 @@ export function PosModifierMappingModal({ companyId, onClose }: Props) {
       next.set(posModifierId, patched);
       return next;
     });
+  }
+
+  // Create an inventory item inline (name + unit cost) and map the triggering row to it.
+  async function handleQuickAddInventory() {
+    if (!invAdd) return;
+    const name = invAdd.name.trim();
+    if (!name) { showToast(t('posModifierMapping.invNameRequired', 'Item name is required'), 'error'); return; }
+    setInvSaving(true);
+    try {
+      const res = await createInventoryItem({ variables: { companyId, input: { name, unitCost: Number(invAdd.unitCost) || 0 } } });
+      const created = (res.data as { createInventoryItem?: { id: string } } | null)?.createInventoryItem;
+      const posModifierId = invAdd.posModifierId;
+      setInvAdd(null);
+      await refetch();
+      if (created?.id) setMapping(posModifierId, { inventoryItemId: created.id });
+      showToast(t('posModifierMapping.invAdded', 'Inventory item added.'), 'success');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : t('posModifierMapping.invAddFailed', 'Failed to add item'), 'error');
+    } finally { setInvSaving(false); }
   }
 
   const isUnmapped = (m?: Mapping) => !m?.inventoryItemId;
@@ -296,6 +324,14 @@ export function PosModifierMappingModal({ companyId, onClose }: Props) {
                           {isSuggested && mapping?.inventoryItemId && (
                             <span style={{ background: '#fef3c7', color: '#92400e', borderRadius: 99, padding: '1px 7px', fontSize: '0.72rem', fontWeight: 600, whiteSpace: 'nowrap' }}>{t('posModifierMapping.suggestedBadge', 'suggested')}</span>
                           )}
+                          <button
+                            className="btn-secondary"
+                            style={{ fontSize: '0.75rem', padding: '4px 8px', whiteSpace: 'nowrap' }}
+                            title={t('posModifierMapping.newItemTitle', 'Create a new inventory item and map it here')}
+                            onClick={() => setInvAdd({ posModifierId: item.posModifierId, name: item.posModifierName, unitCost: '' })}
+                          >
+                            <i className="fa-solid fa-plus" aria-hidden="true" /> {t('posModifierMapping.newItem', 'New')}
+                          </button>
                         </div>
                       </td>
                       <td style={{ padding: '7px 12px', borderBottom: '1px solid #f0f0f0' }}>
@@ -382,6 +418,33 @@ export function PosModifierMappingModal({ companyId, onClose }: Props) {
                 </div>
               );
             })}
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Inline "quick add inventory item" (nested overlay at zIndex 1100) */}
+    {invAdd && (
+      <div className="modal-overlay" style={{ zIndex: 1100 }} onClick={e => { if (e.target === e.currentTarget && !invSaving) setInvAdd(null); }}>
+        <div className="modal-box" style={{ maxWidth: 420 }}>
+          <button className="modal-close" onClick={() => setInvAdd(null)}><i className="fa-solid fa-xmark" /></button>
+          <h3 style={{ margin: '0 0 14px' }}>{t('posModifierMapping.newItemHeading', 'New inventory item')}</h3>
+          <div className="form-group">
+            <label>{t('posModifierMapping.invName', 'Item name *')}</label>
+            <input type="text" value={invAdd.name} onChange={e => setInvAdd(a => a && { ...a, name: e.target.value })} autoFocus />
+          </div>
+          <div className="form-group" style={{ marginTop: 10 }}>
+            <label>{t('posModifierMapping.invUnitCost', 'Unit cost')}</label>
+            <input type="number" step="0.0001" value={invAdd.unitCost} onChange={e => setInvAdd(a => a && { ...a, unitCost: e.target.value })} placeholder="0.00" />
+          </div>
+          <p style={{ margin: '8px 0 14px', fontSize: '0.78rem', color: 'var(--muted)', lineHeight: 1.45 }}>
+            {t('posModifierMapping.invHint', 'This item is added to your inventory and mapped to this modifier. Cost per drink = unit cost × amount.')}
+          </p>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button className="btn-primary" onClick={handleQuickAddInventory} disabled={invSaving}>
+              {invSaving && <span className="spinner" />} <span>{t('posModifierMapping.invAdd', 'Add item')}</span>
+            </button>
+            <button className="btn-secondary" onClick={() => setInvAdd(null)} disabled={invSaving}>{t('posModifierMapping.cancel', 'Cancel')}</button>
           </div>
         </div>
       </div>

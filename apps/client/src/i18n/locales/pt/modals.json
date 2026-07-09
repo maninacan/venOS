@@ -113,7 +113,17 @@
       "saveFailed": "Falha ao salvar"
     },
     "suggestAiUnmapped": "Sugerir não vinculados com IA",
-    "aiAllMapped": "Todos os modificadores já estão vinculados — nada para a IA combinar."
+    "aiAllMapped": "Todos os modificadores já estão vinculados — nada para a IA combinar.",
+    "newItem": "Novo",
+    "newItemTitle": "Crie um item de estoque e vincule-o aqui",
+    "newItemHeading": "Novo item de estoque",
+    "invName": "Nome do item *",
+    "invUnitCost": "Custo unitário",
+    "invHint": "Este item é adicionado ao seu estoque e vinculado a este modificador. Custo por bebida = custo unitário × quantidade.",
+    "invAdd": "Adicionar item",
+    "invNameRequired": "O nome do item é obrigatório",
+    "invAdded": "Item de estoque adicionado.",
+    "invAddFailed": "Falha ao adicionar o item"
   },
   "posMapping": {
     "title": "Vincule o menu do seu POS às suas fichas técnicas",
@@ -147,6 +157,10 @@
       "saveFailed": "Não foi possível salvar"
     },
     "suggestAiUnmapped": "Sugerir não vinculados com IA",
-    "aiAllMapped": "Todos os itens já estão vinculados — nada para a IA combinar."
+    "aiAllMapped": "Todos os itens já estão vinculados — nada para a IA combinar.",
+    "newRecipe": "Nova",
+    "newRecipeTitle": "Crie uma nova receita e vincule-a aqui",
+    "sharedBadge": "compartilhada por {{count}} itens",
+    "makeSubRecipe": "Criar sub-receita"
   }
 }

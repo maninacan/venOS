@@ -4,6 +4,7 @@ import { gql } from '@apollo/client/core';
 import { useTranslation, Trans } from 'react-i18next';
 import { showToast } from '@org/data';
 import { Combobox } from '../Combobox';
+import { RecipeEditorModal, type Component, type Recipe } from './RecipeEditorModal';
 
 const GET_AI_RECOMMENDATIONS = gql`
   query PosMappingRecommendations($companyId: ID!, $posItemIds: [String!]) {
@@ -40,10 +41,12 @@ interface Props {
 
 export function PosMappingModal({ companyId, onClose }: Props) {
   const { t } = useTranslation('modals');
-  const { data, loading } = useQuery(GET_DATA, { variables: { companyId } });
+  const { data, loading, refetch } = useQuery(GET_DATA, { variables: { companyId } });
   const [saveMappings] = useMutation(SAVE_MAPPINGS);
   const [fetchAiRecommendations] = useLazyQuery(GET_AI_RECOMMENDATIONS);
   const [mappings, setMappings] = useState<Map<string, Mapping>>(new Map());
+  // Inline recipe editor: which POS row triggered it + the prefill to seed a new recipe.
+  const [recipeEditor, setRecipeEditor] = useState<{ posItemId: string; prefill: { name?: string; components?: Component[] } } | null>(null);
   // Display order of catalog rows. Unmapped items are floated to the top, but the
   // order is snapshotted (on load and after AI-suggest) rather than recomputed on
   // every keystroke, so rows don't jump around while the user is mapping.
@@ -182,6 +185,20 @@ export function PosMappingModal({ companyId, onClose }: Props) {
   // Recipe options for the combobox — built once, shared by every row.
   const recipeOptions = recipeItems.map(r => ({ id: r.id, label: `${r.name} ($${Number(r.totalCost).toFixed(2)})` }));
 
+  // How many POS items each recipe is mapped to — a recipe shared by >1 item is a
+  // sign it should be split into per-item sub-recipes.
+  const recipeUsage = new Map<string, number>();
+  for (const m of mappings.values()) if (m.recipeId) recipeUsage.set(m.recipeId, (recipeUsage.get(m.recipeId) ?? 0) + 1);
+
+  // After creating a recipe/sub-recipe inline, refresh the recipe list and map the
+  // triggering row to the new recipe.
+  async function handleRecipeCreated(r: Recipe) {
+    const posItemId = recipeEditor?.posItemId;
+    setRecipeEditor(null);
+    await refetch();
+    if (posItemId) setMapping(posItemId, { recipeId: r.id });
+  }
+
   // Rows in display order (unmapped floated to top via the sortedIds snapshot).
   const catalogById = new Map(catalogItems.map(c => [c.posItemId, c]));
   const orderedItems: CatalogItem[] = sortedIds.length
@@ -280,7 +297,30 @@ export function PosMappingModal({ companyId, onClose }: Props) {
                           {isSuggested && mapping?.recipeId && (
                             <span style={{ background: '#fef3c7', color: '#92400e', borderRadius: 99, padding: '1px 7px', fontSize: '0.72rem', fontWeight: 600, whiteSpace: 'nowrap' }}>{t('posMapping.suggestedBadge', 'suggested')}</span>
                           )}
+                          <button
+                            className="btn-secondary"
+                            style={{ fontSize: '0.75rem', padding: '4px 8px', whiteSpace: 'nowrap' }}
+                            title={t('posMapping.newRecipeTitle', 'Create a new recipe and map it here')}
+                            onClick={() => setRecipeEditor({ posItemId: item.posItemId, prefill: { name: displayLabel } })}
+                          >
+                            <i className="fa-solid fa-plus" aria-hidden="true" /> {t('posMapping.newRecipe', 'New')}
+                          </button>
                         </div>
+                        {/* Nudge: this recipe is mapped to multiple items — offer a per-item sub-recipe. */}
+                        {mapping?.recipeId && (recipeUsage.get(mapping.recipeId) ?? 0) > 1 && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 5, fontSize: '0.75rem', color: '#92400e' }}>
+                            <span style={{ background: '#fef3c7', borderRadius: 99, padding: '1px 7px', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                              {t('posMapping.sharedBadge', 'shared by {{count}} items', { count: recipeUsage.get(mapping.recipeId) ?? 0 })}
+                            </span>
+                            <button
+                              className="btn-link"
+                              style={{ background: 'none', border: 'none', padding: 0, color: 'var(--vv-navy)', fontWeight: 600, cursor: 'pointer', fontSize: '0.75rem' }}
+                              onClick={() => setRecipeEditor({ posItemId: item.posItemId, prefill: { name: displayLabel, components: [{ componentType: 'recipe', refRecipeId: mapping.recipeId, refModifierId: null, refInventoryId: null, quantity: 1 }] } })}
+                            >
+                              <i className="fa-solid fa-wand-magic-sparkles" aria-hidden="true" /> {t('posMapping.makeSubRecipe', 'Make sub-recipe')}
+                            </button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   );
@@ -346,6 +386,15 @@ export function PosMappingModal({ companyId, onClose }: Props) {
           </div>
         </div>
       </div>
+    )}
+
+    {/* Inline recipe/sub-recipe editor (nested overlay at zIndex 1100) */}
+    {recipeEditor && (
+      <RecipeEditorModal
+        prefill={recipeEditor.prefill}
+        onSaved={handleRecipeCreated}
+        onClose={() => setRecipeEditor(null)}
+      />
     )}
     </>
   );

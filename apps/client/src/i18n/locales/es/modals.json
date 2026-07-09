@@ -113,7 +113,17 @@
       "saveFailed": "No se pudo guardar"
     },
     "suggestAiUnmapped": "Sugerir no asignados con IA",
-    "aiAllMapped": "Todos los modificadores ya están asignados — nada que la IA deba emparejar."
+    "aiAllMapped": "Todos los modificadores ya están asignados — nada que la IA deba emparejar.",
+    "newItem": "Nuevo",
+    "newItemTitle": "Crea un artículo de inventario y asígnalo aquí",
+    "newItemHeading": "Nuevo artículo de inventario",
+    "invName": "Nombre del artículo *",
+    "invUnitCost": "Costo unitario",
+    "invHint": "Este artículo se agrega a tu inventario y se asigna a este modificador. Costo por bebida = costo unitario × cantidad.",
+    "invAdd": "Agregar artículo",
+    "invNameRequired": "El nombre del artículo es obligatorio",
+    "invAdded": "Artículo de inventario agregado.",
+    "invAddFailed": "No se pudo agregar el artículo"
   },
   "posMapping": {
     "title": "Vincula el menú de tu POS con tus fichas de receta",
@@ -147,6 +157,10 @@
       "saveFailed": "No se pudo guardar"
     },
     "suggestAiUnmapped": "Sugerir no asignados con IA",
-    "aiAllMapped": "Todos los artículos ya están asignados — nada que la IA deba emparejar."
+    "aiAllMapped": "Todos los artículos ya están asignados — nada que la IA deba emparejar.",
+    "newRecipe": "Nueva",
+    "newRecipeTitle": "Crea una receta nueva y asígnala aquí",
+    "sharedBadge": "compartida por {{count}} artículos",
+    "makeSubRecipe": "Crear sub-receta"
   }
 }

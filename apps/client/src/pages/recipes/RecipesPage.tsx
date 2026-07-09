@@ -7,7 +7,7 @@ import { BackToSetupButton } from '../../components/guidance/BackToSetupButton';
 import { showToast } from '@org/data';
 import { useCurrency } from '../../i18n/useCurrency';
 import { formatNumber } from '../../i18n/format';
-import { Combobox } from '../../components/Combobox';
+import { RecipeEditorModal, emptyIngredient, type Ingredient, type Recipe } from '../../components/modals/RecipeEditorModal';
 
 const API_URL = (import.meta.env['VITE_API_URL'] as string) || 'http://localhost:3000';
 
@@ -21,12 +21,9 @@ const GET_RECIPES = gql`
     }
   }
 `;
-// Options for the sub-recipe component pickers (inventory items + mapped modifiers).
-// Referenceable recipes come from the recipes query above.
-const GET_COMPONENT_OPTIONS = gql`
-  query GetRecipeComponentOptions($companyId: ID!) {
-    inventory(companyId: $companyId) { id name unitCost }
-    posModifierMappings(companyId: $companyId) { id posModifierName inventoryItemId quantity }
+// POS-mapped recipe ids — used to scope the AI "Optimize recipes" run.
+const GET_POS_MAPPINGS = gql`
+  query GetPosMappedRecipeIds($companyId: ID!) {
     posMappings(companyId: $companyId) { recipeId }
   }
 `;
@@ -46,29 +43,15 @@ const APPLY_OPTIMIZE = gql`
     applyRecipeOptimizations(companyId: $companyId, accepted: $accepted)
   }
 `;
-const CREATE_RECIPE = gql`
-  mutation CreateRecipe($companyId: ID!, $input: CreateRecipeInput!) {
-    createRecipe(companyId: $companyId, input: $input) { id name totalCost ingredients { id name quantity unitCost unit } components { ${COMPONENT_FIELDS} } }
-  }
-`;
 const CREATE_RECIPES = gql`
   mutation CreateRecipes($companyId: ID!, $inputs: [CreateRecipeInput!]!) {
     createRecipes(companyId: $companyId, inputs: $inputs) { id name totalCost ingredients { id name quantity unitCost unit } components { ${COMPONENT_FIELDS} } }
-  }
-`;
-const UPDATE_RECIPE = gql`
-  mutation UpdateRecipe($id: ID!, $input: CreateRecipeInput!) {
-    updateRecipe(id: $id, input: $input) { id name totalCost ingredients { id name quantity unitCost unit } components { ${COMPONENT_FIELDS} } }
   }
 `;
 const DELETE_RECIPE = gql`
   mutation DeleteRecipe($id: ID!) { deleteRecipe(id: $id) }
 `;
 
-type ComponentType = 'recipe' | 'modifier' | 'inventory';
-interface Ingredient { id?: string; name: string; quantity: number; unitCost: number; unit: string; }
-interface Component { componentType: ComponentType; refRecipeId: string | null; refModifierId: string | null; refInventoryId: string | null; quantity: number; }
-interface Recipe { id: string; name: string; totalCost: number; ingredients: Ingredient[]; components?: Array<Component & { id?: string; name?: string; cost?: number }>; }
 interface ImportedRecipe { tempId: string; name: string; ingredients: Ingredient[]; }
 interface OptLine { name: string; quantity: number; unitCost: number; unit: string | null; }
 interface RecipeOptimization {
@@ -80,8 +63,6 @@ interface RecipeOptimization {
   confidence: number | null; reason: string | null;
 }
 
-const emptyIngredient = (): Ingredient => ({ name: '', quantity: 1, unitCost: 0, unit: '' });
-const emptyComponent = (): Component => ({ componentType: 'recipe', refRecipeId: null, refModifierId: null, refInventoryId: null, quantity: 1 });
 
 export function RecipesPage() {
   const { t } = useTranslation('recipes');
@@ -92,21 +73,15 @@ export function RecipesPage() {
     formatNumber(v, { style: 'currency', currency, minimumFractionDigits: 4, maximumFractionDigits: 4 });
   const { companyId } = useCurrentCompany();
   const { data, loading, refetch } = useQuery(GET_RECIPES, { variables: { companyId }, skip: !companyId });
-  const { data: optData } = useQuery(GET_COMPONENT_OPTIONS, { variables: { companyId }, skip: !companyId });
+  const { data: optData } = useQuery(GET_POS_MAPPINGS, { variables: { companyId }, skip: !companyId });
   const [fetchOptimizations] = useLazyQuery(GET_OPTIMIZE);
   const [applyOptimizations] = useMutation(APPLY_OPTIMIZE);
-  const [createRecipe] = useMutation(CREATE_RECIPE);
   const [createRecipes] = useMutation(CREATE_RECIPES);
-  const [updateRecipe] = useMutation(UPDATE_RECIPE);
   const [deleteRecipe] = useMutation(DELETE_RECIPE);
 
-  // Recipe edit form modal state
+  // Recipe editor modal — editing a recipe (edit mode) or null while creating (isNew).
   const [editing, setEditing] = useState<Recipe | null>(null);
   const [isNew, setIsNew] = useState(false);
-  const [name, setName] = useState('');
-  const [ingredients, setIngredients] = useState<Ingredient[]>([emptyIngredient()]);
-  const [components, setComponents] = useState<Component[]>([]);
-  const [saving, setSaving] = useState(false);
 
   // AI "Optimize recipes" state
   const [showOptimize, setShowOptimize] = useState(false);
@@ -175,112 +150,9 @@ export function RecipesPage() {
 
   const recipes: Recipe[] = data?.recipes ?? [];
 
-  function openNew() {
-    setIsNew(true);
-    setEditing(null);
-    setName('');
-    setIngredients([emptyIngredient()]);
-    setComponents([]);
-  }
-
-  function openEdit(recipe: Recipe) {
-    setIsNew(false);
-    setEditing(recipe);
-    setName(recipe.name);
-    setIngredients(recipe.ingredients.length > 0 ? recipe.ingredients : [emptyIngredient()]);
-    setComponents((recipe.components ?? []).map(c => ({
-      componentType: c.componentType,
-      refRecipeId: c.refRecipeId ?? null,
-      refModifierId: c.refModifierId ?? null,
-      refInventoryId: c.refInventoryId ?? null,
-      quantity: c.quantity,
-    })));
-  }
-
+  function openNew() { setIsNew(true); setEditing(null); }
+  function openEdit(recipe: Recipe) { setIsNew(false); setEditing(recipe); }
   function closeForm() { setEditing(null); setIsNew(false); }
-
-  function updateIngredient(i: number, field: keyof Ingredient, value: string | number) {
-    setIngredients(prev => prev.map((ing, j) => j === i ? { ...ing, [field]: value } : ing));
-  }
-  function addIngredient() { setIngredients(prev => [...prev, emptyIngredient()]); }
-  function removeIngredient(i: number) { setIngredients(prev => prev.filter((_, j) => j !== i)); }
-
-  function setComponent(i: number, patch: Partial<Component>) {
-    setComponents(prev => prev.map((c, j) => {
-      if (j !== i) return c;
-      const next = { ...c, ...patch };
-      // Changing type clears the other refs so only the active one is set.
-      if (patch.componentType && patch.componentType !== c.componentType) {
-        next.refRecipeId = null; next.refModifierId = null; next.refInventoryId = null;
-      }
-      return next;
-    }));
-  }
-  function addComponent() { setComponents(prev => [...prev, emptyComponent()]); }
-  function removeComponent(i: number) { setComponents(prev => prev.filter((_, j) => j !== i)); }
-
-  // Component option lookups (cost + label) built from the recipes + options queries.
-  const invById = new Map<string, { name: string; unitCost: number }>(
-    ((optData?.inventory ?? []) as Array<{ id: string; name: string; unitCost: number }>).map(i => [i.id, { name: i.name, unitCost: Number(i.unitCost) }]));
-  const modById = new Map<string, { name: string; cost: number }>(
-    ((optData?.posModifierMappings ?? []) as Array<{ id: string; posModifierName: string; inventoryItemId: string | null; quantity: number | null }>).map(m => {
-      const unit = m.inventoryItemId ? invById.get(m.inventoryItemId)?.unitCost ?? 0 : 0;
-      return [m.id, { name: m.posModifierName, cost: unit * (m.quantity == null ? 1 : Number(m.quantity)) }];
-    }));
-  const recipeCostById = new Map<string, { name: string; cost: number }>(
-    ((data?.recipes ?? []) as Recipe[]).map(r => [r.id, { name: r.name, cost: Number(r.totalCost) }]));
-
-  const recipeOptions = ((data?.recipes ?? []) as Recipe[])
-    .filter(r => r.id !== editing?.id) // can't reference the recipe being edited (cycle)
-    .map(r => ({ id: r.id, label: `${r.name} (${fmtCost(Number(r.totalCost))})` }));
-  const modifierOptions = Array.from(modById.entries()).map(([id, m]) => ({ id, label: `${m.name} (${fmtCost(m.cost)}/use)` }));
-  const inventoryOptions = Array.from(invById.entries()).map(([id, i]) => ({ id, label: `${i.name} (${fmtCost(i.unitCost)}/unit)` }));
-
-  // Resolved cost of one component row (null when nothing is picked yet).
-  function componentCost(c: Component): number | null {
-    const q = Number(c.quantity) || 0;
-    if (c.componentType === 'recipe' && c.refRecipeId) return (recipeCostById.get(c.refRecipeId)?.cost ?? 0) * q;
-    if (c.componentType === 'modifier' && c.refModifierId) return (modById.get(c.refModifierId)?.cost ?? 0) * q;
-    if (c.componentType === 'inventory' && c.refInventoryId) return (invById.get(c.refInventoryId)?.unitCost ?? 0) * q;
-    return null;
-  }
-
-  const ingredientsCost = ingredients.reduce((s, i) => s + (Number(i.quantity) || 0) * (Number(i.unitCost) || 0), 0);
-  const componentsCost = components.reduce((s, c) => s + (componentCost(c) ?? 0), 0);
-  const totalCost = ingredientsCost + componentsCost;
-
-  async function handleSave() {
-    if (!name.trim()) { showToast(t('toast.nameRequired', 'Recipe name required'), 'error'); return; }
-    setSaving(true);
-    // Keep only components with a reference actually selected for their type.
-    const cleanComponents = components
-      .filter(c => (c.componentType === 'recipe' && c.refRecipeId) || (c.componentType === 'modifier' && c.refModifierId) || (c.componentType === 'inventory' && c.refInventoryId))
-      .map(c => ({
-        componentType: c.componentType,
-        refRecipeId: c.componentType === 'recipe' ? c.refRecipeId : null,
-        refModifierId: c.componentType === 'modifier' ? c.refModifierId : null,
-        refInventoryId: c.componentType === 'inventory' ? c.refInventoryId : null,
-        quantity: Number(c.quantity),
-      }));
-    const input = {
-      name: name.trim(),
-      ingredients: ingredients.filter(i => i.name.trim()).map(({ id: _id, ...i }) => ({ ...i, quantity: Number(i.quantity), unitCost: Number(i.unitCost) })),
-      components: cleanComponents,
-    };
-    try {
-      if (isNew) {
-        await createRecipe({ variables: { companyId, input } });
-        showToast(t('toast.created', 'Recipe created!'), 'success');
-      } else if (editing) {
-        await updateRecipe({ variables: { id: editing.id, input } });
-        showToast(t('toast.updated', 'Recipe updated!'), 'success');
-      }
-      refetch();
-      closeForm();
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : t('toast.saveFailed', 'Failed to save'), 'error');
-    } finally { setSaving(false); }
-  }
 
   async function handleDelete(id: string, recipeName: string) {
     if (!confirm(t('confirmDelete', 'Delete "{{name}}"?', { name: recipeName }))) return;
@@ -673,94 +545,13 @@ export function RecipesPage() {
         )}
       </div>
 
-      {/* Recipe form modal */}
+      {/* Recipe editor modal (shared with the POS mapping modals) */}
       {(isNew || editing) && (
-        <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) closeForm(); }}>
-          <div className="modal-box" style={{ maxWidth: 680 }}>
-            <button className="modal-close" onClick={closeForm}><i className="fa-solid fa-xmark" /></button>
-            <h3 style={{ margin: '0 0 16px' }}>{isNew ? t('form.newTitle', 'New Recipe') : t('form.editTitle', 'Edit: {{name}}', { name: editing?.name })}</h3>
-
-            <div className="form-group">
-              <label>{t('form.recipeName', 'Recipe Name *')}</label>
-              <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder={t('form.recipeNamePlaceholder', 'e.g. Lemon Drop Cocktail')} autoFocus />
-            </div>
-
-            <div style={{ margin: '16px 0 10px', fontWeight: 600, fontSize: '0.9rem', color: 'var(--vv-navy)' }}>
-              {t('form.ingredients', 'Ingredients')}
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 90px 70px 28px', gap: '6px 8px', fontSize: '0.84rem', marginBottom: 4 }}>
-              <span style={{ color: 'var(--muted)', fontWeight: 600 }}>{t('form.name', 'Name')}</span>
-              <span style={{ color: 'var(--muted)', fontWeight: 600, textAlign: 'right' }}>{t('form.qty', 'Qty')}</span>
-              <span style={{ color: 'var(--muted)', fontWeight: 600, textAlign: 'right' }}>{t('form.unitCost', 'Unit Cost')}</span>
-              <span style={{ color: 'var(--muted)', fontWeight: 600 }}>{t('form.unit', 'Unit')}</span>
-              <span />
-            </div>
-
-            {ingredients.map((ing, i) => (
-              <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 90px 70px 28px', gap: '4px 8px', marginBottom: 4 }}>
-                <input type="text" value={ing.name} onChange={e => updateIngredient(i, 'name', e.target.value)} placeholder={t('form.ingredientPlaceholder', 'Ingredient')} />
-                <input type="number" step="0.001" value={ing.quantity} onChange={e => updateIngredient(i, 'quantity', e.target.value)} style={{ textAlign: 'right' }} />
-                <input type="number" step="0.0001" value={ing.unitCost} onChange={e => updateIngredient(i, 'unitCost', e.target.value)} style={{ textAlign: 'right' }} />
-                <input type="text" value={ing.unit} onChange={e => updateIngredient(i, 'unit', e.target.value)} placeholder={t('form.unitPlaceholder', 'oz, g…')} />
-                <button onClick={() => removeIngredient(i)} style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: '1rem', padding: 0 }}><i className="fa-solid fa-xmark" /></button>
-              </div>
-            ))}
-
-            <button className="btn-secondary" style={{ fontSize: '0.82rem', padding: '5px 12px', marginTop: 6 }} onClick={addIngredient}>{t('form.addIngredient', '+ Add Ingredient')}</button>
-
-            {/* Sub-recipe components: a base recipe, a modifier, or an inventory item, each with an amount. */}
-            <div style={{ margin: '18px 0 4px', fontWeight: 600, fontSize: '0.9rem', color: 'var(--vv-navy)' }}>
-              {t('components.title', 'Sub-recipe components')}
-            </div>
-            <p style={{ margin: '0 0 8px', fontSize: '0.78rem', color: 'var(--muted)', lineHeight: 1.45 }}>
-              {t('components.help', 'Build this recipe from another recipe, mapped modifiers, or inventory items. Their cost is added on top of the ingredients above. Use a negative amount to remove an ingredient.')}
-            </p>
-
-            {components.map((c, i) => {
-              const opts = c.componentType === 'recipe' ? recipeOptions : c.componentType === 'modifier' ? modifierOptions : inventoryOptions;
-              const val = c.componentType === 'recipe' ? c.refRecipeId : c.componentType === 'modifier' ? c.refModifierId : c.refInventoryId;
-              const onPick = (id: string | null) => setComponent(i, c.componentType === 'recipe' ? { refRecipeId: id } : c.componentType === 'modifier' ? { refModifierId: id } : { refInventoryId: id });
-              const cost = componentCost(c);
-              return (
-                <div key={i} style={{ display: 'grid', gridTemplateColumns: '110px 1fr 68px 74px 28px', gap: '4px 8px', marginBottom: 6, alignItems: 'center' }}>
-                  <select value={c.componentType} onChange={e => setComponent(i, { componentType: e.target.value as ComponentType })} style={{ fontSize: '0.82rem', padding: '5px 6px' }}>
-                    <option value="recipe">{t('components.typeRecipe', 'Recipe')}</option>
-                    <option value="modifier">{t('components.typeModifier', 'Modifier')}</option>
-                    <option value="inventory">{t('components.typeInventory', 'Inventory')}</option>
-                  </select>
-                  <Combobox
-                    options={opts}
-                    value={val}
-                    onChange={onPick}
-                    noneLabel={t('components.none', '— None —')}
-                    placeholder={t('components.search', 'Search…')}
-                    noMatchesLabel={t('components.noMatches', 'No matches')}
-                  />
-                  <input type="number" step="any" value={c.quantity} onChange={e => setComponent(i, { quantity: e.target.value === '' ? 0 : Number(e.target.value) })} style={{ textAlign: 'right', fontSize: '0.82rem' }} aria-label={t('components.amount', 'Amount')} />
-                  <span style={{ fontSize: '0.8rem', textAlign: 'right', color: cost != null && cost < 0 ? '#16a34a' : 'var(--muted)' }}>
-                    {cost == null ? '—' : `${cost < 0 ? '-' : ''}${fmtCost(Math.abs(cost))}`}
-                  </span>
-                  <button onClick={() => removeComponent(i)} style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: '1rem', padding: 0 }}><i className="fa-solid fa-xmark" /></button>
-                </div>
-              );
-            })}
-
-            <button className="btn-secondary" style={{ fontSize: '0.82rem', padding: '5px 12px', marginTop: 2 }} onClick={addComponent}>{t('components.add', '+ Add component')}</button>
-
-            <div style={{ background: '#f8fafc', borderRadius: 8, padding: '10px 14px', margin: '14px 0', display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-              <span style={{ color: 'var(--muted)' }}>{t('form.estimatedBatchCost', 'Estimated batch cost')}</span>
-              <span style={{ fontWeight: 700, color: 'var(--vv-navy)' }}>{fmtCost(totalCost)}</span>
-            </div>
-
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button className="btn-primary" onClick={handleSave} disabled={saving}>
-                {saving && <span className="spinner" />} <span>{t('form.saveRecipe', 'Save Recipe')}</span>
-              </button>
-              <button className="btn-secondary" onClick={closeForm}>{t('form.cancel', 'Cancel')}</button>
-            </div>
-          </div>
-        </div>
+        <RecipeEditorModal
+          recipe={editing ?? undefined}
+          onSaved={() => { refetch(); }}
+          onClose={closeForm}
+        />
       )}
 
       {/* AI "Optimize recipes" modal */}
