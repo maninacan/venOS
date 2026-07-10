@@ -213,15 +213,20 @@ export function InventoryPage() {
         showToast(t('toast.noItemsFound', 'No items found in that file. Try a different file.'), 'warning');
         return;
       }
-      setImportedItems(parsed.items.map(it => ({
-        tempId: crypto.randomUUID(),
-        name: it.name ?? '',
-        category: it.category ?? '',
-        unitCost: Number(it.unitCost) || 0,
-        quantityOnHand: Number(it.quantityOnHand) || 0,
-        reorderThreshold: Number(it.reorderThreshold) || 0,
-        sku: it.sku ?? '',
-      })));
+      setImportedItems(parsed.items.map(it => {
+        const quantityOnHand = Number(it.quantityOnHand) || 0;
+        return {
+          tempId: crypto.randomUUID(),
+          name: it.name ?? '',
+          category: it.category ?? '',
+          unitCost: Number(it.unitCost) || 0,
+          quantityOnHand,
+          // Default reorder point to 30% of on-hand for each row (rounded to 2dp);
+          // the user can still edit it before approving.
+          reorderThreshold: Math.round(quantityOnHand * 0.3 * 100) / 100,
+          sku: it.sku ?? '',
+        };
+      }));
       setShowImportModal(true);
     } catch (err) {
       showToast(err instanceof Error ? err.message : t('toast.importFailed', 'Import failed'), 'error');

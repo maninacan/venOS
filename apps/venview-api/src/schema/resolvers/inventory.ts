@@ -144,8 +144,10 @@ export const inventoryResolvers = {
       requireAuth(ctx);
       await requireCompanyMember(companyId, ctx.user!.id);
 
-      // Map 'name' → 'itemName' for the DB column
-      const dbInput: Record<string, unknown> = { ...input, companyId, userId: ctx.user!.id, updatedAt: new Date().toISOString() };
+      // Map 'name' → 'itemName' for the DB column. VendorInventory is scoped by
+      // companyId (there is no userId column — including one makes PostgREST reject
+      // the insert with "Could not find the 'userId' column").
+      const dbInput: Record<string, unknown> = { ...input, companyId, updatedAt: new Date().toISOString() };
       if ('name' in dbInput) { dbInput['itemName'] = dbInput['name']; delete dbInput['name']; }
 
       // Upsert by itemName within company so re-imports update rather than duplicate
