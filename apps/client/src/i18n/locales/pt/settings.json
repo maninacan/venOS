@@ -32,18 +32,6 @@
     "reconnect": "Reconectar {{name}}",
     "reauthWarning": "Sua conexão com o {{name}} parou de funcionar (pode ter expirado ou sido revogada). Reconecte para continuar sincronizando vendas e mão de obra."
   },
-  "taxjar": {
-    "name": "TaxJar",
-    "blurb": "Consulta automática das alíquotas de impostos estaduais e locais sobre vendas por CEP",
-    "connected": "Conectado",
-    "notConnected": "Não conectado",
-    "ownerOnly": "Apenas o proprietário da empresa pode gerenciar a conexão com o TaxJar.",
-    "disconnect": "Desconectar o TaxJar",
-    "tokenLabel": "Token da API do TaxJar",
-    "tokenPlaceholder": "Cole o token da API do TaxJar",
-    "connect": "Conectar",
-    "tokenHelp": "Obtenha um token em <1>app.taxjar.com → Conta → Acesso à API</1>. Armazenado de forma criptografada; nunca é mostrado novamente."
-  },
   "companyDetails": {
     "heading": "Dados da empresa",
     "name": "Nome da empresa",
@@ -119,10 +107,6 @@
     "posDisconnected": "{{name}} desconectado.",
     "disconnectFailed": "Não foi possível desconectar",
     "confirmDisconnectPos": "Desconectar {{name}}? Você precisará reconectar para sincronizar as vendas.",
-    "taxjarConnected": "TaxJar conectado.",
-    "taxjarSaveFailed": "Não foi possível salvar o token",
-    "confirmRemoveTaxjar": "Desconectar o TaxJar? As alíquotas de impostos não serão mais consultadas automaticamente.",
-    "taxjarDisconnected": "TaxJar desconectado.",
     "detailsSaved": "Dados da empresa salvos!",
     "saveFailed": "Não foi possível salvar",
     "confirmRemoveMember": "Remover {{email}} da equipe?",

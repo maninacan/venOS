@@ -3,8 +3,8 @@
 // have stateTaxRate = 0, so the dashboard renders state tax as $0 until something
 // re-triggers a rate lookup.
 //
-// This mirrors applyTaxRates() in resolvers/sales.ts (same TaxJar-then-ZIP-fallback
-// logic, via the same shared lib functions) but runs standalone against whichever
+// This mirrors applyTaxRates() in resolvers/sales.ts (ZIP-based state estimate,
+// via the same shared lib function) but runs standalone against whichever
 // database the env points at. Run it once per environment:
 //
 //   doppler run --project venos --config dev -- node <bundle> --dry-run
@@ -16,8 +16,7 @@
 // rate, so re-running is a no-op. --dry-run reports what it *would* change and
 // writes nothing.
 import { createClient } from '@supabase/supabase-js';
-import { lookupTaxRates, lookupStateFallbackRate, type TaxRateLookup } from '../lib/taxRates.js';
-import { decryptToken } from '../lib/crypto.js';
+import { lookupStateFallbackRate, type TaxRateLookup } from '../lib/taxRates.js';
 
 const DRY_RUN = process.argv.includes('--dry-run');
 
@@ -45,22 +44,12 @@ async function main() {
   const summaryByEvent = new Map<string, Row>();
   for (const s of (summaries ?? []) as Row[]) summaryByEvent.set(String(s['eventID']), s);
 
-  const { data: companies } = await supabase.from('Companies').select('id, taxjarToken');
-  const tokenByCompany = new Map<string, string | null>();
-  for (const c of (companies ?? []) as Row[]) tokenByCompany.set(String(c['id']), (c['taxjarToken'] as string) ?? null);
-
-  // Cache lookups so N events in the same company+ZIP hit TaxJar once.
+  // Cache lookups so N events with the same ZIP resolve once.
   const rateCache = new Map<string, TaxRateLookup | null>();
-  async function resolveRates(companyId: string, zip: string): Promise<TaxRateLookup | null> {
-    const cacheKey = `${companyId}:${zip}`;
-    if (rateCache.has(cacheKey)) return rateCache.get(cacheKey)!;
-    let rates: TaxRateLookup | null = null;
-    const enc = tokenByCompany.get(companyId);
-    if (enc) {
-      try { rates = await lookupTaxRates(zip, decryptToken(enc)); } catch { rates = null; }
-    }
-    if (!rates) rates = lookupStateFallbackRate(zip);
-    rateCache.set(cacheKey, rates);
+  function resolveRates(zip: string): TaxRateLookup | null {
+    if (rateCache.has(zip)) return rateCache.get(zip)!;
+    const rates = lookupStateFallbackRate(zip);
+    rateCache.set(zip, rates);
     return rates;
   }
 
@@ -77,7 +66,7 @@ async function main() {
     if (Number(summary['stateTaxRate'] ?? 0) > 0) { counts.alreadySet++; continue; } // already good
     if (!zip || !companyId) { counts.noZip++; continue; }
 
-    const rates = await resolveRates(companyId, zip);
+    const rates = resolveRates(zip);
     if (!rates) { counts.noRate++; continue; }               // unknown ZIP or no-sales-tax state
 
     if (DRY_RUN) {

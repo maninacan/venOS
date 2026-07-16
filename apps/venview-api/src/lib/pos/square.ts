@@ -190,6 +190,11 @@ export const squareProvider: PosProvider = {
     let grossSales = 0, discounts = 0, tips = 0, taxCollected = 0, refunds = 0;
     type PulledMod = { name: string; catalogObjectId: string | null; qty: number };
     const itemMap = new Map<string, { name: string; qty: number; catalogObjectId: string | null; revenue: number; modifiers: PulledMod[] }>();
+    // Actual taxes Square applied, aggregated by name+rate across orders. Square
+    // returns each order's `taxes` with a `name`, string `percentage` (e.g. "8.25"),
+    // and `applied_money`. This is the real collected rate — the source of truth for
+    // the Sales Tax tab (vs. a separate ZIP-based estimate).
+    const taxMap = new Map<string, { name: string; rate: number; amount: number }>();
     for (const order of allOrders) {
       // Gross = true item sales (pre-discount/return/tax/tip), summed per line
       // item from gross_sales_money (fallback total_money, then base_price × qty).
@@ -231,6 +236,17 @@ export const squareProvider: PosProvider = {
       discounts += amt(order['total_discount_money']) / 100;
       tips += amt(order['total_tip_money']) / 100;
       taxCollected += amt(order['total_tax_money']) / 100;
+      // Capture the actual applied taxes (name + rate + amount), keyed by name+rate
+      // so state/county/city lines stay distinct and merge across orders.
+      for (const tax of (order['taxes'] as Array<Record<string, unknown>> | null) ?? []) {
+        const taxName = (tax['name'] as string ?? '').trim() || 'Sales Tax';
+        const rate = Number(tax['percentage'] ?? 0) / 100; // percentage is a string like "8.25"
+        const applied = amt(tax['applied_money']) / 100;
+        if (rate <= 0 && applied <= 0) continue;
+        const key = `${taxName}|${rate}`;
+        const prev = taxMap.get(key);
+        taxMap.set(key, { name: taxName, rate, amount: +((prev?.amount ?? 0) + applied).toFixed(2) });
+      }
       // Returns/refunds recorded on the order.
       refunds += amt((order['return_amounts'] as { total_money?: unknown } | null)?.total_money) / 100;
       // Auto-gratuity service charges are tips too (card tips arrive via total_tip_money).
@@ -250,6 +266,7 @@ export const squareProvider: PosProvider = {
 
     return {
       grossSales, discounts, refunds, tips, processingFees, totalCollected, taxCollected,
+      taxLines: [...taxMap.values()],
       items: [...itemMap.values()],
       orderCount: allOrders.length,
     };

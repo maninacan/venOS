@@ -44,6 +44,9 @@ export interface PosSalesPull {
   processingFees: number;   // provider processing fees (stored in SalesSummary.squareFees)
   totalCollected: number;
   taxCollected: number;
+  // The actual taxes the POS applied, aggregated across orders by name + rate
+  // (e.g. state + county + city). Empty when the POS reported no tax lines.
+  taxLines?: Array<{ name: string; rate: number; amount: number }>;
   items: Array<{
     name: string;
     qty: number;

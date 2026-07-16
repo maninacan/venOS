@@ -2,7 +2,7 @@ import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
 
 // ── AES-256-GCM token encryption ─────────────────────────────────────────────
 // Format: <iv_hex>:<authTag_hex>:<data_hex>. Used for any secret we store at
-// rest (Square OAuth tokens, per-company TaxJar tokens, …).
+// rest (e.g. Square OAuth tokens).
 
 function getEncKey(): Buffer {
   const hex = process.env['TOKEN_ENCRYPTION_KEY'];

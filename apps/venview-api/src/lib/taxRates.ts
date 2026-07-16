@@ -1,4 +1,3 @@
-import axios from 'axios';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import zipcodes from 'zipcodes';
 
@@ -9,11 +8,12 @@ export interface TaxRateLookup {
   jurisdiction: { state: string; county: string; city: string };
 }
 
-// General statewide sales-tax rates (decimals) by USPS state code, used as a
-// fallback when TaxJar isn't configured so at least the STATE portion can be
-// estimated. These are the base state rates only — local (county/city/district)
-// tax is not included, so callers should treat this as an estimate and let the
-// user override with exact rates. NH/OR/MT/DE/AK have no statewide sales tax.
+// General statewide sales-tax rates (decimals) by USPS state code. Used to
+// estimate the STATE portion for events whose POS didn't report actual tax
+// (e.g. manual/non-POS events). These are the base state rates only — local
+// (county/city/district) tax is not included, so callers should treat this as an
+// estimate and let the user override with exact rates. NH/OR/MT/DE/AK have no
+// statewide sales tax.
 const STATE_SALES_TAX_RATES: Record<string, number> = {
   AL: 0.04, AK: 0.0, AZ: 0.056, AR: 0.065, CA: 0.0725, CO: 0.029, CT: 0.0635,
   DE: 0.0, DC: 0.06, FL: 0.06, GA: 0.04, HI: 0.04, ID: 0.06, IL: 0.0625,
@@ -42,61 +42,4 @@ export function lookupStateFallbackRate(zip: string): TaxRateLookup | null {
     combinedRate: stateRate,
     jurisdiction: { state, county: '', city: String(zc?.city ?? '') },
   };
-}
-
-// Validate a TaxJar token with a lightweight rate lookup. Distinguishes a
-// rejected token (auth failure) from a transient network problem so the caller
-// can give a precise error and never store an unverified token.
-export async function verifyTaxjarToken(token: string): Promise<'valid' | 'invalid' | 'unreachable'> {
-  if (!token.trim()) return 'invalid';
-  try {
-    await axios.get('https://api.taxjar.com/v2/rates/90210', {
-      headers: { Authorization: `Bearer ${token.trim()}` },
-      timeout: 8000,
-    });
-    return 'valid';
-  } catch (err) {
-    const status = (err as { response?: { status?: number } })?.response?.status;
-    return status === 401 || status === 403 ? 'invalid' : 'unreachable';
-  }
-}
-
-// Look up the state + combined-local sales tax rate for a US ZIP, using the
-// company's own TaxJar token.
-//
-// Provider boundary: this single function isolates the rate source so it can be
-// swapped (TaxJar today; another API or a static dataset later). Returns null
-// on any failure / missing token so callers degrade to manual entry.
-export async function lookupTaxRates(zip: string, token: string): Promise<TaxRateLookup | null> {
-  const clean = (zip ?? '').trim().slice(0, 5);
-  if (!/^\d{5}$/.test(clean)) return null;
-  if (!token) return null;
-
-  try {
-    const res = await axios.get(`https://api.taxjar.com/v2/rates/${clean}`, {
-      headers: { Authorization: `Bearer ${token}` },
-      timeout: 8000,
-    });
-    const r = (res.data as { rate?: Record<string, unknown> })?.rate;
-    if (!r) return null;
-
-    const stateRate = Number(r['state_rate'] ?? 0);
-    const combinedRate = Number(r['combined_rate'] ?? 0);
-    const localRate = Math.max(0, +(combinedRate - stateRate).toFixed(6));
-
-    // Fall back to the zipcodes package for names TaxJar may omit.
-    const zc = zipcodes.lookup(clean);
-    return {
-      stateRate,
-      localRate,
-      combinedRate,
-      jurisdiction: {
-        state: String(r['state'] ?? zc?.state ?? ''),
-        county: String(r['county'] ?? ''),
-        city: String(r['city'] ?? zc?.city ?? ''),
-      },
-    };
-  } catch {
-    return null;
-  }
 }

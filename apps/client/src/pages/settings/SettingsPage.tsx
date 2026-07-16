@@ -15,7 +15,7 @@ import { COUNTRIES } from '../../lib/countries';
 const GET_SETTINGS = gql`
   query GetSettings($companyId: ID!) {
     company(id: $companyId) {
-      id name phone contactName vendorCategory email joinCode plan pendingOwnerId taxjarConnected posSystem defaultCountry
+      id name phone contactName vendorCategory email joinCode plan pendingOwnerId posSystem defaultCountry
       members { userId email role }
       pendingRequests { userId email role }
       posStatus { connected provider locationName locationId needsReauth }
@@ -45,16 +45,6 @@ const APPROVE_MEMBER = gql`
 const INVITE_MEMBER = gql`
   mutation InviteMember($companyId: ID!, $email: String!) {
     inviteMember(companyId: $companyId, email: $email) { email status }
-  }
-`;
-const SET_TAXJAR = gql`
-  mutation SetTaxjarToken($companyId: ID!, $token: String!) {
-    setTaxjarToken(companyId: $companyId, token: $token)
-  }
-`;
-const REMOVE_TAXJAR = gql`
-  mutation RemoveTaxjarToken($companyId: ID!) {
-    removeTaxjarToken(companyId: $companyId)
   }
 `;
 const OFFER_OWNERSHIP = gql`
@@ -115,8 +105,6 @@ export function SettingsPage() {
   const [acceptOwnership] = useMutation(ACCEPT_OWNERSHIP);
   const [declineOwnership] = useMutation(DECLINE_OWNERSHIP);
   const [deleteCompany] = useMutation(DELETE_COMPANY);
-  const [setTaxjarToken] = useMutation(SET_TAXJAR);
-  const [removeTaxjarToken] = useMutation(REMOVE_TAXJAR);
   const { user } = useAuth();
 
   const { data, loading, refetch } = useQuery(GET_SETTINGS, {
@@ -145,8 +133,6 @@ export function SettingsPage() {
   const [inviting, setInviting] = useState(false);
   const [inviteCooldown, setInviteCooldown] = useState(0);
   const [transferTo, setTransferTo] = useState('');
-  const [taxjarInput, setTaxjarInput] = useState('');
-  const [savingTaxjar, setSavingTaxjar] = useState(false);
 
   const info = data?.company;
   const posStatus = info?.posStatus;
@@ -293,29 +279,6 @@ export function SettingsPage() {
     }
   }
 
-  async function handleSaveTaxjar() {
-    if (!taxjarInput.trim()) return;
-    setSavingTaxjar(true);
-    try {
-      await setTaxjarToken({ variables: { companyId, token: taxjarInput.trim() } });
-      showToast(t('toast.taxjarConnected', 'TaxJar connected.'), 'success');
-      setTaxjarInput('');
-      refetch();
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : t('toast.taxjarSaveFailed', 'Failed to save token'), 'error');
-    } finally { setSavingTaxjar(false); }
-  }
-
-  async function handleRemoveTaxjar() {
-    if (!confirm(t('toast.confirmRemoveTaxjar', 'Disconnect TaxJar? Tax rates will no longer auto-look-up.'))) return;
-    try {
-      await removeTaxjarToken({ variables: { companyId } });
-      showToast(t('toast.taxjarDisconnected', 'TaxJar disconnected.'), 'info');
-      refetch();
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : t('toast.disconnectFailed', 'Failed to disconnect'), 'error');
-    }
-  }
 
   async function saveCompanyDetails() {
     setSavingCompany(true);
@@ -564,58 +527,6 @@ export function SettingsPage() {
           )}
         </div>
 
-        {/* TaxJar */}
-        <div className="border border-[rgba(11,42,74,0.12)] rounded-[10px] p-4 mt-3">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-[#16a34a] rounded-md flex items-center justify-center flex-shrink-0 text-white">
-              <i className="fa-solid fa-percent" />
-            </div>
-            <div>
-              <h3 className="m-0 mb-0.5 text-[0.95rem] font-semibold">{t('taxjar.name', 'TaxJar')}</h3>
-              <p className="m-0 text-[0.8rem] text-[#64748b]">{t('taxjar.blurb', 'Auto-look-up state & local sales tax rates by ZIP')}</p>
-            </div>
-            <span className={`inline-flex items-center gap-1 px-2.5 py-[3px] rounded-full text-[0.74rem] font-semibold ml-auto ${info?.taxjarConnected ? 'bg-[#dcfce7] text-[#15803d]' : 'bg-[#f1f5f9] text-[#64748b]'}`}>
-              {info?.taxjarConnected ? <><i className="fa-solid fa-check" aria-hidden="true" /> {t('taxjar.connected', 'Connected')}</> : t('taxjar.notConnected', 'Not Connected')}
-            </span>
-          </div>
-
-          {!isOwner ? (
-            <p style={{ fontSize: '0.78rem', color: 'var(--muted)', margin: '12px 0 0' }}>
-              {t('taxjar.ownerOnly', 'Only the company owner can manage the TaxJar connection.')}
-            </p>
-          ) : info?.taxjarConnected ? (
-            <div style={{ marginTop: 14 }}>
-              <button className="btn-danger-subtle" style={{ fontSize: '0.85rem' }} onClick={handleRemoveTaxjar}>
-                {t('taxjar.disconnect', 'Disconnect TaxJar')}
-              </button>
-            </div>
-          ) : (
-            <div style={{ marginTop: 14, display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
-              <div className="form-group" style={{ margin: 0, flex: 1, minWidth: 240 }}>
-                <label style={{ fontSize: '0.8rem' }}>{t('taxjar.tokenLabel', 'TaxJar API token')}</label>
-                <input
-                  type="password"
-                  value={taxjarInput}
-                  onChange={e => setTaxjarInput(e.target.value)}
-                  placeholder={t('taxjar.tokenPlaceholder', 'Paste your TaxJar API token')}
-                  autoComplete="off"
-                  style={{ width: '100%' }}
-                />
-              </div>
-              <button className="btn-primary" style={{ fontSize: '0.85rem' }} onClick={handleSaveTaxjar} disabled={savingTaxjar || !taxjarInput.trim()}>
-                {savingTaxjar && <span className="spinner" />} <span>{t('taxjar.connect', 'Connect')}</span>
-              </button>
-              <p style={{ fontSize: '0.78rem', color: 'var(--muted)', margin: '4px 0 0', width: '100%' }}>
-                <Trans
-                  i18nKey="taxjar.tokenHelp"
-                  ns="settings"
-                  defaults="Get a token at <1>app.taxjar.com → Account → API Access</1>. Stored encrypted; never shown again."
-                  components={{ 1: <span style={{ fontWeight: 600 }} /> }}
-                />
-              </p>
-            </div>
-          )}
-        </div>
       </div>
 
       {/* Company Details */}

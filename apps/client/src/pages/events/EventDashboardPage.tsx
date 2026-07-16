@@ -29,7 +29,7 @@ const GET_REPORT = gql`
         healthDeptFee eventFee mileage mileageRate coordinatorFee
         posFee employeeBonus eventRunnerFees laborFees additionalFees
       }
-      taxes { stateRate localRate combinedRate stateTax localTax taxCollected rateSource jurisdiction }
+      taxes { stateRate localRate combinedRate stateTax localTax taxCollected rateSource jurisdiction lines { name rate amount } }
       summary {
         posFees cogs grossProfit totalExpenses netProfit
         tips stateFoodTax laborFees additionalFeesTotal mileageReimbursement
@@ -586,6 +586,9 @@ function TaxSection({ eventId, hasPos, taxes, onSaved }: {
   const stateTax = Number(taxes?.['stateTax'] ?? 0);
   const localTax = Number(taxes?.['localTax'] ?? 0);
   const taxCollected = Number(taxes?.['taxCollected'] ?? 0);
+  // Actual taxes the POS applied (state/county/city), when available — shown
+  // as-is instead of a computed state/local split.
+  const posLines = (taxes?.['lines'] as Array<{ name: string; rate: number; amount: number }> | null) ?? [];
 
   async function save() {
     setSaving(true);
@@ -619,19 +622,28 @@ function TaxSection({ eventId, hasPos, taxes, onSaved }: {
       {String(taxes?.['rateSource'] ?? '') === 'none' && (
         <div style={{ background: '#fff7ed', border: '1px solid #fed7aa', color: '#c2410c', borderRadius: 8, padding: '10px 12px', fontSize: '0.82rem', margin: '0 0 12px', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
           <i className="fa-solid fa-triangle-exclamation" aria-hidden="true" style={{ marginTop: 2 }} />
-          <span>{t('dashboard.tax.promptNone', "We couldn't determine your sales tax rates, so the collected tax isn't split by state. Enter your state and local rates below, or connect TaxJar in Settings for automatic lookup.")}</span>
+          <span>{t('dashboard.tax.promptNone', "We couldn't determine your sales tax rates, so the collected tax isn't split by state. Enter your state and local rates below.")}</span>
         </div>
       )}
       {String(taxes?.['rateSource'] ?? '') === 'estimated' && (
         <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', color: '#1e40af', borderRadius: 8, padding: '10px 12px', fontSize: '0.82rem', margin: '0 0 12px', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
           <i className="fa-solid fa-circle-info" aria-hidden="true" style={{ marginTop: 2 }} />
-          <span>{t('dashboard.tax.promptEstimated', "State rate estimated from your ZIP ({{state}}); local tax isn't included. For exact state + local rates, enter them below or connect TaxJar in Settings.", { state: stateName })}</span>
+          <span>{t('dashboard.tax.promptEstimated', "State rate estimated from your ZIP ({{state}}); local tax isn't included. For exact state + local rates, enter them below.", { state: stateName })}</span>
         </div>
       )}
 
       <div style={{ marginBottom: 14 }}>
-        <div style={rowStyle}><span>{t('dashboard.tax.remitState', 'Remit to {{name}} — State ({{rate}}%)', { name: stateName, rate: (Number(taxes?.['stateRate'] ?? 0) * 100).toFixed(2) })}</span><strong>{fmt(stateTax)}</strong></div>
-        <div style={rowStyle}><span>{t('dashboard.tax.local', '{{name}} — Local ({{rate}}%)', { name: localName, rate: (Number(taxes?.['localRate'] ?? 0) * 100).toFixed(2) })}</span><strong>{fmt(localTax)}</strong></div>
+        {posLines.length > 0 ? (
+          // Real POS tax lines (name + rate + amount), exactly as the POS applied them.
+          posLines.map((l, i) => (
+            <div key={i} style={rowStyle}><span>{t('dashboard.tax.posLine', '{{name}} ({{rate}}%)', { name: l.name, rate: (Number(l.rate) * 100).toFixed(2) })}</span><strong>{fmt(Number(l.amount))}</strong></div>
+          ))
+        ) : (
+          <>
+            <div style={rowStyle}><span>{t('dashboard.tax.remitState', 'Remit to {{name}} — State ({{rate}}%)', { name: stateName, rate: (Number(taxes?.['stateRate'] ?? 0) * 100).toFixed(2) })}</span><strong>{fmt(stateTax)}</strong></div>
+            <div style={rowStyle}><span>{t('dashboard.tax.local', '{{name}} — Local ({{rate}}%)', { name: localName, rate: (Number(taxes?.['localRate'] ?? 0) * 100).toFixed(2) })}</span><strong>{fmt(localTax)}</strong></div>
+          </>
+        )}
         <div style={{ ...rowStyle, borderBottom: 'none', fontWeight: 700, color: 'var(--vv-navy)' }}><span>{t('dashboard.tax.totalCollected', 'Total tax collected')}</span><strong>{fmt(taxCollected)}</strong></div>
       </div>
 

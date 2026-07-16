@@ -35,8 +35,6 @@ export const typeDefs = `#graphql
     "User id with a pending ownership offer, if any."
     pendingOwnerId: ID
     posStatus: PosStatus
-    "True when a TaxJar API token is stored for this company (the token itself is never exposed)."
-    taxjarConnected: Boolean
     "Onboarding answer: 'square' | 'manual' (others reserved)."
     posSystem: String
     "Onboarding answer: 'pos' | 'other' | 'flat_rate'."
@@ -208,6 +206,15 @@ export const typeDefs = `#graphql
     uploadedAt: String
   }
 
+  "A single tax the POS actually applied (e.g. state, county, city)."
+  type TaxLine {
+    name: String!
+    "Fractional rate, e.g. 0.0725 for 7.25%."
+    rate: Float!
+    "Amount collected for this tax."
+    amount: Float!
+  }
+
   type TaxInfo {
     stateRate: Float
     localRate: Float
@@ -216,6 +223,8 @@ export const typeDefs = `#graphql
     localTax: Float
     taxCollected: Float
     rateSource: String
+    "The POS-applied tax breakdown (name + rate + amount); present when rateSource is 'square'."
+    lines: [TaxLine!]
     jurisdiction: JSON
     stateFoodTax: Float
     taxDetail: JSON
@@ -788,8 +797,6 @@ export const typeDefs = `#graphql
     approveMember(companyId: ID!, userId: ID!): Boolean!
     inviteMember(companyId: ID!, email: String!): InviteResult!
     setCompanyProfile(companyId: ID!, posSystem: String, laborMethod: String): Company!
-    setTaxjarToken(companyId: ID!, token: String!): Boolean!
-    removeTaxjarToken(companyId: ID!): Boolean!
     leaveCompany(companyId: ID!): Boolean!
     offerOwnership(companyId: ID!, newOwnerId: ID!): Boolean!
     acceptOwnership(companyId: ID!): Boolean!

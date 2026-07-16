@@ -2,8 +2,6 @@ import { randomBytes } from 'crypto';
 import type { AppContext } from '../../context/index.js';
 import { requireAuth, requireCompanyMember } from '../../context/index.js';
 import { supabase } from '../../lib/supabase.js';
-import { encryptToken } from '../../lib/crypto.js';
-import { verifyTaxjarToken } from '../../lib/taxRates.js';
 import { sendWelcomeEmail, sendJoinRequestEmail } from '../../lib/email.js';
 import logger from '../../lib/logger.js';
 
@@ -353,35 +351,6 @@ export const companyResolvers = {
       return data;
     },
 
-    // Store the company's own TaxJar API token, encrypted at rest (owner only).
-    setTaxjarToken: async (
-      _: unknown,
-      { companyId, token }: { companyId: string; token: string },
-      ctx: AppContext
-    ) => {
-      requireAuth(ctx);
-      const membership = await requireCompanyMember(companyId, ctx.user.id);
-      if (membership.role !== 'owner') throw new Error('Only the owner can manage integrations');
-      const trimmed = token.trim();
-      if (!trimmed) throw new Error('Token required');
-
-      // Verify before storing so a bad token is rejected immediately.
-      const check = await verifyTaxjarToken(trimmed);
-      if (check === 'invalid') throw new Error('That TaxJar API token was rejected. Double-check it in app.taxjar.com → Account → API Access.');
-      if (check === 'unreachable') throw new Error('Could not reach TaxJar to verify the token. Please try again in a moment.');
-
-      await supabase.from('Companies').update({ taxjarToken: encryptToken(trimmed) }).eq('id', companyId);
-      return true;
-    },
-
-    removeTaxjarToken: async (_: unknown, { companyId }: { companyId: string }, ctx: AppContext) => {
-      requireAuth(ctx);
-      const membership = await requireCompanyMember(companyId, ctx.user.id);
-      if (membership.role !== 'owner') throw new Error('Only the owner can manage integrations');
-      await supabase.from('Companies').update({ taxjarToken: null }).eq('id', companyId);
-      return true;
-    },
-
     leaveCompany: async (_: unknown, { companyId }: { companyId: string }, ctx: AppContext) => {
       requireAuth(ctx);
       const membership = await requireCompanyMember(companyId, ctx.user.id);
@@ -488,9 +457,6 @@ export const companyResolvers = {
   },
 
   Company: {
-    // Whether a TaxJar token is stored — never expose the token itself.
-    taxjarConnected: (company: Record<string, unknown>) => !!company['taxjarToken'],
-
     members: async (company: Record<string, unknown>) => {
       return membersByStatus(company['id'] as string, 'active');
     },

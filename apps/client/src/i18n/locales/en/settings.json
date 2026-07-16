@@ -32,18 +32,6 @@
     "reconnect": "Reconnect {{name}}",
     "reauthWarning": "Your {{name}} connection stopped working (it may have expired or been revoked). Reconnect to keep syncing sales and labor."
   },
-  "taxjar": {
-    "name": "TaxJar",
-    "blurb": "Auto-look-up state & local sales tax rates by ZIP",
-    "connected": "Connected",
-    "notConnected": "Not Connected",
-    "ownerOnly": "Only the company owner can manage the TaxJar connection.",
-    "disconnect": "Disconnect TaxJar",
-    "tokenLabel": "TaxJar API token",
-    "tokenPlaceholder": "Paste your TaxJar API token",
-    "connect": "Connect",
-    "tokenHelp": "Get a token at <1>app.taxjar.com → Account → API Access</1>. Stored encrypted; never shown again."
-  },
   "companyDetails": {
     "heading": "Company Details",
     "name": "Company Name",
@@ -119,10 +107,6 @@
     "posDisconnected": "{{name}} disconnected.",
     "disconnectFailed": "Failed to disconnect",
     "confirmDisconnectPos": "Disconnect {{name}}? You will need to reconnect to sync sales.",
-    "taxjarConnected": "TaxJar connected.",
-    "taxjarSaveFailed": "Failed to save token",
-    "confirmRemoveTaxjar": "Disconnect TaxJar? Tax rates will no longer auto-look-up.",
-    "taxjarDisconnected": "TaxJar disconnected.",
     "detailsSaved": "Company details saved!",
     "saveFailed": "Failed to save",
     "confirmRemoveMember": "Remove {{email}} from the team?",

@@ -1,8 +1,7 @@
 import type { AppContext } from '../../context/index.js';
 import { requireAuth, requireCompanyMember } from '../../context/index.js';
 import { supabase } from '../../lib/supabase.js';
-import { decryptToken } from '../../lib/crypto.js';
-import { lookupTaxRates, lookupStateFallbackRate, type TaxRateLookup } from '../../lib/taxRates.js';
+import { lookupStateFallbackRate } from '../../lib/taxRates.js';
 import { providerForCompany, type PosEvent } from '../../lib/pos/index.js';
 import { isPosAuthError } from '../../lib/pos/types.js';
 import { buildCostLookup, norm } from '../../lib/pos/matchCost.js';
@@ -62,31 +61,32 @@ async function upsertSales(eventId: string, patch: Record<string, unknown>): Pro
   }
 }
 
-// Look up state + local rates from the event's ZIP and store them — unless the
-// rate was manually overridden. Prefers TaxJar (exact state + local) when the
-// company has a token; otherwise falls back to the state's base rate derived
-// from the ZIP so the STATE portion is still computed. Best-effort: no-ops when
-// there's no ZIP or no rate can be resolved.
+// Store the event's sales-tax rates — unless the rate was manually overridden.
+// Priority: the actual taxes the POS applied (source of truth) → otherwise an
+// estimate of the STATE rate from the event's ZIP (local is unknown; the user can
+// refine it manually). Best-effort: no-ops when nothing can be resolved.
 export async function applyTaxRates(eventId: string): Promise<void> {
-  const { data: ev } = await supabase.from('EventInfo').select('zipCode, companyId').eq('eventID', eventId).single();
-  const evRow = ev as Record<string, unknown> | null;
-  const zip = evRow?.['zipCode'] as string | null;
-  const companyId = evRow?.['companyId'] as string | null;
-  if (!zip || !companyId) return;
+  const { data: s } = await supabase.from('SalesSummary').select('taxOverride, taxLines').eq('eventID', eventId).single();
+  const sRow = s as Record<string, unknown> | null;
+  // A manual rate override wins over any auto-lookup.
+  if (sRow?.['taxOverride']) return;
 
-  const { data: s } = await supabase.from('SalesSummary').select('taxOverride').eq('eventID', eventId).single();
-  if ((s as Record<string, unknown> | null)?.['taxOverride']) return;
-
-  // Prefer the company's own (encrypted) TaxJar token for exact state + local rates.
-  let rates: TaxRateLookup | null = null;
-  const { data: company } = await supabase.from('Companies').select('taxjarToken').eq('id', companyId).single();
-  const enc = (company as Record<string, unknown> | null)?.['taxjarToken'] as string | null;
-  if (enc) {
-    try { rates = await lookupTaxRates(zip, decryptToken(enc)); } catch { rates = null; }
+  // The POS reported the actual applied taxes — they're the source of truth. Set
+  // the combined rate from them; the named breakdown is stored on taxLines and
+  // surfaced directly by the events resolver.
+  const taxLines = (sRow?.['taxLines'] as Array<{ rate?: number }> | null) ?? null;
+  if (taxLines && taxLines.length) {
+    const combined = +taxLines.reduce((sum, l) => sum + Number(l.rate ?? 0), 0).toFixed(6);
+    await upsertSales(eventId, { taxRate: combined, stateTaxRate: 0, localTaxRate: 0, taxJurisdiction: null });
+    return;
   }
-  // No TaxJar (or lookup failed) → estimate the state rate from the ZIP so the
-  // state portion still shows. Local is unknown; the user can refine it manually.
-  if (!rates) rates = lookupStateFallbackRate(zip);
+
+  // No POS tax (e.g. manual/non-POS event) → estimate the state rate from the ZIP.
+  const { data: ev } = await supabase.from('EventInfo').select('zipCode').eq('eventID', eventId).single();
+  const zip = (ev as Record<string, unknown> | null)?.['zipCode'] as string | null;
+  if (!zip) return;
+
+  const rates = lookupStateFallbackRate(zip);
   if (!rates) return;
 
   await upsertSales(eventId, {
@@ -308,6 +308,10 @@ export const salesResolvers = {
         squareFees: +pull.processingFees.toFixed(2), // POS processing fees (column kept for compat)
         totalCollected: +pull.totalCollected.toFixed(2),
         taxCollected: +pull.taxCollected.toFixed(2),
+        // Actual taxes the POS applied (name + rate + amount); source of truth for
+        // the Sales Tax tab. Null when the POS reported none, so applyTaxRates
+        // falls back to the ZIP state estimate.
+        taxLines: pull.taxLines && pull.taxLines.length ? pull.taxLines : null,
         updatedAt: new Date().toISOString(),
       };
       const { data: existingSales } = await supabase.from('SalesSummary').select('id').eq('eventID', eventId).single();

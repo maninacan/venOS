@@ -100,25 +100,32 @@ async function buildEventReport(eventId: string) {
       const taxCollected = ev['posLocationId']
         ? Number(sr?.['taxCollected'] ?? 0)
         : +(taxBase * combinedRate).toFixed(2);
-      // State portion = the state's statutory rate applied to the base (capped at
-      // what was actually collected); the remainder is local. Works whether we
-      // know both rates (TaxJar) or only the state rate (ZIP fallback).
+      // State portion = statutory state rate on the base (capped at collected); the
+      // remainder is local. Used for events whose rates come from the ZIP estimate.
       const stateTax = stateRate > 0 ? Math.min(taxCollected, +(taxBase * stateRate).toFixed(2)) : 0;
       const localTax = +(Math.max(0, taxCollected - stateTax)).toFixed(2);
-      // Where the rates came from, so the client can prompt when they're missing
-      // ('none') or only estimated from the ZIP ('estimated').
+      // The actual taxes the POS applied, if any — the source of truth. Each is a
+      // named line (state/county/city) with its own rate and collected amount.
+      const taxLines = (sr?.['taxLines'] as Array<{ name?: string; rate?: number; amount?: number }> | null) ?? null;
+      const hasPosLines = !!taxLines && taxLines.length > 0;
+      const lines = hasPosLines
+        ? taxLines!.map(l => ({ name: String(l.name ?? 'Sales Tax'), rate: Number(l.rate ?? 0), amount: +Number(l.amount ?? 0).toFixed(2) }))
+        : [];
+      // Where the rates came from, so the client can show the POS breakdown
+      // ('square'), or prompt when they're missing ('none') / estimated from the ZIP.
       const rateSource = sr?.['taxOverride'] ? 'manual'
-        : localRate > 0 ? 'taxjar'
+        : hasPosLines ? 'square'
         : stateRate > 0 ? 'estimated'
         : 'none';
       return {
         stateRate,
         localRate,
-        combinedRate,
+        combinedRate: hasPosLines ? +lines.reduce((s, l) => s + l.rate, 0).toFixed(6) : combinedRate,
         stateTax,
         localTax,
         taxCollected,
         rateSource,
+        lines,
         jurisdiction: sr?.['taxJurisdiction'] ?? null,
         // legacy aliases retained for safety
         stateFoodTax: taxCollected,

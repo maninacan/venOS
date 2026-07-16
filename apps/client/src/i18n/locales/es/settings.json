@@ -32,18 +32,6 @@
     "reconnect": "Reconectar {{name}}",
     "reauthWarning": "Tu conexión de {{name}} dejó de funcionar (puede haber caducado o sido revocada). Reconéctala para seguir sincronizando ventas y mano de obra."
   },
-  "taxjar": {
-    "name": "TaxJar",
-    "blurb": "Consulta automática de tasas de impuestos estatales y locales por código postal",
-    "connected": "Conectado",
-    "notConnected": "No conectado",
-    "ownerOnly": "Solo el propietario de la empresa puede administrar la conexión con TaxJar.",
-    "disconnect": "Desconectar TaxJar",
-    "tokenLabel": "Token de API de TaxJar",
-    "tokenPlaceholder": "Pega tu token de API de TaxJar",
-    "connect": "Conectar",
-    "tokenHelp": "Obtén un token en <1>app.taxjar.com → Cuenta → Acceso a la API</1>. Se almacena cifrado; no se vuelve a mostrar."
-  },
   "companyDetails": {
     "heading": "Datos de la empresa",
     "name": "Nombre de la empresa",
@@ -119,10 +107,6 @@
     "posDisconnected": "{{name}} desconectado.",
     "disconnectFailed": "No se pudo desconectar",
     "confirmDisconnectPos": "¿Desconectar {{name}}? Deberás volver a conectarlo para sincronizar las ventas.",
-    "taxjarConnected": "TaxJar conectado.",
-    "taxjarSaveFailed": "No se pudo guardar el token",
-    "confirmRemoveTaxjar": "¿Desconectar TaxJar? Las tasas de impuestos ya no se consultarán automáticamente.",
-    "taxjarDisconnected": "TaxJar desconectado.",
     "detailsSaved": "¡Datos de la empresa guardados!",
     "saveFailed": "No se pudo guardar",
     "confirmRemoveMember": "¿Quitar a {{email}} del equipo?",
