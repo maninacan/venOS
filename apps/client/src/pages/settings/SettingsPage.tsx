@@ -162,6 +162,16 @@ export function SettingsPage() {
     el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [loading, location.hash]);
 
+  // Deep-link to POS item mapping (e.g. from the event COGS "unmatched" warning):
+  // open the mapping modal directly, then strip the param so it doesn't reopen.
+  useEffect(() => {
+    if (searchParams.get('posMapping') !== '1') return;
+    setShowPosMappings(true);
+    const next = new URLSearchParams(searchParams);
+    next.delete('posMapping');
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
+
   // Handle post-OAuth redirect
   useEffect(() => {
     const pos = searchParams.get('pos');

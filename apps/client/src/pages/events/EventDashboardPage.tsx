@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, type ReactNode } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@apollo/client/react';
 import { gql } from '@apollo/client/core';
-import { useTranslation } from 'react-i18next';
+import { useTranslation, Trans } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { useCurrentCompany } from '../../hooks/useCurrentCompany';
 import { useCurrency } from '../../i18n/useCurrency';
@@ -253,7 +253,17 @@ export function EventDashboardPage() {
             const unmatched = (inventorySales as Array<Record<string, unknown>>).filter(r => r['totalCost'] == null).length;
             return unmatched > 0 ? (
               <p style={{ fontSize: '0.82rem', color: '#c2410c', marginTop: 10 }}>
-                {t('dashboard.recipeUnmatchedWarn', '{{count}} item(s) have no recipe or inventory cost — their COGS is $0. Map them under Settings → POS Item Mapping, then re-pull sales.', { count: unmatched })}
+                <Trans
+                  t={t}
+                  i18nKey="dashboard.recipeUnmatchedWarn"
+                  count={unmatched}
+                  values={{ count: unmatched }}
+                  defaults="{{count}} item(s) have no recipe or inventory cost — their COGS is $0. Map them under <1>Settings → POS Item Mapping</1>, then re-pull sales."
+                >
+                  {'{{count}} item(s) have no recipe or inventory cost — their COGS is $0. Map them under '}
+                  <Link to={`/companies/${companyId}/settings?posMapping=1`} style={{ color: 'inherit', textDecoration: 'underline', fontWeight: 600 }}>Settings → POS Item Mapping</Link>
+                  {', then re-pull sales.'}
+                </Trans>
               </p>
             ) : null;
           })()}
