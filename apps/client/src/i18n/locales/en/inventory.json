@@ -7,8 +7,10 @@
   "searchPlaceholder": "Search items…",
   "allCategories": "All Categories",
   "loading": "Loading…",
-  "emptyNoItems": "No inventory items yet — upload a CSV or items will appear here.",
+  "emptyNoItems": "No inventory items yet — add one manually or use AI Import.",
   "emptyNoMatch": "No items match your search.",
+  "addItem": "Add Item",
+  "lowStockOnly": "Low stock",
   "table": {
     "item": "Item",
     "category": "Category",
@@ -21,8 +23,35 @@
   "cancel": "Cancel",
   "itemCount_one": "{{count}} item",
   "itemCount_other": "{{count}} items",
-  "confirmDelete": "Delete this item?",
-  "confirmClearAll": "Delete ALL inventory items? This cannot be undone.",
+  "addModal": {
+    "title": "Add inventory item",
+    "name": "Name",
+    "namePlaceholder": "e.g. Lemons",
+    "category": "Category",
+    "categoryPlaceholder": "e.g. Produce",
+    "unitCost": "Unit cost",
+    "onHand": "On hand",
+    "reorderAt": "Reorder at",
+    "sku": "SKU",
+    "skuPlaceholder": "Optional",
+    "duplicateWarning": "An item with this name already exists — saving will update it.",
+    "submit": "Add item",
+    "cancel": "Cancel"
+  },
+  "deleteModal": {
+    "title": "Delete item?",
+    "message": "Delete \"{{name}}\"? This cannot be undone.",
+    "confirm": "Delete"
+  },
+  "clearAllModal": {
+    "title": "Delete all inventory?",
+    "message": "This permanently deletes all {{count}} inventory items. This is irreversible and cannot be undone.",
+    "typePrompt": "To confirm, type <1>{{word}}</1> below.",
+    "confirmWord": "DELETE",
+    "continue": "Continue",
+    "confirm": "Delete all",
+    "back": "Back"
+  },
   "streaming": {
     "parseErrorTitle": "Parse Error — Raw Output",
     "analyzingTitle": "Claude is analyzing your file…",

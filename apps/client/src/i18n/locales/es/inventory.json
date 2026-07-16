@@ -7,8 +7,10 @@
   "searchPlaceholder": "Buscar artículos…",
   "allCategories": "Todas las categorías",
   "loading": "Cargando…",
-  "emptyNoItems": "Aún no hay artículos en el inventario — sube un CSV o los artículos aparecerán aquí.",
+  "emptyNoItems": "Aún no hay artículos en el inventario — agrega uno manualmente o usa Importar con IA.",
   "emptyNoMatch": "Ningún artículo coincide con tu búsqueda.",
+  "addItem": "Agregar artículo",
+  "lowStockOnly": "Existencias bajas",
   "table": {
     "item": "Artículo",
     "category": "Categoría",
@@ -21,8 +23,35 @@
   "cancel": "Cancelar",
   "itemCount_one": "{{count}} artículo",
   "itemCount_other": "{{count}} artículos",
-  "confirmDelete": "¿Eliminar este artículo?",
-  "confirmClearAll": "¿Eliminar TODOS los artículos del inventario? Esto no se puede deshacer.",
+  "addModal": {
+    "title": "Agregar artículo al inventario",
+    "name": "Nombre",
+    "namePlaceholder": "p. ej. Limones",
+    "category": "Categoría",
+    "categoryPlaceholder": "p. ej. Frutas y verduras",
+    "unitCost": "Costo unitario",
+    "onHand": "Existencias",
+    "reorderAt": "Reabastecer en",
+    "sku": "SKU",
+    "skuPlaceholder": "Opcional",
+    "duplicateWarning": "Ya existe un artículo con este nombre — al guardar se actualizará.",
+    "submit": "Agregar artículo",
+    "cancel": "Cancelar"
+  },
+  "deleteModal": {
+    "title": "¿Eliminar artículo?",
+    "message": "¿Eliminar \"{{name}}\"? Esto no se puede deshacer.",
+    "confirm": "Eliminar"
+  },
+  "clearAllModal": {
+    "title": "¿Eliminar todo el inventario?",
+    "message": "Esto elimina permanentemente los {{count}} artículos del inventario. Es irreversible y no se puede deshacer.",
+    "typePrompt": "Para confirmar, escribe <1>{{word}}</1> a continuación.",
+    "confirmWord": "ELIMINAR",
+    "continue": "Continuar",
+    "confirm": "Eliminar todo",
+    "back": "Atrás"
+  },
   "streaming": {
     "parseErrorTitle": "Error de análisis — Salida sin procesar",
     "analyzingTitle": "Claude está analizando tu archivo…",

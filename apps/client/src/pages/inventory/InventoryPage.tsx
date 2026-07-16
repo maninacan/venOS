@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useTranslation, Trans } from 'react-i18next';
 import { useQuery, useMutation } from '@apollo/client/react';
 import { gql } from '@apollo/client/core';
 import { useCurrentCompany } from '../../hooks/useCurrentCompany';
 import { BackToSetupButton } from '../../components/guidance/BackToSetupButton';
+import { ConfirmModal } from '../../components/modals/ConfirmModal';
+import { AddInventoryItemModal, type NewInventoryInput } from '../../components/modals/AddInventoryItemModal';
 import { showToast } from '@org/data';
 import { useCurrency } from '../../i18n/useCurrency';
 import { formatNumber } from '../../i18n/format';
@@ -76,6 +78,10 @@ export function InventoryPage() {
   const [editVals, setEditVals] = useState<Record<string, string>>({});
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
+  const [lowOnly, setLowOnly] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<InventoryItem | null>(null);
+  const [showClearAll, setShowClearAll] = useState(false);
 
   // AI import state
   const [aiUploading, setAiUploading] = useState(false);
@@ -104,11 +110,15 @@ export function InventoryPage() {
 
   const items: InventoryItem[] = data?.inventory ?? [];
   const categories = [...new Set(items.map(i => i.category).filter(Boolean) as string[])].sort();
+  const isLowStock = (item: InventoryItem) =>
+    (item.reorderThreshold ?? 0) > 0 && (item.quantityOnHand ?? 0) <= (item.reorderThreshold ?? 0);
+  const lowCount = items.filter(isLowStock).length;
 
   const filtered = items.filter(item => {
     const matchesSearch = !search || item.name.toLowerCase().includes(search.toLowerCase());
     const matchesCategory = !categoryFilter || item.category === categoryFilter;
-    return matchesSearch && matchesCategory;
+    const matchesLow = !lowOnly || isLowStock(item);
+    return matchesSearch && matchesCategory && matchesLow;
   });
 
   function startEdit(item: InventoryItem) {
@@ -145,15 +155,24 @@ export function InventoryPage() {
     }
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm(t('confirmDelete', 'Delete this item?'))) return;
-    await deleteItem({ variables: { id } });
+  // Persist a manually-added item. Throws on error so the modal shows it inline.
+  async function handleAddItem(input: NewInventoryInput) {
+    await createItem({ variables: { companyId, input } });
+    setShowAddModal(false);
+    showToast(t('toast.itemAdded', 'Item saved.'), 'success');
     refetch();
   }
 
-  async function handleClearAll() {
-    if (!confirm(t('confirmClearAll', 'Delete ALL inventory items? This cannot be undone.'))) return;
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    await deleteItem({ variables: { id: deleteTarget.id } });
+    setDeleteTarget(null);
+    refetch();
+  }
+
+  async function confirmClearAll() {
     await clearAll({ variables: { companyId } });
+    setShowClearAll(false);
     showToast(t('toast.cleared', 'Inventory cleared'), 'info');
     refetch();
   }
@@ -299,7 +318,10 @@ export function InventoryPage() {
 
         <div className="flex flex-wrap gap-2.5 mb-3.5 justify-between items-center">
           <div className="flex gap-2 items-center flex-wrap">
-            <button className="btn-primary" onClick={() => aiFileInputRef.current?.click()} disabled={aiUploading}>
+            <button className="btn-primary" onClick={() => setShowAddModal(true)}>
+              <i className="fa-solid fa-plus" /> <span>{t('addItem', 'Add Item')}</span>
+            </button>
+            <button className="btn-secondary" onClick={() => aiFileInputRef.current?.click()} disabled={aiUploading}>
               {aiUploading ? <span className="spinner" /> : <i className="fa-solid fa-wand-magic-sparkles" />}
               <span>{aiUploading ? ` ${t('analyzing', 'Analyzing…')}` : ` ${t('aiImport', 'AI Import')}`}</span>
             </button>
@@ -310,9 +332,22 @@ export function InventoryPage() {
               accept=".csv,.xlsx,.xls,.pdf,.jpg,.jpeg,.png,.webp,.gif,.heic"
               onChange={handleAIUpload}
             />
-            <button className="btn-danger" onClick={handleClearAll}><i className="fa-solid fa-trash" /> {t('clearAll', 'Clear All')}</button>
+            {items.length > 0 && (
+              <button className="btn-danger" onClick={() => setShowClearAll(true)}><i className="fa-solid fa-trash" /> {t('clearAll', 'Clear All')}</button>
+            )}
           </div>
           <div className="flex gap-2 items-center flex-wrap">
+            {lowCount > 0 && (
+              <button
+                type="button"
+                className={lowOnly ? 'btn-primary' : 'btn-secondary'}
+                onClick={() => setLowOnly(v => !v)}
+                aria-pressed={lowOnly}
+                style={{ fontSize: '0.82rem' }}
+              >
+                <i className="fa-solid fa-triangle-exclamation" /> {t('lowStockOnly', 'Low stock')} ({lowCount})
+              </button>
+            )}
             <input type="text" placeholder={t('searchPlaceholder', 'Search items…')} value={search} onChange={e => setSearch(e.target.value)} style={{ width: 180 }} />
             <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)} style={{ width: 150 }}>
               <option value="">{t('allCategories', 'All Categories')}</option>
@@ -324,11 +359,21 @@ export function InventoryPage() {
         {loading && <p className="text-[#64748b] text-[0.88rem]">{t('loading', 'Loading…')}</p>}
 
         {!loading && filtered.length === 0 && (
-          <p className="text-[#64748b] text-[0.86rem] py-8 text-center">
-            {items.length === 0
-              ? t('emptyNoItems', 'No inventory items yet — upload a CSV or items will appear here.')
-              : t('emptyNoMatch', 'No items match your search.')}
-          </p>
+          items.length === 0 ? (
+            <div className="py-8 text-center">
+              <p className="text-[#64748b] text-[0.86rem] mb-3">{t('emptyNoItems', 'No inventory items yet — add one manually or use AI Import.')}</p>
+              <div className="flex gap-2 justify-center flex-wrap">
+                <button className="btn-primary" onClick={() => setShowAddModal(true)}>
+                  <i className="fa-solid fa-plus" /> <span>{t('addItem', 'Add Item')}</span>
+                </button>
+                <button className="btn-secondary" onClick={() => aiFileInputRef.current?.click()} disabled={aiUploading}>
+                  <i className="fa-solid fa-wand-magic-sparkles" /> <span> {t('aiImport', 'AI Import')}</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-[#64748b] text-[0.86rem] py-8 text-center">{t('emptyNoMatch', 'No items match your search.')}</p>
+          )
         )}
 
         {filtered.length > 0 && (
@@ -347,7 +392,7 @@ export function InventoryPage() {
               <tbody>
                 {filtered.map(item => {
                   const isEditing = editingId === item.id;
-                  const isLow = (item.reorderThreshold ?? 0) > 0 && (item.quantityOnHand ?? 0) <= (item.reorderThreshold ?? 0);
+                  const isLow = isLowStock(item);
                   return (
                     <tr key={item.id} style={{ background: isLow ? '#fffbeb' : undefined }}>
                       <td style={{ padding: '8px 10px', borderBottom: '1px solid #f1f5f9' }}>
@@ -384,7 +429,7 @@ export function InventoryPage() {
                         ) : (
                           <div style={{ display: 'flex', gap: 6 }}>
                             <button className="btn-secondary" style={{ fontSize: '0.78rem', padding: '3px 8px' }} onClick={() => startEdit(item)}><i className="fa-solid fa-pen-to-square" /></button>
-                            <button className="btn-danger-subtle" style={{ fontSize: '0.78rem', padding: '3px 8px' }} onClick={() => handleDelete(item.id)}><i className="fa-solid fa-trash" /></button>
+                            <button className="btn-danger-subtle" style={{ fontSize: '0.78rem', padding: '3px 8px' }} onClick={() => setDeleteTarget(item)}><i className="fa-solid fa-trash" /></button>
                           </div>
                         )}
                       </td>
@@ -484,6 +529,52 @@ export function InventoryPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {showAddModal && (
+        <AddInventoryItemModal
+          existingNames={items.map(i => i.name)}
+          categories={categories}
+          onSave={handleAddItem}
+          onClose={() => setShowAddModal(false)}
+        />
+      )}
+
+      {deleteTarget && (
+        <ConfirmModal
+          danger
+          title={t('deleteModal.title', 'Delete item?')}
+          message={t('deleteModal.message', 'Delete "{{name}}"? This cannot be undone.', { name: deleteTarget.name })}
+          confirmLabel={t('deleteModal.confirm', 'Delete')}
+          cancelLabel={t('cancel', 'Cancel')}
+          onConfirm={confirmDelete}
+          onClose={() => setDeleteTarget(null)}
+        />
+      )}
+
+      {showClearAll && (
+        <ConfirmModal
+          danger
+          title={t('clearAllModal.title', 'Delete all inventory?')}
+          message={t('clearAllModal.message', 'This permanently deletes all {{count}} inventory items. This is irreversible and cannot be undone.', { count: items.length })}
+          requireText={t('clearAllModal.confirmWord', 'DELETE')}
+          requireTextPrompt={
+            <Trans
+              t={t}
+              i18nKey="clearAllModal.typePrompt"
+              defaults="To confirm, type <1>{{word}}</1> below."
+              values={{ word: t('clearAllModal.confirmWord', 'DELETE') }}
+              components={{ 1: <strong style={{ color: 'var(--vv-navy)' }} /> }}
+            />
+          }
+          inputPlaceholder={t('clearAllModal.confirmWord', 'DELETE')}
+          continueLabel={t('clearAllModal.continue', 'Continue')}
+          confirmLabel={t('clearAllModal.confirm', 'Delete all')}
+          cancelLabel={t('cancel', 'Cancel')}
+          backLabel={t('clearAllModal.back', 'Back')}
+          onConfirm={confirmClearAll}
+          onClose={() => setShowClearAll(false)}
+        />
       )}
     </>
   );

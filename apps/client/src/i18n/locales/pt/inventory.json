@@ -7,8 +7,10 @@
   "searchPlaceholder": "Buscar itens…",
   "allCategories": "Todas as categorias",
   "loading": "Carregando…",
-  "emptyNoItems": "Nenhum item em estoque ainda — envie um CSV ou os itens aparecerão aqui.",
+  "emptyNoItems": "Nenhum item em estoque ainda — adicione um manualmente ou use Importar com IA.",
   "emptyNoMatch": "Nenhum item corresponde à sua busca.",
+  "addItem": "Adicionar item",
+  "lowStockOnly": "Estoque baixo",
   "table": {
     "item": "Item",
     "category": "Categoria",
@@ -21,8 +23,35 @@
   "cancel": "Cancelar",
   "itemCount_one": "{{count}} item",
   "itemCount_other": "{{count}} itens",
-  "confirmDelete": "Excluir este item?",
-  "confirmClearAll": "Excluir TODOS os itens do estoque? Isso não pode ser desfeito.",
+  "addModal": {
+    "title": "Adicionar item ao estoque",
+    "name": "Nome",
+    "namePlaceholder": "ex.: Limões",
+    "category": "Categoria",
+    "categoryPlaceholder": "ex.: Hortifrúti",
+    "unitCost": "Custo unitário",
+    "onHand": "Em estoque",
+    "reorderAt": "Repor em",
+    "sku": "SKU",
+    "skuPlaceholder": "Opcional",
+    "duplicateWarning": "Já existe um item com este nome — salvar irá atualizá-lo.",
+    "submit": "Adicionar item",
+    "cancel": "Cancelar"
+  },
+  "deleteModal": {
+    "title": "Excluir item?",
+    "message": "Excluir \"{{name}}\"? Isso não pode ser desfeito.",
+    "confirm": "Excluir"
+  },
+  "clearAllModal": {
+    "title": "Excluir todo o estoque?",
+    "message": "Isso exclui permanentemente todos os {{count}} itens do estoque. É irreversível e não pode ser desfeito.",
+    "typePrompt": "Para confirmar, digite <1>{{word}}</1> abaixo.",
+    "confirmWord": "EXCLUIR",
+    "continue": "Continuar",
+    "confirm": "Excluir tudo",
+    "back": "Voltar"
+  },
   "streaming": {
     "parseErrorTitle": "Erro de análise — Saída bruta",
     "analyzingTitle": "O Claude está analisando seu arquivo…",
