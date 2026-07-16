@@ -43,6 +43,16 @@ export const typeDefs = `#graphql
     laborMethod: String
     "For a pending company (from pendingCompanies): when the current user last reminded the owner; null otherwise."
     lastRemindedAt: String
+    "Counts of records that would be permanently removed if this company is deleted."
+    deletionStats: CompanyDeletionStats!
+  }
+
+  "Record counts shown in the delete-company confirmation (the deletion's blast radius)."
+  type CompanyDeletionStats {
+    events: Int!
+    recipes: Int!
+    inventory: Int!
+    members: Int!
   }
 
   type RemindResult {

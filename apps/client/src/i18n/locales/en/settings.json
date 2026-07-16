@@ -94,7 +94,21 @@
     "selectMember": "Select a member…",
     "offerOwnership": "Offer ownership",
     "deleteCompany": "Delete company",
-    "thisCompany": "this company"
+    "thisCompany": "this company",
+    "deleteModal": {
+      "title": "Delete {{name}}?",
+      "intro": "This permanently deletes everything in this company. This action is irreversible and cannot be undone.",
+      "events": "{{count}} events",
+      "recipes": "{{count}} recipes",
+      "inventory": "{{count}} inventory items",
+      "members": "{{count}} team members",
+      "plusMore": "Plus all sales, labor, POS mappings, and related records.",
+      "typePrompt": "To confirm, type <1>{{name}}</1> below.",
+      "continue": "Continue",
+      "confirm": "Delete company",
+      "cancel": "Cancel",
+      "back": "Back"
+    }
   },
   "toast": {
     "posConnected": "POS connected successfully! Your locations are now available.",

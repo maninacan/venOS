@@ -495,6 +495,27 @@ export const companyResolvers = {
       return membersByStatus(company['id'] as string, 'active');
     },
 
+    // Blast-radius counts for the delete-company confirmation. Uses head+count
+    // queries so no rows are transferred. Resolved on demand (queried lazily when
+    // the delete modal opens), not part of the default settings load.
+    deletionStats: async (company: Record<string, unknown>) => {
+      const companyId = company['id'] as string;
+      const countOf = async (table: string) => {
+        const { count } = await supabase
+          .from(table)
+          .select('*', { count: 'exact', head: true })
+          .eq('companyId', companyId);
+        return count ?? 0;
+      };
+      const [events, recipes, inventory, members] = await Promise.all([
+        countOf('EventInfo'),
+        countOf('RecipeCards'),
+        countOf('VendorInventory'),
+        countOf('CompanyMembers'),
+      ]);
+      return { events, recipes, inventory, members };
+    },
+
     pendingRequests: async (company: Record<string, unknown>) => {
       return membersByStatus(company['id'] as string, 'pending');
     },

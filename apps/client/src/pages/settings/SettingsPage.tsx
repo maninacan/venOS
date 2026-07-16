@@ -8,6 +8,7 @@ import { BackToSetupButton } from '../../components/guidance/BackToSetupButton';
 import { showToast, useAuth } from '@org/data';
 import { PosMappingModal } from '../../components/modals/PosMappingModal';
 import { PosModifierMappingModal } from '../../components/modals/PosModifierMappingModal';
+import { ConfirmModal } from '../../components/modals/ConfirmModal';
 import { LanguageRegionCard } from '../../components/settings/LanguageRegionCard';
 import { COUNTRIES } from '../../lib/countries';
 
@@ -76,6 +77,16 @@ const DELETE_COMPANY = gql`
     deleteCompany(id: $id)
   }
 `;
+// Blast-radius counts for the delete confirmation. Fetched lazily (only while the
+// delete modal is open) so it doesn't cost anything on a normal settings load.
+const GET_DELETION_STATS = gql`
+  query GetDeletionStats($companyId: ID!) {
+    company(id: $companyId) {
+      id
+      deletionStats { events recipes inventory members }
+    }
+  }
+`;
 
 const API_URL = (import.meta.env['VITE_API_URL'] as string) || 'http://localhost:3000';
 
@@ -115,6 +126,17 @@ export function SettingsPage() {
 
   const [showPosMappings, setShowPosMappings] = useState(false);
   const [showModifierMappings, setShowModifierMappings] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  // Load the deletion blast-radius counts only while the delete modal is open.
+  const { data: deletionData } = useQuery(GET_DELETION_STATS, {
+    variables: { companyId },
+    skip: !showDeleteModal || !companyId,
+    fetchPolicy: 'cache-and-network',
+  });
+  const deletionStats = deletionData?.company?.deletionStats as
+    | { events: number; recipes: number; inventory: number; members: number }
+    | undefined;
   const [companyForm, setCompanyForm] = useState({ name: '', phone: '', contactName: '', vendorCategory: '', email: '', defaultCountry: 'US' });
   const [savingCompany, setSavingCompany] = useState(false);
   const [connectingPos, setConnectingPos] = useState(false);
@@ -414,15 +436,13 @@ export function SettingsPage() {
     }
   }
 
-  async function handleDeleteCompany() {
-    if (!confirm(t('toast.confirmDelete', 'Delete {{name}}? This permanently removes all its events, recipes, inventory, and team. This cannot be undone.', { name: info?.name ?? t('danger.thisCompany', 'this company') }))) return;
-    try {
-      await deleteCompany({ variables: { id: companyId } });
-      showToast(t('toast.companyDeleted', 'Company deleted.'), 'info');
-      navigate('/companies');
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : t('toast.deleteFailed', 'Failed to delete company'), 'error');
-    }
+  // Actual deletion, run after both confirmation steps. Throws on failure so the
+  // ConfirmModal can surface the error inline (it does not close on error).
+  async function confirmDeleteCompany() {
+    await deleteCompany({ variables: { id: companyId } });
+    setShowDeleteModal(false);
+    showToast(t('toast.companyDeleted', 'Company deleted.'), 'info');
+    navigate('/companies');
   }
 
   const otherMembers = members.filter((m: { userId: string }) => m.userId !== user?.id);
@@ -811,7 +831,7 @@ export function SettingsPage() {
             )}
 
             <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: 14 }}>
-              <button className="btn-danger" onClick={handleDeleteCompany}>
+              <button className="btn-danger" onClick={() => setShowDeleteModal(true)}>
                 <i className="fa-solid fa-trash" /> {t('danger.deleteCompany', 'Delete company')}
               </button>
             </div>
@@ -824,6 +844,43 @@ export function SettingsPage() {
       )}
       {showModifierMappings && companyId && (
         <PosModifierMappingModal companyId={companyId} onClose={() => setShowModifierMappings(false)} />
+      )}
+      {showDeleteModal && (
+        <ConfirmModal
+          danger
+          title={t('danger.deleteModal.title', 'Delete {{name}}?', { name: info?.name ?? t('danger.thisCompany', 'this company') })}
+          message={
+            <>
+              <p style={{ margin: '0 0 10px' }}>
+                {t('danger.deleteModal.intro', 'This permanently deletes everything in this company. This action is irreversible and cannot be undone.')}
+              </p>
+              <ul style={{ margin: '0 0 10px', paddingLeft: 18 }}>
+                <li>{t('danger.deleteModal.events', '{{count}} events', { count: deletionStats?.events ?? 0 })}</li>
+                <li>{t('danger.deleteModal.recipes', '{{count}} recipes', { count: deletionStats?.recipes ?? 0 })}</li>
+                <li>{t('danger.deleteModal.inventory', '{{count}} inventory items', { count: deletionStats?.inventory ?? 0 })}</li>
+                <li>{t('danger.deleteModal.members', '{{count}} team members', { count: deletionStats?.members ?? 0 })}</li>
+              </ul>
+              <p style={{ margin: 0 }}>{t('danger.deleteModal.plusMore', 'Plus all sales, labor, POS mappings, and related records.')}</p>
+            </>
+          }
+          requireText={info?.name ?? ''}
+          requireTextPrompt={
+            <Trans
+              t={t}
+              i18nKey="danger.deleteModal.typePrompt"
+              defaults="To confirm, type <1>{{name}}</1> below."
+              values={{ name: info?.name ?? '' }}
+              components={{ 1: <strong style={{ color: 'var(--vv-navy)' }} /> }}
+            />
+          }
+          inputPlaceholder={info?.name ?? ''}
+          continueLabel={t('danger.deleteModal.continue', 'Continue')}
+          confirmLabel={t('danger.deleteModal.confirm', 'Delete company')}
+          cancelLabel={t('danger.deleteModal.cancel', 'Cancel')}
+          backLabel={t('danger.deleteModal.back', 'Back')}
+          onConfirm={confirmDeleteCompany}
+          onClose={() => setShowDeleteModal(false)}
+        />
       )}
     </>
   );

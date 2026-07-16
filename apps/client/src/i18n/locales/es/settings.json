@@ -94,7 +94,21 @@
     "selectMember": "Selecciona un miembro…",
     "offerOwnership": "Ofrecer la propiedad",
     "deleteCompany": "Eliminar empresa",
-    "thisCompany": "esta empresa"
+    "thisCompany": "esta empresa",
+    "deleteModal": {
+      "title": "¿Eliminar {{name}}?",
+      "intro": "Esto elimina permanentemente todo lo de esta empresa. Esta acción es irreversible y no se puede deshacer.",
+      "events": "{{count}} eventos",
+      "recipes": "{{count}} recetas",
+      "inventory": "{{count}} artículos de inventario",
+      "members": "{{count}} miembros del equipo",
+      "plusMore": "Además de todas las ventas, mano de obra, asignaciones de TPV y registros relacionados.",
+      "typePrompt": "Para confirmar, escribe <1>{{name}}</1> a continuación.",
+      "continue": "Continuar",
+      "confirm": "Eliminar empresa",
+      "cancel": "Cancelar",
+      "back": "Atrás"
+    }
   },
   "toast": {
     "posConnected": "¡POS conectado correctamente! Tus ubicaciones ya están disponibles.",

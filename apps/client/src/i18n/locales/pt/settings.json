@@ -94,7 +94,21 @@
     "selectMember": "Selecione um membro…",
     "offerOwnership": "Oferecer a propriedade",
     "deleteCompany": "Excluir empresa",
-    "thisCompany": "esta empresa"
+    "thisCompany": "esta empresa",
+    "deleteModal": {
+      "title": "Excluir {{name}}?",
+      "intro": "Isso exclui permanentemente tudo desta empresa. Esta ação é irreversível e não pode ser desfeita.",
+      "events": "{{count}} eventos",
+      "recipes": "{{count}} receitas",
+      "inventory": "{{count}} itens de estoque",
+      "members": "{{count}} membros da equipe",
+      "plusMore": "Além de todas as vendas, mão de obra, mapeamentos de PDV e registros relacionados.",
+      "typePrompt": "Para confirmar, digite <1>{{name}}</1> abaixo.",
+      "continue": "Continuar",
+      "confirm": "Excluir empresa",
+      "cancel": "Cancelar",
+      "back": "Voltar"
+    }
   },
   "toast": {
     "posConnected": "POS conectado com sucesso! Seus locais já estão disponíveis.",
