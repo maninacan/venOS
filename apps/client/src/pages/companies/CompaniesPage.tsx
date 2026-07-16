@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { useQuery, useMutation } from '@apollo/client/react';
 import { gql } from '@apollo/client/core';
 import { CompanyCard, CompanyCardSkeleton } from '../../components/companies/CompanyCard';
+import { GetStartedEmptyState } from '../../components/companies/GetStartedEmptyState';
 import { showToast } from '@org/data';
 
 const GET_MY_COMPANIES = gql`
@@ -38,27 +39,39 @@ export function CompaniesPage() {
 
   const companies = data?.me?.companies ?? [];
   const pendingCompanies = data?.me?.pendingCompanies ?? [];
+  const isFirstRun = !loading && data?.me && companies.length === 0 && pendingCompanies.length === 0;
 
-  async function handleJoin(e: FormEvent) {
-    e.preventDefault();
-    if (!joinCode.trim()) return;
+  // Request access to a company by join code. Shared by the inline join form and
+  // the first-run empty state.
+  async function submitJoin(code: string) {
+    if (!code.trim()) return;
     setJoining(true);
     try {
-      const { data: result } = await requestAccess({ variables: { joinCode: joinCode.trim().toUpperCase() } });
+      const { data: result } = await requestAccess({ variables: { joinCode: code.trim().toUpperCase() } });
       const { companyName, status } = result.requestAccess;
       if (status === 'active') {
         showToast(t('toast.alreadyMember', "You're already a member of {{name}}.", { name: companyName }), 'info');
         refetch();
       } else {
         showToast(t('toast.accessRequested', 'Access requested for {{name}} — pending owner approval.', { name: companyName }), 'success', 6000);
+        refetch();
       }
-      setJoinCode('');
-      setShowJoinForm(false);
     } catch (err) {
       showToast(err instanceof Error ? err.message : t('toast.invalidJoinCode', 'Invalid join code'), 'error');
     } finally {
       setJoining(false);
     }
+  }
+
+  async function handleJoin(e: FormEvent) {
+    e.preventDefault();
+    await submitJoin(joinCode);
+    setJoinCode('');
+    setShowJoinForm(false);
+  }
+
+  if (isFirstRun) {
+    return <GetStartedEmptyState onJoin={submitJoin} joining={joining} />;
   }
 
   return (

@@ -7,6 +7,22 @@
   "joinCodePlaceholder": "Digite o código de acesso (ex.: ABC123)",
   "requestAccess": "Solicitar acesso",
   "cancel": "Cancelar",
+  "getStarted": {
+    "stepOf": "Etapa {{current}} de {{total}}",
+    "languageHeading": "Escolha seu idioma",
+    "languageSub": "Você pode alterar isso a qualquer momento nas Configurações.",
+    "continue": "Continuar",
+    "back": "Voltar",
+    "heading": "Boas-vindas ao venOS!",
+    "subheading": "Vamos configurar seu espaço de trabalho. Escolha como quer começar:",
+    "createTitle": "Criar uma empresa",
+    "createDesc": "Comece do zero como proprietário: configure eventos, receitas, estoque e conecte seu PDV.",
+    "createCta": "Criar empresa",
+    "joinTitle": "Entrar em uma empresa",
+    "joinDesc": "Tem um código de acesso da sua equipe? Solicite acesso e um proprietário aprovará você.",
+    "joinCta": "Digitar código de acesso",
+    "joinSubmit": "Solicitar acesso"
+  },
   "create": {
     "heading": "Cadastre sua empresa",
     "subtitle": "Configure seu food truck ou negócio de fornecedor no venOS.",

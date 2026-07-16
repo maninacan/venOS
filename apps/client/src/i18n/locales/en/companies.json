@@ -7,6 +7,22 @@
   "joinCodePlaceholder": "Enter join code (e.g. ABC123)",
   "requestAccess": "Request access",
   "cancel": "Cancel",
+  "getStarted": {
+    "stepOf": "Step {{current}} of {{total}}",
+    "languageHeading": "Choose your language",
+    "languageSub": "You can change this anytime in Settings.",
+    "continue": "Continue",
+    "back": "Back",
+    "heading": "Welcome to venOS!",
+    "subheading": "Let's set up your workspace. Choose how you'd like to start:",
+    "createTitle": "Create a company",
+    "createDesc": "Start fresh as the owner — set up events, recipes, inventory, and connect your POS.",
+    "createCta": "Create company",
+    "joinTitle": "Join a company",
+    "joinDesc": "Have a join code from your team? Request access and an owner will approve you.",
+    "joinCta": "Enter join code",
+    "joinSubmit": "Request access"
+  },
   "create": {
     "heading": "Register Your Company",
     "subtitle": "Set up your food truck or vendor business on venOS.",
