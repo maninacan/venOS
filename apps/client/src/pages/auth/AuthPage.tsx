@@ -25,6 +25,7 @@ export function AuthPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [signupSent, setSignupSent] = useState(false);
+  const [existingAccount, setExistingAccount] = useState(false);
   const [resent, setResent] = useState(false);
 
   // Forgot password modal state
@@ -84,6 +85,15 @@ export function AuthPage() {
         } else if (data.session) {
           // Email confirmation disabled — signed in immediately.
           navigate(returnTo ?? '/companies');
+        } else if (data.user && data.user.identities && data.user.identities.length === 0) {
+          // Supabase returns no session + no error for BOTH a genuine new signup
+          // (confirmation pending) AND an already-registered email (enumeration
+          // protection returns an obfuscated user). They differ by identities: a
+          // new user has one identity; a duplicate signup comes back with an
+          // empty identities array. Detect the latter to point the user at sign-in
+          // instead of the misleading "check your email" screen. Best-effort — if
+          // Supabase ever stops exposing this, we fall through to signupSent.
+          setExistingAccount(true);
         } else {
           // Confirmation required — verification email sent, no session yet.
           setSignupSent(true);
@@ -156,7 +166,39 @@ export function AuthPage() {
             <span className="block text-[0.8rem] text-[#64748b] mt-0.5">{t('tagline', 'Vendor Intelligence for Events')}</span>
           </div>
 
-          {signupSent ? (
+          {existingAccount ? (
+            <div className="text-center py-2">
+              <div className="text-[2.4rem] mb-2" style={{ color: '#0B2A4A' }}>
+                <i className="fa-solid fa-circle-user" />
+              </div>
+              <h2 className="mt-0 mb-1.5 text-[1.25rem] font-bold text-[#0B2A4A]">{t('existingAccount.title', 'You already have an account')}</h2>
+              <p className="mt-0 mb-5 text-[0.88rem] text-[#64748b]">
+                <Trans
+                  i18nKey="existingAccount.body"
+                  ns="auth"
+                  defaults="An account with <1>{{email}}</1> already exists. Sign in below, or reset your password if you've forgotten it."
+                  values={{ email }}
+                  components={{ 1: <strong className="text-[#0B2A4A]" /> }}
+                />
+              </p>
+              <button
+                type="button"
+                className="btn-primary w-full justify-center py-[11px] text-base"
+                onClick={() => { setExistingAccount(false); setMode('signin'); setPassword(''); setError(''); }}
+              >
+                <span>{t('signIn', 'Sign In')}</span>
+              </button>
+              <p className="text-center text-[0.85rem] text-[#64748b] mt-3.5">
+                <a
+                  href="#"
+                  className="text-[#0B2A4A] font-semibold no-underline hover:underline"
+                  onClick={e => { e.preventDefault(); setExistingAccount(false); setMode('signin'); setPassword(''); setError(''); setResetEmail(email); setShowForgot(true); }}
+                >
+                  {t('forgotPassword', 'Forgot Password?')}
+                </a>
+              </p>
+            </div>
+          ) : signupSent ? (
             <div className="text-center py-2">
               <div className="text-[2.4rem] mb-2" style={{ color: '#2E7D32' }}>
                 <i className="fa-solid fa-envelope-circle-check" />
@@ -200,6 +242,16 @@ export function AuthPage() {
               </p>
               {resent && <div className="text-[#166534] text-[0.85rem] mt-1">{t('signupSent.resent', 'Verification email resent.')}</div>}
               {error && <div className="text-[#dc2626] text-[0.85rem] mt-1">{error}</div>}
+              <p className="text-center text-[0.82rem] text-[#64748b] mt-3.5">
+                {t('signupSent.alreadyHavePrefix', 'Already have an account? ')}
+                <a
+                  href="#"
+                  className="text-[#0B2A4A] font-semibold no-underline hover:underline"
+                  onClick={e => { e.preventDefault(); setSignupSent(false); setMode('signin'); setPassword(''); setError(''); setResetEmail(email); setShowForgot(true); }}
+                >
+                  {t('forgotPassword', 'Forgot Password?')}
+                </a>
+              </p>
             </div>
           ) : (
           <>
