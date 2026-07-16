@@ -5,7 +5,7 @@ import { decryptToken } from '../../lib/crypto.js';
 import { lookupTaxRates, lookupStateFallbackRate, type TaxRateLookup } from '../../lib/taxRates.js';
 import { providerForCompany, type PosEvent } from '../../lib/pos/index.js';
 import { isPosAuthError } from '../../lib/pos/types.js';
-import { buildCostLookup } from '../../lib/pos/matchCost.js';
+import { buildCostLookup, norm } from '../../lib/pos/matchCost.js';
 import { computeRecipeCosts, loadRecipeCostContext } from '../../lib/recipeCost.js';
 import { suggestMappings } from '../../lib/aiMappingSuggest.js';
 
@@ -230,12 +230,27 @@ export const salesResolvers = {
         };
       }));
 
-      const inventoryRows: Array<Record<string, unknown>> = [];
-      let unmatchedCount = 0;
+      // Aggregate by display name. Square can return the same product across
+      // multiple line items with different or missing catalog_object_ids (an
+      // item re-created in the catalog gets a new variation id; open items have
+      // none), which the pull buckets separately. Merging by normalized name
+      // collapses those twins into one row. A matched variation's unit cost is
+      // applied to the full combined quantity: the same product doesn't have a
+      // real cost difference — an unmatched twin is just a catalog-id gap.
+      type MergedRow = {
+        name: string;
+        qty: number;
+        revenue: number;
+        hasRevenue: boolean;
+        modifierCost: number;
+        anyModifierResolved: boolean;
+        unitCost: number | null;
+        recipeId: string | null;
+      };
+      const grouped = new Map<string, MergedRow>();
       let unmatchedModifierCount = 0;
       for (const item of pull.items) {
         const { unitCost, recipeId } = costLookup.resolve({ name: item.name, catalogObjectId: item.catalogObjectId });
-        if (unitCost == null) unmatchedCount++;
 
         // Sum mapped modifier costs for this line (per-application cost × applied
         // count). Can be negative when a modifier removes an ingredient.
@@ -248,19 +263,37 @@ export const salesResolvers = {
           modifierCost += modResolved.unitCost * mod.qty;
         }
 
-        const baseCost = unitCost != null ? unitCost * item.qty : 0;
+        const key = norm(item.name);
+        const g = grouped.get(key) ?? {
+          name: item.name, qty: 0, revenue: 0, hasRevenue: false,
+          modifierCost: 0, anyModifierResolved: false, unitCost: null, recipeId: null,
+        };
+        g.qty += item.qty;
+        if (item.revenue != null) { g.revenue += item.revenue; g.hasRevenue = true; }
+        g.modifierCost += modifierCost;
+        g.anyModifierResolved = g.anyModifierResolved || anyModifierResolved;
+        // Keep the first matched variation's cost/recipe; apply it to the whole group.
+        if (g.unitCost == null && unitCost != null) { g.unitCost = unitCost; g.recipeId = recipeId; }
+        grouped.set(key, g);
+      }
+
+      const inventoryRows: Array<Record<string, unknown>> = [];
+      let unmatchedCount = 0;
+      for (const g of grouped.values()) {
+        if (g.unitCost == null) unmatchedCount++;
+        const baseCost = g.unitCost != null ? g.unitCost * g.qty : 0;
         // totalCost is the full line COGS; null only when neither the base nor
         // any modifier cost is known (so an unmapped line stays unmatched, not $0).
-        const hasAnyCost = unitCost != null || anyModifierResolved;
+        const hasAnyCost = g.unitCost != null || g.anyModifierResolved;
         inventoryRows.push({
           eventID: eventId,
-          name: item.name,
-          quantitySold: item.qty,
-          unitCost,
-          totalCost: hasAnyCost ? +Number(baseCost + modifierCost).toFixed(4) : null,
-          modifierCost: anyModifierResolved ? +Number(modifierCost).toFixed(4) : null,
-          revenue: item.revenue != null ? +Number(item.revenue).toFixed(2) : null,
-          recipeId,
+          name: g.name,
+          quantitySold: g.qty,
+          unitCost: g.unitCost,
+          totalCost: hasAnyCost ? +Number(baseCost + g.modifierCost).toFixed(4) : null,
+          modifierCost: g.anyModifierResolved ? +Number(g.modifierCost).toFixed(4) : null,
+          revenue: g.hasRevenue ? +Number(g.revenue).toFixed(2) : null,
+          recipeId: g.recipeId,
         });
       }
 

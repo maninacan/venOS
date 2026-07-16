@@ -30,7 +30,10 @@ export interface ResolvedCost {
 }
 
 const NO_MATCH: ResolvedCost = { unitCost: null, recipeId: null };
-const norm = (s: unknown) => String(s ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
+// Normalize a name for matching/grouping: trim, lowercase, collapse whitespace.
+// Exported so callers that aggregate by display name group identically to how
+// buildCostLookup matches (see syncSales' per-name row aggregation).
+export const norm = (s: unknown) => String(s ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
 
 // Recipe wins: use the recipe total when a recipe is mapped and priced; else the
 // inventory unit cost.
