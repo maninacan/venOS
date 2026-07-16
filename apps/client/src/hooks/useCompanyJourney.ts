@@ -17,8 +17,12 @@ const GET_JOURNEY = gql`
     eventKpi(companyId: $companyId) { totalEvents }
     recipes(companyId: $companyId) { id }
     inventory(companyId: $companyId) { id }
+    posMappings(companyId: $companyId) { id inventoryItemId recipeId }
+    posModifierMappings(companyId: $companyId) { id inventoryItemId recipeId }
   }
 `;
+
+interface MappingRow { inventoryItemId?: string | null; recipeId?: string | null }
 
 export interface JourneyStep {
   key: string;
@@ -71,6 +75,10 @@ export function useCompanyJourney(companyId: string | null) {
   const POS_LABELS: Record<string, string> = { square: 'Square', shopify: 'Shopify', toast: 'Toast' };
   const posName = posSystem && POS_LABELS[posSystem] ? POS_LABELS[posSystem] : t('steps.pos.genericPos', 'your POS');
   const languageChosen = !!user?.user_metadata?.['lang'];
+  // A mapping "counts" only when it actually links a recipe or inventory item —
+  // savePosMappings writes a row per catalog item, including unmapped ones.
+  const itemMappingCount = ((data?.posMappings ?? []) as MappingRow[]).filter(m => m.inventoryItemId || m.recipeId).length;
+  const modifierMappingCount = ((data?.posModifierMappings ?? []) as MappingRow[]).filter(m => m.inventoryItemId || m.recipeId).length;
 
   const base: Array<Omit<JourneyStep, 'skipped'>> = [
     {
@@ -84,6 +92,14 @@ export function useCompanyJourney(companyId: string | null) {
     {
       key: 'pos', label: t('steps.pos.label', 'Connect {{pos}}', { pos: posName }), description: t('steps.pos.description', 'Auto-sync sales (and labor) from your POS.'),
       ctaLabel: t('steps.pos.cta', 'Connect {{pos}}', { pos: posName }), to: `/companies/${companyId}/settings?setup=1`, done: posConnected, optional: true,
+    },
+    {
+      key: 'pos-item-mapping', label: t('steps.posItemMapping.label', 'Map POS items to recipes'), description: t('steps.posItemMapping.description', 'Link each POS product to a recipe so COGS is calculated automatically.'),
+      ctaLabel: t('steps.posItemMapping.cta', 'Map items'), to: `/companies/${companyId}/settings?setup=1&posMapping=1`, done: itemMappingCount > 0, optional: true,
+    },
+    {
+      key: 'pos-modifier-mapping', label: t('steps.posModifierMapping.label', 'Map POS modifiers'), description: t('steps.posModifierMapping.description', 'Link modifiers (add-ons, sizes) to inventory so their cost is counted.'),
+      ctaLabel: t('steps.posModifierMapping.cta', 'Map modifiers'), to: `/companies/${companyId}/settings?setup=1&posModifierMapping=1`, done: modifierMappingCount > 0, optional: true,
     },
     {
       key: 'recipes', label: t('steps.recipes.label', 'Add your recipes'), description: t('steps.recipes.description', 'Define ingredient costs so venOS can calculate COGS.'),
@@ -104,8 +120,13 @@ export function useCompanyJourney(companyId: string | null) {
   ];
 
   // Personalize from onboarding answers: a manual-POS company doesn't need the
-  // POS connection step at all.
-  const filtered = base.filter(s => !(s.key === 'pos' && posSystem === 'manual'));
+  // POS connection step, and the mapping steps only make sense once a (non-manual)
+  // POS is connected — the mappers read the live POS catalog, empty otherwise.
+  const filtered = base.filter(s => {
+    if (s.key === 'pos' && posSystem === 'manual') return false;
+    if ((s.key === 'pos-item-mapping' || s.key === 'pos-modifier-mapping') && (posSystem === 'manual' || !posConnected)) return false;
+    return true;
+  });
   const steps: JourneyStep[] = filtered.map(s => ({ ...s, skipped: skips.has(s.key) }));
 
   // Core path = company exists + first event created.

@@ -16,6 +16,16 @@
       "cta": "Conectar {{pos}}",
       "genericPos": "tu POS"
     },
+    "posItemMapping": {
+      "label": "Asigna los artículos del POS a recetas",
+      "description": "Vincula cada producto del POS con una receta para calcular el costo de ventas automáticamente.",
+      "cta": "Asignar artículos"
+    },
+    "posModifierMapping": {
+      "label": "Asigna los modificadores del POS",
+      "description": "Vincula los modificadores (extras, tamaños) al inventario para incluir su costo.",
+      "cta": "Asignar modificadores"
+    },
     "recipes": {
       "label": "Agrega tus recetas",
       "description": "Define los costos de ingredientes para que venOS calcule el costo de ventas.",

@@ -16,6 +16,16 @@
       "cta": "Connect {{pos}}",
       "genericPos": "your POS"
     },
+    "posItemMapping": {
+      "label": "Map POS items to recipes",
+      "description": "Link each POS product to a recipe so COGS is calculated automatically.",
+      "cta": "Map items"
+    },
+    "posModifierMapping": {
+      "label": "Map POS modifiers",
+      "description": "Link modifiers (add-ons, sizes) to inventory so their cost is counted.",
+      "cta": "Map modifiers"
+    },
     "recipes": {
       "label": "Add your recipes",
       "description": "Define ingredient costs so venOS can calculate COGS.",

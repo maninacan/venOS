@@ -16,6 +16,16 @@
       "cta": "Conectar {{pos}}",
       "genericPos": "seu POS"
     },
+    "posItemMapping": {
+      "label": "Mapeie os itens do POS para receitas",
+      "description": "Vincule cada produto do POS a uma receita para calcular o CMV automaticamente.",
+      "cta": "Mapear itens"
+    },
+    "posModifierMapping": {
+      "label": "Mapeie os modificadores do POS",
+      "description": "Vincule os modificadores (adicionais, tamanhos) ao estoque para contabilizar o custo.",
+      "cta": "Mapear modificadores"
+    },
     "recipes": {
       "label": "Adicione suas receitas",
       "description": "Defina os custos dos ingredientes para que o venOS calcule o Custo dos Produtos Vendidos (CMV).",
