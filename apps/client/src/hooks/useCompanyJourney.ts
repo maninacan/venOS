@@ -94,20 +94,20 @@ export function useCompanyJourney(companyId: string | null) {
       ctaLabel: t('steps.pos.cta', 'Connect {{pos}}', { pos: posName }), to: `/companies/${companyId}/settings?setup=1`, done: posConnected, optional: true,
     },
     {
-      key: 'pos-item-mapping', label: t('steps.posItemMapping.label', 'Map POS items to recipes'), description: t('steps.posItemMapping.description', 'Link each POS product to a recipe so COGS is calculated automatically.'),
-      ctaLabel: t('steps.posItemMapping.cta', 'Map items'), to: `/companies/${companyId}/settings?setup=1&posMapping=1`, done: itemMappingCount > 0, optional: true,
-    },
-    {
-      key: 'pos-modifier-mapping', label: t('steps.posModifierMapping.label', 'Map POS modifiers'), description: t('steps.posModifierMapping.description', 'Link modifiers (add-ons, sizes) to inventory so their cost is counted.'),
-      ctaLabel: t('steps.posModifierMapping.cta', 'Map modifiers'), to: `/companies/${companyId}/settings?setup=1&posModifierMapping=1`, done: modifierMappingCount > 0, optional: true,
-    },
-    {
       key: 'recipes', label: t('steps.recipes.label', 'Add your recipes'), description: t('steps.recipes.description', 'Define ingredient costs so venOS can calculate COGS.'),
       ctaLabel: t('steps.recipes.cta', 'Add recipes'), to: `/companies/${companyId}/recipes?setup=1`, done: recipeCount > 0, optional: true,
     },
     {
       key: 'inventory', label: t('steps.inventory.label', 'Add your inventory'), description: t('steps.inventory.description', 'Import your product catalog to track stock and costs.'),
       ctaLabel: t('steps.inventory.cta', 'Add inventory'), to: `/companies/${companyId}/inventory?setup=1`, done: inventoryCount > 0, optional: true,
+    },
+    {
+      key: 'pos-item-mapping', label: t('steps.posItemMapping.label', 'Map POS items to recipes'), description: t('steps.posItemMapping.description', 'Link each POS product to a recipe so COGS is calculated automatically.'),
+      ctaLabel: t('steps.posItemMapping.cta', 'Map items'), to: `/companies/${companyId}/settings?setup=1&posMapping=1`, done: itemMappingCount > 0, optional: true,
+    },
+    {
+      key: 'pos-modifier-mapping', label: t('steps.posModifierMapping.label', 'Map POS modifiers'), description: t('steps.posModifierMapping.description', 'Link modifiers (add-ons, sizes) to inventory so their cost is counted.'),
+      ctaLabel: t('steps.posModifierMapping.cta', 'Map modifiers'), to: `/companies/${companyId}/settings?setup=1&posModifierMapping=1`, done: modifierMappingCount > 0, optional: true,
     },
     {
       key: 'team', label: t('steps.team.label', 'Invite your team'), description: t('steps.team.description', 'Share events, inventory, and recipes with teammates.'),
