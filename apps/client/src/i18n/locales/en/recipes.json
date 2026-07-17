@@ -83,10 +83,38 @@
     "keepImported": "Replace with this import",
     "keepImportedHint": "moves POS & sales mappings to the new version"
   },
-  "confirmDelete": "Delete \"{{name}}\"?",
-  "confirmDeleteAll": "[DEV] Delete all {{count}} recipes?",
+  "cancel": "Cancel",
+  "deleteModal": {
+    "title": "Delete recipe?",
+    "message": "Delete \"{{name}}\"? This can't be undone.",
+    "confirm": "Delete"
+  },
+  "deleteEmptyModal": {
+    "title": "Delete empty recipes?",
+    "message_one": "Delete {{count}} empty recipe with no ingredients or components? This can't be undone.",
+    "message_other": "Delete {{count}} empty recipes with no ingredients or components? This can't be undone.",
+    "confirm": "Delete empty"
+  },
+  "deleteAllModal": {
+    "title": "Delete all recipes?",
+    "message_one": "This permanently deletes {{count}} recipe. This is irreversible and cannot be undone.",
+    "message_other": "This permanently deletes all {{count}} recipes. This is irreversible and cannot be undone.",
+    "confirmWord": "DELETE",
+    "typePrompt": "To confirm, type <1>{{word}}</1> below.",
+    "continue": "Continue",
+    "confirm": "Delete all",
+    "back": "Back"
+  },
+  "deleteProgress": {
+    "title": "Deleting recipes…",
+    "count": "{{done}} of {{total}} deleted"
+  },
   "toast": {
     "nameRequired": "Recipe name required",
+    "bulkDeleted_one": "Deleted {{count}} recipe",
+    "bulkDeleted_other": "Deleted {{count}} recipes",
+    "bulkDeleteFailed": "Deleted {{done}} of {{total}} — some failed.",
+    "retry": "Retry",
     "contentRequired": "Add at least one ingredient or component",
     "deletedEmpty_one": "Deleted {{count}} empty recipe",
     "deletedEmpty_other": "Deleted {{count}} empty recipes",

@@ -253,27 +253,21 @@ export function PosModifierMappingModal({ companyId, onClose }: Props) {
             {t('posModifierMapping.title', 'Match Your POS Modifiers to Your Inventory')}
           </h2>
           <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--muted)', lineHeight: 1.5 }}>
-            <Trans t={t} i18nKey="posModifierMapping.description" defaults='Map each modifier (flavor add-ons, whip, …) to the inventory item it uses and the amount used per drink — venOS adds that cost to every drink the modifier is on, so COGS stays accurate without a separate menu item per flavor. Use a <2>negative amount</2> for removals (e.g. "No SCM" = -1). Choose "No inventory item" for free modifiers.'>
-              Map each modifier (flavor add-ons, whip, …) to the inventory item it uses and the amount used per drink — venOS adds that cost to every drink the modifier is on, so COGS stays accurate without a separate menu item per flavor. Use a <em>negative amount</em> for removals (e.g. "No SCM" = -1). Choose "No inventory item" for free modifiers.
-            </Trans>
+            <Trans t={t} i18nKey="posModifierMapping.description" defaults='Map each modifier (flavor add-ons, whip, …) to the inventory item it uses and the amount used per drink — venOS adds that cost to every drink the modifier is on, so COGS stays accurate without a separate menu item per flavor. Use a <2>negative amount</2> for removals (e.g. "No SCM" = -1). Choose "No inventory item" for free modifiers.' components={{ 2: <em /> }} />
           </p>
         </div>
 
         {/* Auto-suggest legend */}
         {suggestedCount > 0 && (
           <div style={{ padding: '8px 26px', background: '#fffbeb', borderBottom: '1px solid #fde68a', fontSize: '0.8rem', color: '#78350f' }}>
-<i className="fa-solid fa-wand-magic-sparkles" aria-hidden="true" /> <Trans t={t} i18nKey="posModifierMapping.suggestedLegend" count={suggestedCount} values={{ count: suggestedCount }} defaults="<1>{{count}} modifier(s)</1> were matched by AI — marked <3>suggested</3>. Review before saving.">
-              <strong>{{ count: suggestedCount }} modifier(s)</strong> were matched by AI — marked <span style={{ background: '#fef3c7', borderRadius: 4, padding: '1px 5px', fontWeight: 600 }}>suggested</span>. Review before saving.
-            </Trans>
+<i className="fa-solid fa-wand-magic-sparkles" aria-hidden="true" /> <Trans t={t} i18nKey="posModifierMapping.suggestedLegend" count={suggestedCount} values={{ count: suggestedCount }} defaults="<1>{{count}} modifier(s)</1> were matched by AI — marked <3>suggested</3>. Review before saving." components={{ 1: <strong />, 3: <span style={{ background: '#fef3c7', borderRadius: 4, padding: '1px 5px', fontWeight: 600 }} /> }} />
           </div>
         )}
 
         {/* Unmapped warning */}
         {unmappedCount > 0 && (
           <div style={{ padding: '8px 26px', background: '#fff7ed', borderBottom: '1px solid #fed7aa', fontSize: '0.8rem', color: '#c2410c' }}>
-<i className="fa-solid fa-triangle-exclamation" aria-hidden="true" /> <Trans t={t} i18nKey="posModifierMapping.unmappedWarning" count={unmappedCount} values={{ count: unmappedCount }} defaults="<1>{{count}} modifier(s)</1> have no inventory item — their cost won’t be added to COGS.">
-              <strong>{{ count: unmappedCount }} modifier(s)</strong> have no inventory item — their cost won’t be added to COGS.
-            </Trans>
+<i className="fa-solid fa-triangle-exclamation" aria-hidden="true" /> <Trans t={t} i18nKey="posModifierMapping.unmappedWarning" count={unmappedCount} values={{ count: unmappedCount }} defaults="<1>{{count}} modifier(s)</1> have no inventory item — their cost won’t be added to COGS." components={{ 1: <strong /> }} />
           </div>
         )}
 

@@ -224,27 +224,21 @@ export function PosMappingModal({ companyId, onClose }: Props) {
             {t('posMapping.title', 'Match Your POS Menu to Your Recipe Cards')}
           </h2>
           <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--muted)', lineHeight: 1.5 }}>
-            <Trans t={t} i18nKey="posMapping.description" defaults='Map each POS item to the recipe that makes it — venOS uses the recipe’s ingredient cost to calculate COGS automatically every sync. Choose <2>"No recipe"</2> for tips, fees, and other non-menu items.'>
-              Map each POS item to the recipe that makes it — venOS uses the recipe’s ingredient cost to calculate COGS automatically every sync. Choose <em>"No recipe"</em> for tips, fees, and other non-menu items.
-            </Trans>
+            <Trans t={t} i18nKey="posMapping.description" defaults='Map each POS item to the recipe that makes it — venOS uses the recipe’s ingredient cost to calculate COGS automatically every sync. Choose <2>"No recipe"</2> for tips, fees, and other non-menu items.' components={{ 2: <em /> }} />
           </p>
         </div>
 
         {/* Auto-suggest legend */}
         {suggestedCount > 0 && (
           <div style={{ padding: '8px 26px', background: '#fffbeb', borderBottom: '1px solid #fde68a', fontSize: '0.8rem', color: '#78350f' }}>
-<i className="fa-solid fa-wand-magic-sparkles" aria-hidden="true" /> <Trans t={t} i18nKey="posMapping.suggestedLegend" count={suggestedCount} values={{ count: suggestedCount }} defaults="<1>{{count}} item(s)</1> were matched by AI — marked <3>suggested</3>. Review before saving.">
-              <strong>{{ count: suggestedCount }} item(s)</strong> were matched by AI — marked <span style={{ background: '#fef3c7', borderRadius: 4, padding: '1px 5px', fontWeight: 600 }}>suggested</span>. Review before saving.
-            </Trans>
+<i className="fa-solid fa-wand-magic-sparkles" aria-hidden="true" /> <Trans t={t} i18nKey="posMapping.suggestedLegend" count={suggestedCount} values={{ count: suggestedCount }} defaults="<1>{{count}} item(s)</1> were matched by AI — marked <3>suggested</3>. Review before saving." components={{ 1: <strong />, 3: <span style={{ background: '#fef3c7', borderRadius: 4, padding: '1px 5px', fontWeight: 600 }} /> }} />
           </div>
         )}
 
         {/* Unmapped warning */}
         {unmappedCount > 0 && (
           <div style={{ padding: '8px 26px', background: '#fff7ed', borderBottom: '1px solid #fed7aa', fontSize: '0.8rem', color: '#c2410c' }}>
-<i className="fa-solid fa-triangle-exclamation" aria-hidden="true" /> <Trans t={t} i18nKey="posMapping.unmappedWarning" count={unmappedCount} values={{ count: unmappedCount }} defaults="<1>{{count}} item(s)</1> have no recipe card — COGS will show as $0 for those.">
-              <strong>{{ count: unmappedCount }} item(s)</strong> have no recipe card — COGS will show as $0 for those.
-            </Trans>
+<i className="fa-solid fa-triangle-exclamation" aria-hidden="true" /> <Trans t={t} i18nKey="posMapping.unmappedWarning" count={unmappedCount} values={{ count: unmappedCount }} defaults="<1>{{count}} item(s)</1> have no recipe card — COGS will show as $0 for those." components={{ 1: <strong /> }} />
           </div>
         )}
 

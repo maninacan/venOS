@@ -848,6 +848,8 @@ export const typeDefs = `#graphql
     createRecipes(companyId: ID!, inputs: [CreateRecipeInput!]!): [Recipe!]!
     updateRecipe(id: ID!, input: CreateRecipeInput!): Recipe!
     deleteRecipe(id: ID!): Boolean!
+    "Bulk-delete recipes by id (scoped to the company). Returns the number actually deleted."
+    deleteRecipes(companyId: ID!, ids: [ID!]!): Int!
     "Replace removeId with keepId: transfer its POS/sales mappings and sub-recipe references onto keepId, then delete removeId. Returns the surviving recipe."
     replaceRecipe(companyId: ID!, keepId: ID!, removeId: ID!): Recipe!
     "Apply accepted recipe-optimization recommendations (creates bases as needed, restructures variants in place)."

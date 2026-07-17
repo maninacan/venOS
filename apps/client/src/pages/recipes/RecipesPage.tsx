@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, Fragment } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useTranslation, Trans } from 'react-i18next';
 import { useQuery, useMutation, useLazyQuery } from '@apollo/client/react';
 import { gql } from '@apollo/client/core';
 import { useCurrentCompany } from '../../hooks/useCurrentCompany';
@@ -8,6 +8,8 @@ import { showToast } from '@org/data';
 import { useCurrency } from '../../i18n/useCurrency';
 import { formatNumber } from '../../i18n/format';
 import { RecipeEditorModal, emptyIngredient, type Ingredient, type Recipe } from '../../components/modals/RecipeEditorModal';
+import { ConfirmModal } from '../../components/modals/ConfirmModal';
+import { ProgressModal } from '../../components/modals/ProgressModal';
 
 const API_URL = (import.meta.env['VITE_API_URL'] as string) || 'http://localhost:3000';
 
@@ -58,8 +60,8 @@ const REPLACE_RECIPE = gql`
     replaceRecipe(companyId: $companyId, keepId: $keepId, removeId: $removeId) { id }
   }
 `;
-const DELETE_RECIPE = gql`
-  mutation DeleteRecipe($id: ID!) { deleteRecipe(id: $id) }
+const DELETE_RECIPES = gql`
+  mutation DeleteRecipes($companyId: ID!, $ids: [ID!]!) { deleteRecipes(companyId: $companyId, ids: $ids) }
 `;
 
 interface ImportedRecipe {
@@ -95,7 +97,13 @@ export function RecipesPage() {
   const [createRecipes] = useMutation(CREATE_RECIPES);
   const [createRecipe] = useMutation(CREATE_RECIPE);
   const [replaceRecipe] = useMutation(REPLACE_RECIPE);
-  const [deleteRecipe] = useMutation(DELETE_RECIPE);
+  const [deleteRecipes] = useMutation(DELETE_RECIPES);
+
+  // Delete confirmation + bulk-delete progress state.
+  const [deleteTarget, setDeleteTarget] = useState<Recipe | null>(null);
+  const [showDeleteEmpty, setShowDeleteEmpty] = useState(false);
+  const [showDeleteAll, setShowDeleteAll] = useState(false);
+  const [deleteProgress, setDeleteProgress] = useState<{ done: number; total: number } | null>(null);
 
   // Recipe editor modal — editing a recipe (edit mode) or null while creating (isNew).
   const [editing, setEditing] = useState<Recipe | null>(null);
@@ -185,21 +193,34 @@ export function RecipesPage() {
   function openEdit(recipe: Recipe) { setIsNew(false); setEditing(recipe); }
   function closeForm() { setEditing(null); setIsNew(false); }
 
-  async function handleDeleteEmpty() {
-    if (emptyRecipes.length === 0) return;
-    if (!confirm(t('confirmDeleteEmpty', 'Delete {{count}} empty recipe(s) (no ingredients or components)?', { count: emptyRecipes.length }))) return;
-    for (const r of emptyRecipes) await deleteRecipe({ variables: { id: r.id } }).catch(() => null);
-    showToast(t('toast.deletedEmpty', 'Deleted {{count}} empty recipe(s)', { count: emptyRecipes.length }), 'info');
-    refetch();
-  }
-
-  async function handleDelete(id: string, recipeName: string) {
-    if (!confirm(t('confirmDelete', 'Delete "{{name}}"?', { name: recipeName }))) return;
+  // Delete ids in bounded chunks, updating the progress bar between each. Every
+  // chunk commits server-side on arrival, so a mid-run reload just leaves fewer
+  // recipes and the action can be re-run to finish the rest.
+  async function runBulkDelete(ids: string[]) {
+    if (ids.length === 0) return;
+    const CHUNK = 100;
+    setDeleteProgress({ done: 0, total: ids.length });
+    let done = 0;
     try {
-      await deleteRecipe({ variables: { id } });
-      showToast(t('toast.deleted', 'Recipe deleted'), 'info');
+      for (let i = 0; i < ids.length; i += CHUNK) {
+        const chunk = ids.slice(i, i + CHUNK);
+        await deleteRecipes({ variables: { companyId, ids: chunk } });
+        done += chunk.length;
+        setDeleteProgress({ done, total: ids.length });
+      }
+      showToast(t('toast.bulkDeleted', 'Deleted {{count}} recipe(s)', { count: done }), 'success');
+    } catch {
+      const remaining = ids.slice(done);
+      showToast(
+        t('toast.bulkDeleteFailed', 'Deleted {{done}} of {{total}} — some failed.', { done, total: ids.length }),
+        'error', 6000,
+        () => { void runBulkDelete(remaining); },
+        t('toast.retry', 'Retry'),
+      );
+    } finally {
+      setDeleteProgress(null);
       refetch();
-    } catch { showToast(t('toast.deleteFailed', 'Failed to delete'), 'error'); }
+    }
   }
 
   function openOptimize() { setShowOptimize(true); setOptRecs(null); setOptAccepted(new Set()); setOptScope('all'); }
@@ -496,11 +517,7 @@ export function RecipesPage() {
               <button
                 className="btn-danger-subtle"
                 style={{ fontSize: '0.78rem', padding: '4px 10px' }}
-                onClick={async () => {
-                  if (!confirm(t('confirmDeleteAll', '[DEV] Delete all {{count}} recipes?', { count: recipes.length }))) return;
-                  for (const r of recipes) await deleteRecipe({ variables: { id: r.id } }).catch(() => null);
-                  refetch();
-                }}
+                onClick={() => setShowDeleteAll(true)}
               >
                 <i className="fa-solid fa-trash" /> {t('deleteAll', 'Delete All')}
               </button>
@@ -514,7 +531,7 @@ export function RecipesPage() {
               <i className="fa-solid fa-triangle-exclamation" style={{ marginRight: 6 }} />
               {t('emptyBanner', '{{count}} empty recipe(s) — no ingredients or components.', { count: emptyRecipes.length })}
             </span>
-            <button className="btn-danger-subtle" style={{ fontSize: '0.8rem', padding: '4px 12px', whiteSpace: 'nowrap' }} onClick={handleDeleteEmpty}>
+            <button className="btn-danger-subtle" style={{ fontSize: '0.8rem', padding: '4px 12px', whiteSpace: 'nowrap' }} onClick={() => setShowDeleteEmpty(true)}>
               <i className="fa-solid fa-trash" /> {t('deleteEmpty', 'Delete empty')}
             </button>
           </div>
@@ -535,7 +552,7 @@ export function RecipesPage() {
                 <div className="text-[0.82rem] text-[#64748b]">{t('batchCost', '{{cost}}/batch', { cost: fmtCost(Number(recipe.totalCost)) })} · {t('ingredientCount', '{{count}} ingredients', { count: recipe.ingredients.length })}</div>
                 <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
                   <button className="btn-secondary" style={{ fontSize: '0.8rem', padding: '4px 10px' }} onClick={() => openEdit(recipe)}><i className="fa-solid fa-pen-to-square" /> {t('edit', 'Edit')}</button>
-                  <button className="btn-danger-subtle" style={{ fontSize: '0.8rem', padding: '4px 10px' }} onClick={() => handleDelete(recipe.id, recipe.name)}><i className="fa-solid fa-trash" /></button>
+                  <button className="btn-danger-subtle" style={{ fontSize: '0.8rem', padding: '4px 10px' }} onClick={() => setDeleteTarget(recipe)}><i className="fa-solid fa-trash" /></button>
                 </div>
                 {recipe.ingredients.length > 0 && (
                   <details style={{ marginTop: 8 }}>
@@ -598,7 +615,7 @@ export function RecipesPage() {
                         <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 600, color: 'var(--vv-navy)' }}>{fmtCost(Number(recipe.totalCost))}</td>
                         <td style={{ padding: '8px 12px', textAlign: 'right', whiteSpace: 'nowrap' }}>
                           <button className="btn-secondary" style={{ fontSize: '0.8rem', padding: '4px 10px', marginRight: 6 }} onClick={e => { e.stopPropagation(); openEdit(recipe); }}><i className="fa-solid fa-pen-to-square" /> {t('edit', 'Edit')}</button>
-                          <button className="btn-danger-subtle" style={{ fontSize: '0.8rem', padding: '4px 10px' }} onClick={e => { e.stopPropagation(); handleDelete(recipe.id, recipe.name); }}><i className="fa-solid fa-trash" /></button>
+                          <button className="btn-danger-subtle" style={{ fontSize: '0.8rem', padding: '4px 10px' }} onClick={e => { e.stopPropagation(); setDeleteTarget(recipe); }}><i className="fa-solid fa-trash" /></button>
                         </td>
                       </tr>
                       {isOpen && (
@@ -637,6 +654,65 @@ export function RecipesPage() {
           recipe={editing ?? undefined}
           onSaved={() => { refetch(); }}
           onClose={closeForm}
+        />
+      )}
+
+      {/* Delete confirmations (replace native confirm() with the app modal) */}
+      {deleteTarget && (
+        <ConfirmModal
+          danger
+          title={t('deleteModal.title', 'Delete recipe?')}
+          message={t('deleteModal.message', 'Delete "{{name}}"? This can\'t be undone.', { name: deleteTarget.name })}
+          confirmLabel={t('deleteModal.confirm', 'Delete')}
+          cancelLabel={t('cancel', 'Cancel')}
+          onConfirm={() => { const id = deleteTarget.id; setDeleteTarget(null); return runBulkDelete([id]); }}
+          onClose={() => setDeleteTarget(null)}
+        />
+      )}
+
+      {showDeleteEmpty && (
+        <ConfirmModal
+          danger
+          title={t('deleteEmptyModal.title', 'Delete empty recipes?')}
+          message={t('deleteEmptyModal.message', 'Delete {{count}} empty recipe(s) with no ingredients or components? This can\'t be undone.', { count: emptyRecipes.length })}
+          confirmLabel={t('deleteEmptyModal.confirm', 'Delete empty')}
+          cancelLabel={t('cancel', 'Cancel')}
+          onConfirm={() => { const ids = emptyRecipes.map(r => r.id); setShowDeleteEmpty(false); return runBulkDelete(ids); }}
+          onClose={() => setShowDeleteEmpty(false)}
+        />
+      )}
+
+      {showDeleteAll && (
+        <ConfirmModal
+          danger
+          title={t('deleteAllModal.title', 'Delete all recipes?')}
+          message={t('deleteAllModal.message', 'This permanently deletes all {{count}} recipes. This is irreversible and cannot be undone.', { count: recipes.length })}
+          requireText={t('deleteAllModal.confirmWord', 'DELETE')}
+          requireTextPrompt={
+            <Trans
+              t={t}
+              i18nKey="deleteAllModal.typePrompt"
+              defaults="To confirm, type <1>{{word}}</1> below."
+              values={{ word: t('deleteAllModal.confirmWord', 'DELETE') }}
+              components={{ 1: <strong style={{ color: 'var(--vv-navy)' }} /> }}
+            />
+          }
+          inputPlaceholder={t('deleteAllModal.confirmWord', 'DELETE')}
+          continueLabel={t('deleteAllModal.continue', 'Continue')}
+          confirmLabel={t('deleteAllModal.confirm', 'Delete all')}
+          cancelLabel={t('cancel', 'Cancel')}
+          backLabel={t('deleteAllModal.back', 'Back')}
+          onConfirm={() => { const ids = recipes.map(r => r.id); setShowDeleteAll(false); return runBulkDelete(ids); }}
+          onClose={() => setShowDeleteAll(false)}
+        />
+      )}
+
+      {deleteProgress && (
+        <ProgressModal
+          title={t('deleteProgress.title', 'Deleting recipes…')}
+          done={deleteProgress.done}
+          total={deleteProgress.total}
+          detail={t('deleteProgress.count', '{{done}} of {{total}} deleted', { done: deleteProgress.done, total: deleteProgress.total })}
         />
       )}
 

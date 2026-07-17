@@ -83,10 +83,38 @@
     "keepImported": "Reemplazar con esta importación",
     "keepImportedHint": "traslada las asignaciones de POS y ventas a la nueva versión"
   },
-  "confirmDelete": "¿Eliminar \"{{name}}\"?",
-  "confirmDeleteAll": "[DEV] ¿Eliminar las {{count}} recetas?",
+  "cancel": "Cancelar",
+  "deleteModal": {
+    "title": "¿Eliminar receta?",
+    "message": "¿Eliminar \"{{name}}\"? Esta acción no se puede deshacer.",
+    "confirm": "Eliminar"
+  },
+  "deleteEmptyModal": {
+    "title": "¿Eliminar recetas vacías?",
+    "message_one": "¿Eliminar {{count}} receta vacía sin ingredientes ni componentes? Esta acción no se puede deshacer.",
+    "message_other": "¿Eliminar {{count}} recetas vacías sin ingredientes ni componentes? Esta acción no se puede deshacer.",
+    "confirm": "Eliminar vacías"
+  },
+  "deleteAllModal": {
+    "title": "¿Eliminar todas las recetas?",
+    "message_one": "Esto elimina permanentemente {{count}} receta. Es irreversible y no se puede deshacer.",
+    "message_other": "Esto elimina permanentemente las {{count}} recetas. Es irreversible y no se puede deshacer.",
+    "confirmWord": "DELETE",
+    "typePrompt": "Para confirmar, escribe <1>{{word}}</1> abajo.",
+    "continue": "Continuar",
+    "confirm": "Eliminar todas",
+    "back": "Atrás"
+  },
+  "deleteProgress": {
+    "title": "Eliminando recetas…",
+    "count": "{{done}} de {{total}} eliminadas"
+  },
   "toast": {
     "nameRequired": "El nombre de la receta es obligatorio",
+    "bulkDeleted_one": "Se eliminó {{count}} receta",
+    "bulkDeleted_other": "Se eliminaron {{count}} recetas",
+    "bulkDeleteFailed": "Se eliminaron {{done}} de {{total}} — algunas fallaron.",
+    "retry": "Reintentar",
     "contentRequired": "Agrega al menos un ingrediente o componente",
     "deletedEmpty_one": "Se eliminó {{count}} receta vacía",
     "deletedEmpty_other": "Se eliminaron {{count}} recetas vacías",

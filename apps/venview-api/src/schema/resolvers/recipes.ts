@@ -254,6 +254,26 @@ export const recipeResolvers = {
       return true;
     },
 
+    // Bulk delete: one cascading DELETE per call (ingredients/components cascade,
+    // POS/sales mappings set null). Scoped to the company so a stray cross-tenant
+    // id is ignored rather than deleted. Returns the number actually removed.
+    deleteRecipes: async (
+      _: unknown,
+      { companyId, ids }: { companyId: string; ids: string[] },
+      ctx: AppContext
+    ) => {
+      requireAuth(ctx);
+      await requireCompanyMember(companyId, ctx.user!.id);
+      if (!Array.isArray(ids) || ids.length === 0) return 0;
+
+      const { data, error } = await supabase
+        .from('RecipeCards').delete()
+        .eq('companyId', companyId).in('id', ids)
+        .select('id');
+      if (error) throw new Error(error.message);
+      return (data ?? []).length;
+    },
+
     // Replace one recipe with another: move every reference from removeId onto
     // keepId, then delete removeId. Used by AI import to resolve a name collision
     // (keep the freshly imported recipe, inherit the existing one's POS/sales

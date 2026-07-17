@@ -83,10 +83,38 @@
     "keepImported": "Substituir por esta importação",
     "keepImportedHint": "move os vínculos de POS e vendas para a nova versão"
   },
-  "confirmDelete": "Excluir \"{{name}}\"?",
-  "confirmDeleteAll": "[DEV] Excluir todas as {{count}} receitas?",
+  "cancel": "Cancelar",
+  "deleteModal": {
+    "title": "Excluir receita?",
+    "message": "Excluir \"{{name}}\"? Esta ação não pode ser desfeita.",
+    "confirm": "Excluir"
+  },
+  "deleteEmptyModal": {
+    "title": "Excluir receitas vazias?",
+    "message_one": "Excluir {{count}} receita vazia sem ingredientes nem componentes? Esta ação não pode ser desfeita.",
+    "message_other": "Excluir {{count}} receitas vazias sem ingredientes nem componentes? Esta ação não pode ser desfeita.",
+    "confirm": "Excluir vazias"
+  },
+  "deleteAllModal": {
+    "title": "Excluir todas as receitas?",
+    "message_one": "Isso exclui permanentemente {{count}} receita. É irreversível e não pode ser desfeito.",
+    "message_other": "Isso exclui permanentemente todas as {{count}} receitas. É irreversível e não pode ser desfeito.",
+    "confirmWord": "DELETE",
+    "typePrompt": "Para confirmar, digite <1>{{word}}</1> abaixo.",
+    "continue": "Continuar",
+    "confirm": "Excluir todas",
+    "back": "Voltar"
+  },
+  "deleteProgress": {
+    "title": "Excluindo receitas…",
+    "count": "{{done}} de {{total}} excluídas"
+  },
   "toast": {
     "nameRequired": "Nome da receita obrigatório",
+    "bulkDeleted_one": "{{count}} receita excluída",
+    "bulkDeleted_other": "{{count}} receitas excluídas",
+    "bulkDeleteFailed": "{{done}} de {{total}} excluídas — algumas falharam.",
+    "retry": "Tentar novamente",
     "contentRequired": "Adicione ao menos um ingrediente ou componente",
     "deletedEmpty_one": "{{count}} receita vazia excluída",
     "deletedEmpty_other": "{{count}} receitas vazias excluídas",
