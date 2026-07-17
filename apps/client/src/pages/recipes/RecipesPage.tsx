@@ -48,11 +48,27 @@ const CREATE_RECIPES = gql`
     createRecipes(companyId: $companyId, inputs: $inputs) { id name totalCost ingredients { id name quantity unitCost unit } components { ${COMPONENT_FIELDS} } }
   }
 `;
+const CREATE_RECIPE = gql`
+  mutation CreateRecipe($companyId: ID!, $input: CreateRecipeInput!) {
+    createRecipe(companyId: $companyId, input: $input) { id name totalCost ingredients { id name quantity unitCost unit } components { ${COMPONENT_FIELDS} } }
+  }
+`;
+const REPLACE_RECIPE = gql`
+  mutation ReplaceRecipe($companyId: ID!, $keepId: ID!, $removeId: ID!) {
+    replaceRecipe(companyId: $companyId, keepId: $keepId, removeId: $removeId) { id }
+  }
+`;
 const DELETE_RECIPE = gql`
   mutation DeleteRecipe($id: ID!) { deleteRecipe(id: $id) }
 `;
 
-interface ImportedRecipe { tempId: string; name: string; ingredients: Ingredient[]; }
+interface ImportedRecipe {
+  tempId: string; name: string; ingredients: Ingredient[];
+  /** Set when this name matches an existing recipe; drives the collision UI. */
+  collisionExistingId?: string;
+  /** keepExisting = discard this import; keepImported = replace the existing recipe. */
+  resolution: 'keepExisting' | 'keepImported';
+}
 interface OptLine { name: string; quantity: number; unitCost: number; unit: string | null; }
 interface RecipeOptimization {
   recipeId: string; recipeName: string; kind: 'variant' | 'distinct';
@@ -77,6 +93,8 @@ export function RecipesPage() {
   const [fetchOptimizations] = useLazyQuery(GET_OPTIMIZE);
   const [applyOptimizations] = useMutation(APPLY_OPTIMIZE);
   const [createRecipes] = useMutation(CREATE_RECIPES);
+  const [createRecipe] = useMutation(CREATE_RECIPE);
+  const [replaceRecipe] = useMutation(REPLACE_RECIPE);
   const [deleteRecipe] = useMutation(DELETE_RECIPE);
 
   // Recipe editor modal — editing a recipe (edit mode) or null while creating (isNew).
@@ -150,9 +168,30 @@ export function RecipesPage() {
 
   const recipes: Recipe[] = data?.recipes ?? [];
 
+  // A recipe with no ingredients and no components carries no cost — flag it for cleanup.
+  const isEmpty = (r: Recipe) => r.ingredients.length === 0 && (r.components?.length ?? 0) === 0;
+  const emptyRecipes = recipes.filter(isEmpty);
+  // Name index for AI-import collision detection (case-insensitive, matches uploads.ts).
+  const normalizeName = (n: string) => n.toLowerCase().trim();
+  const existingByName = new Map(recipes.map(r => [normalizeName(r.name), r]));
+
+  const emptyBadge = (
+    <span style={{ marginLeft: 6, fontSize: '0.66rem', fontWeight: 700, color: '#92400e', background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: 99, padding: '1px 7px', verticalAlign: 'middle', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+      {t('emptyBadge', 'Empty')}
+    </span>
+  );
+
   function openNew() { setIsNew(true); setEditing(null); }
   function openEdit(recipe: Recipe) { setIsNew(false); setEditing(recipe); }
   function closeForm() { setEditing(null); setIsNew(false); }
+
+  async function handleDeleteEmpty() {
+    if (emptyRecipes.length === 0) return;
+    if (!confirm(t('confirmDeleteEmpty', 'Delete {{count}} empty recipe(s) (no ingredients or components)?', { count: emptyRecipes.length }))) return;
+    for (const r of emptyRecipes) await deleteRecipe({ variables: { id: r.id } }).catch(() => null);
+    showToast(t('toast.deletedEmpty', 'Deleted {{count}} empty recipe(s)', { count: emptyRecipes.length }), 'info');
+    refetch();
+  }
 
   async function handleDelete(id: string, recipeName: string) {
     if (!confirm(t('confirmDelete', 'Delete "{{name}}"?', { name: recipeName }))) return;
@@ -286,7 +325,10 @@ export function RecipesPage() {
         setStreamingError(t('toast.noRecipesFound', 'Claude could not find any recipes in this file.\n\nThe output above is what Claude returned. Check if your CSV has recognizable recipe names and ingredient rows.'));
         return;
       }
-      setImportedRecipes(parsed.recipes.map(r => ({ ...r, tempId: crypto.randomUUID() })));
+      setImportedRecipes(parsed.recipes.map(r => {
+        const existing = existingByName.get(normalizeName(r.name));
+        return { ...r, tempId: crypto.randomUUID(), collisionExistingId: existing?.id, resolution: 'keepExisting' as const };
+      }));
       setShowImportModal(true);
     } catch (err) {
       showToast(err instanceof Error ? err.message : t('toast.importFailed', 'Import failed'), 'error');
@@ -310,12 +352,18 @@ export function RecipesPage() {
   }
 
   function saveImportEdit() {
-    setImportedRecipes(prev => prev.map(r =>
-      r.tempId === importEditing
-        ? { ...r, name: importEditName.trim() || r.name, ingredients: importEditIngredients }
-        : r
-    ));
+    setImportedRecipes(prev => prev.map(r => {
+      if (r.tempId !== importEditing) return r;
+      const name = importEditName.trim() || r.name;
+      // A rename can change collision status — re-resolve against existing names.
+      const existing = existingByName.get(normalizeName(name));
+      return { ...r, name, ingredients: importEditIngredients, collisionExistingId: existing?.id, resolution: existing ? r.resolution : 'keepExisting' };
+    }));
     setImportEditing(null);
+  }
+
+  function setImportResolution(tempId: string, resolution: 'keepExisting' | 'keepImported') {
+    setImportedRecipes(prev => prev.map(r => r.tempId === tempId ? { ...r, resolution } : r));
   }
 
   function deleteImportedRecipe(tempId: string) {
@@ -331,19 +379,28 @@ export function RecipesPage() {
     // Coerce numbers to finite values — a NaN (e.g. an unparseable "$0.50") can't be
     // serialized as a GraphQL Float! and would otherwise reject the whole request.
     const num = (v: unknown) => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
-    const inputs = importedRecipes.map(recipe => ({
+    const toInput = (recipe: ImportedRecipe) => ({
       name: recipe.name.trim(),
       ingredients: recipe.ingredients
         .filter(i => i.name.trim())
         .map(({ id: _id, ...i }) => ({ ...i, quantity: num(i.quantity), unitCost: num(i.unitCost) })),
-    }));
+    });
+
+    // Partition by collision resolution. Empty imports can't be saved (Feature 1
+    // blocks them), so they're skipped and counted rather than failing a chunk.
+    const isEmptyImport = (r: ImportedRecipe) => r.ingredients.filter(i => i.name.trim()).length === 0;
+    const usable = importedRecipes.filter(r => !isEmptyImport(r));
+    const skippedEmpty = importedRecipes.length - usable.length;
+    const replacements = usable.filter(r => r.collisionExistingId && r.resolution === 'keepImported');
+    const fresh = usable.filter(r => !(r.collisionExistingId && r.resolution === 'keepExisting') && !replacements.includes(r));
+
     let saved = 0, failed = 0;
     try {
-      // Save in bulk — one mutation per chunk instead of one round-trip per recipe.
-      // Chunking keeps any single request bounded for very large imports.
+      // Fresh (non-colliding) recipes → chunked bulk insert.
+      const freshInputs = fresh.map(toInput);
       const CHUNK_SIZE = 50;
-      for (let i = 0; i < inputs.length; i += CHUNK_SIZE) {
-        const chunk = inputs.slice(i, i + CHUNK_SIZE);
+      for (let i = 0; i < freshInputs.length; i += CHUNK_SIZE) {
+        const chunk = freshInputs.slice(i, i + CHUNK_SIZE);
         try {
           const { data } = await createRecipes({ variables: { companyId, inputs: chunk } });
           saved += data?.createRecipes?.length ?? chunk.length;
@@ -358,7 +415,23 @@ export function RecipesPage() {
         }
       }
 
+      // Replacements → create the imported recipe, then transfer the existing
+      // recipe's POS/sales mappings onto it and delete the old one.
+      for (const r of replacements) {
+        try {
+          const { data } = await createRecipe({ variables: { companyId, input: toInput(r) } });
+          const newId = (data as { createRecipe?: { id: string } } | null)?.createRecipe?.id;
+          if (newId && r.collisionExistingId) {
+            await replaceRecipe({ variables: { companyId, keepId: newId, removeId: r.collisionExistingId } });
+          }
+          saved++;
+        } catch (oneErr) { failed++; console.error('replaceRecipe failed:', r.name, oneErr); }
+      }
+
       refetch();
+      if (skippedEmpty > 0) {
+        showToast(t('toast.skippedEmpty', 'Skipped {{count}} empty recipe(s)', { count: skippedEmpty }), 'warning', 5000);
+      }
       if (failed === 0) {
         showToast(t('toast.saved', 'Saved {{count}} recipes!', { count: saved }), 'success', 5000);
         closeImportModal();
@@ -369,6 +442,7 @@ export function RecipesPage() {
   }
 
   const importEditCost = importEditIngredients.reduce((s, i) => s + (Number(i.quantity) || 0) * (Number(i.unitCost) || 0), 0);
+  const importCollisions = importedRecipes.filter(r => r.collisionExistingId).length;
 
   return (
     <>
@@ -434,6 +508,18 @@ export function RecipesPage() {
           </div>
         </div>
 
+        {emptyRecipes.length > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: 8, padding: '10px 14px', marginBottom: 12 }}>
+            <span style={{ fontSize: '0.85rem', color: '#92400e' }}>
+              <i className="fa-solid fa-triangle-exclamation" style={{ marginRight: 6 }} />
+              {t('emptyBanner', '{{count}} empty recipe(s) — no ingredients or components.', { count: emptyRecipes.length })}
+            </span>
+            <button className="btn-danger-subtle" style={{ fontSize: '0.8rem', padding: '4px 12px', whiteSpace: 'nowrap' }} onClick={handleDeleteEmpty}>
+              <i className="fa-solid fa-trash" /> {t('deleteEmpty', 'Delete empty')}
+            </button>
+          </div>
+        )}
+
         {loading && <p style={{ color: 'var(--muted)', fontSize: '0.88rem' }}>{t('loading', 'Loading…')}</p>}
         {!loading && recipes.length === 0 && (
           <p style={{ color: 'var(--muted)', textAlign: 'center', padding: '32px 0', fontSize: '0.9rem' }}>
@@ -445,7 +531,7 @@ export function RecipesPage() {
           <div className="grid grid-cols-[repeat(auto-fill,minmax(270px,1fr))] gap-3.5 mt-3.5">
             {recipes.map(recipe => (
               <div key={recipe.id} className="bg-white border border-[rgba(11,42,74,0.12)] rounded-xl p-4 transition-shadow hover:shadow-[0_4px_12px_rgba(11,42,74,0.08)]">
-                <div className="text-[0.97rem] font-bold text-[#0B2A4A] mb-1">{recipe.name}</div>
+                <div className="text-[0.97rem] font-bold text-[#0B2A4A] mb-1">{recipe.name}{isEmpty(recipe) && emptyBadge}</div>
                 <div className="text-[0.82rem] text-[#64748b]">{t('batchCost', '{{cost}}/batch', { cost: fmtCost(Number(recipe.totalCost)) })} · {t('ingredientCount', '{{count}} ingredients', { count: recipe.ingredients.length })}</div>
                 <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
                   <button className="btn-secondary" style={{ fontSize: '0.8rem', padding: '4px 10px' }} onClick={() => openEdit(recipe)}><i className="fa-solid fa-pen-to-square" /> {t('edit', 'Edit')}</button>
@@ -506,7 +592,7 @@ export function RecipesPage() {
                               className={`fa-solid fa-chevron-right inline-block mr-2 text-[0.72rem] text-[color:var(--muted)] transition-transform duration-200 ease-in-out ${isOpen ? 'rotate-90' : 'rotate-0'}`}
                             />
                           )}
-                          {recipe.name}
+                          {recipe.name}{isEmpty(recipe) && emptyBadge}
                         </td>
                         <td style={{ padding: '8px 12px', textAlign: 'right' }}>{recipe.ingredients.length}</td>
                         <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 600, color: 'var(--vv-navy)' }}>{fmtCost(Number(recipe.totalCost))}</td>
@@ -721,11 +807,19 @@ export function RecipesPage() {
               <p style={{ margin: 0, color: 'var(--muted)', fontSize: '0.85rem' }}>
                 {t('review.detected', '{{count}} recipes detected. Edit or delete any before saving.', { count: importedRecipes.length })}
               </p>
+              {importCollisions > 0 && (
+                <p style={{ margin: '6px 0 0', color: '#92400e', fontSize: '0.82rem' }}>
+                  <i className="fa-solid fa-triangle-exclamation" style={{ marginRight: 6 }} />
+                  {t('review.collisionSummary', '{{count}} name(s) already exist — choose which version to keep below.', { count: importCollisions })}
+                </p>
+              )}
             </div>
 
             <div style={{ overflowY: 'auto', flex: 1, padding: '0 28px' }}>
-              {importedRecipes.map(recipe => (
-                <div key={recipe.tempId} style={{ border: '1px solid rgba(11,42,74,0.12)', borderRadius: 10, padding: '12px 14px', marginBottom: 10, background: '#fff' }}>
+              {importedRecipes.map(recipe => {
+                const existing = recipe.collisionExistingId ? recipes.find(r => r.id === recipe.collisionExistingId) : undefined;
+                return (
+                <div key={recipe.tempId} style={{ border: recipe.collisionExistingId ? '1px solid #fcd34d' : '1px solid rgba(11,42,74,0.12)', borderRadius: 10, padding: '12px 14px', marginBottom: 10, background: '#fff' }}>
                   {importEditing === recipe.tempId ? (
                     /* Edit mode */
                     <>
@@ -764,6 +858,7 @@ export function RecipesPage() {
                     </>
                   ) : (
                     /* View mode */
+                    <>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <div>
                         <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--vv-navy)', marginBottom: 2 }}>{recipe.name}</div>
@@ -783,9 +878,35 @@ export function RecipesPage() {
                         </button>
                       </div>
                     </div>
+                    {recipe.collisionExistingId && (
+                      <div style={{ marginTop: 10, border: '1px solid #fcd34d', background: '#fffbeb', borderRadius: 8, padding: '9px 11px' }}>
+                        <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#92400e', marginBottom: 6 }}>
+                          <i className="fa-solid fa-triangle-exclamation" style={{ marginRight: 6 }} />
+                          {t('review.collisionTitle', 'A recipe named "{{name}}" already exists', { name: recipe.name })}
+                        </div>
+                        <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: '0.82rem', marginBottom: 5, cursor: 'pointer' }}>
+                          <input type="radio" checked={recipe.resolution === 'keepExisting'} onChange={() => setImportResolution(recipe.tempId, 'keepExisting')} style={{ marginTop: 3 }} />
+                          <span>
+                            <strong>{t('review.keepExisting', 'Keep existing')}</strong>
+                            {existing && <span style={{ color: 'var(--muted)' }}> ({t('ingredientCount', '{{count}} ingredients', { count: existing.ingredients.length })}{existing.ingredients.length > 0 ? ` · ${fmtCost(Number(existing.totalCost))}` : ''})</span>}
+                            {' — '}{t('review.keepExistingHint', 'discard this import')}
+                          </span>
+                        </label>
+                        <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: '0.82rem', cursor: 'pointer' }}>
+                          <input type="radio" checked={recipe.resolution === 'keepImported'} onChange={() => setImportResolution(recipe.tempId, 'keepImported')} style={{ marginTop: 3 }} />
+                          <span>
+                            <strong>{t('review.keepImported', 'Replace with this import')}</strong>
+                            <span style={{ color: 'var(--muted)' }}> ({t('ingredientCount', '{{count}} ingredients', { count: recipe.ingredients.length })})</span>
+                            {' — '}{t('review.keepImportedHint', 'moves POS & sales mappings to the new version')}
+                          </span>
+                        </label>
+                      </div>
+                    )}
+                    </>
                   )}
                 </div>
-              ))}
+                );
+              })}
             </div>
 
             <div style={{ display: 'flex', gap: 10, padding: '14px 28px 28px', borderTop: '1px solid rgba(11,42,74,0.08)', flexShrink: 0 }}>

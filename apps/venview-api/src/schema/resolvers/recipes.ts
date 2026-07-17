@@ -20,6 +20,18 @@ function componentRows(components: unknown, recipeId: string): Row[] {
   }));
 }
 
+// A recipe must carry content: at least one named ingredient line, or at least
+// one sub-recipe component. Empty recipes (name only) are rejected on write.
+function hasContent(input: Record<string, unknown>): boolean {
+  const ingredients = input['ingredients'];
+  const namedIngredients = Array.isArray(ingredients)
+    ? (ingredients as Row[]).filter(i => typeof i['name'] === 'string' && (i['name'] as string).trim()).length
+    : 0;
+  const components = input['components'];
+  const componentCount = Array.isArray(components) ? (components as Row[]).length : 0;
+  return namedIngredients > 0 || componentCount > 0;
+}
+
 // Reject a save whose recipe-type components would introduce a cost cycle.
 async function assertNoCycles(recipeId: string, components: unknown): Promise<void> {
   if (!Array.isArray(components)) return;
@@ -128,6 +140,8 @@ export const recipeResolvers = {
       requireAuth(ctx);
       await requireCompanyMember(companyId, ctx.user!.id);
 
+      if (!hasContent(input)) throw new Error('A recipe needs at least one ingredient or component.');
+
       const { ingredients, components, ...recipeFields } = input;
 
       const { data: recipe, error } = await supabase
@@ -165,6 +179,10 @@ export const recipeResolvers = {
 
       if (!Array.isArray(inputs) || inputs.length === 0) return [];
 
+      for (const i of inputs) {
+        if (!hasContent(i)) throw new Error(`"${(i['name'] as string) ?? 'Recipe'}" has no ingredients or components.`);
+      }
+
       const { data: cards, error: cardErr } = await supabase
         .from('RecipeCards')
         .insert(inputs.map(i => ({ name: i['name'], companyId })))
@@ -200,6 +218,8 @@ export const recipeResolvers = {
     ) => {
       requireAuth(ctx);
 
+      if (!hasContent(input)) throw new Error('A recipe needs at least one ingredient or component.');
+
       const { ingredients, components, ...recipeFields } = input;
 
       await assertNoCycles(id, components);
@@ -232,6 +252,62 @@ export const recipeResolvers = {
       requireAuth(ctx);
       await supabase.from('RecipeCards').delete().eq('id', id);
       return true;
+    },
+
+    // Replace one recipe with another: move every reference from removeId onto
+    // keepId, then delete removeId. Used by AI import to resolve a name collision
+    // (keep the freshly imported recipe, inherit the existing one's POS/sales
+    // mappings so nothing is silently orphaned).
+    replaceRecipe: async (
+      _: unknown,
+      { companyId, keepId, removeId }: { companyId: string; keepId: string; removeId: string },
+      ctx: AppContext
+    ) => {
+      requireAuth(ctx);
+      await requireCompanyMember(companyId, ctx.user!.id);
+      if (keepId === removeId) throw new Error('Cannot replace a recipe with itself.');
+
+      // Both recipes must exist and belong to this company (guards id injection).
+      const { data: cards, error: cardErr } = await supabase
+        .from('RecipeCards').select('id, companyId').in('id', [keepId, removeId]);
+      if (cardErr) throw new Error(cardErr.message);
+      const rows = (cards ?? []) as Row[];
+      const keep = rows.find(r => r['id'] === keepId);
+      const remove = rows.find(r => r['id'] === removeId);
+      if (!keep || !remove) throw new Error('Recipe not found.');
+      if (keep['companyId'] !== companyId || remove['companyId'] !== companyId) {
+        throw new Error('Recipe does not belong to this company.');
+      }
+
+      // 1. Move mapping references (POS item, POS modifier, sold lines).
+      for (const table of ['PosItemMapping', 'PosModifierMapping', 'InventorySales'] as const) {
+        const { error } = await supabase.from(table).update({ recipeId: keepId }).eq('recipeId', removeId);
+        if (error) throw new Error(error.message);
+      }
+
+      // 2. Re-point other recipes that use removeId as a sub-recipe component.
+      //    Drop rows that would self-reference keepId, then repoint the rest —
+      //    skipping (deleting) any repoint that would create a cost cycle.
+      await supabase.from('RecipeComponents').delete().eq('recipeId', keepId).eq('refRecipeId', removeId);
+      const { data: refs } = await supabase
+        .from('RecipeComponents').select('id, recipeId').eq('refRecipeId', removeId);
+      for (const ref of (refs ?? []) as Row[]) {
+        const parentId = ref['recipeId'] as string;
+        if (await wouldCreateCycle(parentId, keepId)) {
+          await supabase.from('RecipeComponents').delete().eq('id', ref['id']);
+        } else {
+          await supabase.from('RecipeComponents').update({ refRecipeId: keepId }).eq('id', ref['id']);
+        }
+      }
+
+      // 3. Delete the removed recipe (cascades its own ingredients/components).
+      const { error: delErr } = await supabase.from('RecipeCards').delete().eq('id', removeId);
+      if (delErr) throw new Error(delErr.message);
+
+      // 4. Return the shaped survivor.
+      const { data: full } = await supabase.from('RecipeCards').select(RECIPE_SELECT).eq('id', keepId).single();
+      const costCtx = await loadRecipeCostContext(companyId);
+      return shapeRecipe(full as Row, costCtx);
     },
 
     // Apply accepted recipe-optimization recommendations: create needed base

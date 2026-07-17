@@ -142,6 +142,11 @@ export function RecipeEditorModal({ recipe, prefill, onSaved, onClose }: Props) 
       ingredients: ingredients.filter(i => i.name.trim()).map(({ id: _id, ...i }) => ({ ...i, quantity: Number(i.quantity), unitCost: Number(i.unitCost) })),
       components: cleanComponents,
     };
+    if (input.ingredients.length === 0 && cleanComponents.length === 0) {
+      showToast(t('toast.contentRequired', 'Add at least one ingredient or component'), 'error');
+      setSaving(false);
+      return;
+    }
     try {
       let saved: Recipe | undefined;
       if (isNew) {
