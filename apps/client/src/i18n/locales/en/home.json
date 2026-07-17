@@ -1,0 +1,57 @@
+{
+  "page": {
+    "defaultTitle": "Home",
+    "subtitle": "Here's what to focus on next."
+  },
+  "banner": {
+    "getSetUp": "Get set up",
+    "nextForEvent": "Next for {{eventName}}",
+    "openEvent": "Open event"
+  },
+  "events": {
+    "heading": "Events in progress",
+    "allEvents": "All events",
+    "emptyNoEvents": "No events yet.",
+    "createFirst": "Create your first event",
+    "allFinalized": "All events are finalized.",
+    "phaseDone": "Done"
+  },
+  "profit": {
+    "cardTitle": "Event Profit Summary",
+    "revenue": "Revenue",
+    "grossSales": "Gross Sales",
+    "returns": "Returns",
+    "discounts": "Discounts",
+    "netSales": "Net Sales",
+    "cogsTitle": "Cost of Goods Sold (COGS) - Supply Fees",
+    "ingredientCosts": "Ingredient Costs",
+    "grossProfit": "Gross Profit",
+    "operatingExpenses": "Operating Expenses",
+    "healthDeptFee": "Health Dept Fee",
+    "eventFee": "Event Fee",
+    "additionalFees": "Additional Fees",
+    "mileageReimbursement": "Mileage Reimbursement",
+    "employeeBonus": "Employee Bonus",
+    "eventRunnerFees": "Event Runner Fees",
+    "laborFees": "Labor Fees",
+    "coordinatorFee": "Coordinator Fee",
+    "posFees": "POS Fees",
+    "totalOperatingExpenses": "Total Operating Expenses",
+    "netProfit": "Net Profit",
+    "laborWarning": "Labor not yet entered — profit may change. Add labor in the Labor card above.",
+    "forYourRecords": "For Your Records",
+    "finalizeEvent": "Finalize Event",
+    "tips": "Tips (pass-through to staff)",
+    "salesTaxRemitState": "Sales tax — remit to {{jurisdiction}} ({{rate}})",
+    "salesTaxRemitLocal": "Sales tax — remit to {{jurisdiction}} ({{rate}})",
+    "stateFallback": "State",
+    "localFallback": "Local",
+    "totalSalesTaxCollected": "Total sales tax collected (to remit)",
+    "taxDisclaimer": "ⓘ Sales tax is collected on behalf of the taxing authorities and excluded from profit. Income taxes are calculated annually — consult your accountant."
+  },
+  "toast": {
+    "eventFinalized": "Event finalized!",
+    "finalizeLimit": "Upgrade to Pro to finalize more than 1 event.",
+    "finalizeFailed": "Failed to finalize"
+  }
+}

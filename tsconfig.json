@@ -1,0 +1,25 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compileOnSave": false,
+  "files": [],
+  "references": [
+    {
+      "path": "./apps/client"
+    },
+    {
+      "path": "./apps/venview-api"
+    },
+    {
+      "path": "./libs/common-components"
+    },
+    {
+      "path": "./libs/data"
+    },
+    {
+      "path": "./apps/marketing"
+    },
+    {
+      "path": "./apps/super-admin-portal"
+    }
+  ]
+}

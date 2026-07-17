@@ -1,0 +1,51 @@
+{
+  "heading": "Facturación",
+  "subtitle": "Administra tu suscripción de venOS y los datos de pago.",
+  "loading": "Cargando…",
+  "planPro": "venOS Pro",
+  "planStarter": "venOS Starter",
+  "accessEnds": "El acceso termina el {{date}}",
+  "renews": "Se renueva el {{date}}",
+  "manage": {
+    "eyebrow": "Administrar suscripción",
+    "description": "Actualiza tu método de pago, consulta tus facturas o cancela tu plan mediante nuestro portal de facturación seguro.",
+    "button": "Administrar suscripción"
+  },
+  "upgrade": {
+    "eyebrow": "Mejora a venOS Pro",
+    "headline": "Conoce la ganancia real de cada evento.",
+    "subhead": "Da seguimiento a las tendencias con el tiempo y toma decisiones más inteligentes, más rápido.",
+    "button": "Mejorar a Pro",
+    "secureNote": "Pago seguro con tecnología de Stripe · cancela cuando quieras."
+  },
+  "features": {
+    "reports": {
+      "title": "Informes posteriores al evento",
+      "detail": "Desglose completo de pérdidas y ganancias, listo para compartir e imprimir"
+    },
+    "unlimitedEvents": {
+      "title": "Eventos finalizados ilimitados",
+      "detail": "Da seguimiento a cada mercado, festival y pop-up que realices"
+    },
+    "pdfExport": {
+      "title": "Exportar a PDF",
+      "detail": "Descarga informes con tu marca para tus registros o tu contador"
+    },
+    "history": {
+      "title": "Historial completo de eventos",
+      "detail": "Compara eventos a lo largo del tiempo para encontrar tus mercados más rentables"
+    },
+    "squareSync": {
+      "title": "Sincronización con Square POS",
+      "detail": "Obtén datos de ventas reales, incluidas comisiones, reembolsos y descuentos"
+    },
+    "customForms": {
+      "title": "Plantillas de formularios personalizadas",
+      "detail": "Diseña formularios de eventos que se adapten exactamente a cómo trabajas"
+    }
+  },
+  "toast": {
+    "paymentReceived": "Pago recibido: activando venOS Pro…",
+    "checkoutCancelled": "Pago cancelado."
+  }
+}

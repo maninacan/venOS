@@ -1,0 +1,150 @@
+// Shared profit calculation logic — ported from old buildPostEventReport()
+
+export interface SalesSummaryRow {
+  grossSales?: number | null;
+  netSales?: number | null;
+  discounts?: number | null;
+  refunds?: number | null;
+  tax?: number | null;
+  tips?: number | null;
+  squareFees?: number | null;
+  posFees?: number | null;
+  taxRate?: number | null;
+  taxOverride?: boolean | null;
+  totalCollected?: number | null;
+}
+
+export interface ExpensesRow {
+  healthDeptFee?: number | null;
+  eventFee?: number | null;
+  mileage?: number | null;
+  mileageRate?: number | null;
+  coordinatorFee?: number | null;
+  posFee?: number | null;
+  employeeBonus?: number | null;
+  eventRunnerFees?: number | null;
+}
+
+export interface LaborRow {
+  hours?: number | null;
+  wage?: number | null;
+  total?: number | null;
+}
+
+export type FeeCalcType = 'flat' | 'per_unit' | 'percentage';
+export type FeePctBase = 'gross' | 'net';
+
+export interface AdditionalFeeRow {
+  amount: number;
+  isDiscount: boolean;
+  // How `amount` is interpreted: flat dollars, dollars-per-unit, or a percentage.
+  // Absent/unknown → 'flat' (preserves legacy rows).
+  calcType?: FeeCalcType | null;
+  // For percentage rows: which sales figure the percent applies to.
+  pctBase?: FeePctBase | null;
+}
+
+// Resolve a fee/expense row to its effective (signed) dollar amount.
+// `unitsSold` is total items sold for the event; `sales` supplies the gross/net base.
+export function resolveFeeAmount(
+  fee: AdditionalFeeRow,
+  sales: SalesSummaryRow | null,
+  unitsSold: number
+): number {
+  const n = (v: number | null | undefined) => Number(v ?? 0);
+  const rate = n(fee.amount);
+  let value: number;
+  switch (fee.calcType) {
+    case 'per_unit':
+      value = rate * n(unitsSold);
+      break;
+    case 'percentage':
+      value = (rate / 100) * n(fee.pctBase === 'gross' ? sales?.grossSales : sales?.netSales);
+      break;
+    default: // 'flat'
+      value = rate;
+  }
+  return fee.isDiscount ? -value : value;
+}
+
+export interface ProfitSummary {
+  posFees: number;
+  cogs: number;
+  grossProfit: number;
+  totalExpenses: number;
+  netProfit: number;
+  tips: number;
+  stateFoodTax: number;
+  laborFees: number;
+  additionalFeesTotal: number;
+  mileageReimbursement: number;
+}
+
+export function computeProfit(
+  sales: SalesSummaryRow | null,
+  expenses: ExpensesRow | null,
+  laborRows: LaborRow[],
+  additionalFees: AdditionalFeeRow[],
+  cogsSalesFees: number,
+  hasSquare: boolean,
+  taxRate = 0,
+  unitsSold = 0
+): ProfitSummary {
+  const n = (v: number | null | undefined) => Number(v ?? 0);
+
+  const netSales = n(sales?.netSales);
+  const squareTips = n(sales?.tips);
+  const tips = squareTips;
+
+  // Labor: sum from actual shift rows (ceiling per shift, matching client Labor Card)
+  const laborFees = laborRows.reduce((sum, r) => {
+    const shiftTotal = n(r.total) || (n(r.hours) * n(r.wage));
+    return sum + Math.ceil(shiftTotal * 100) / 100;
+  }, 0);
+
+  // Additional fees / custom expenses (flat, per-unit, or percentage-based; discounts subtract)
+  const additionalFeesTotal = additionalFees.reduce(
+    (sum, f) => sum + resolveFeeAmount(f, sales, unitsSold),
+    0
+  );
+
+  const mileageReimbursement = n(expenses?.mileage) * n(expenses?.mileageRate ?? 0.67);
+
+  // POS fees: manual override wins, then Square fees for Square-linked events
+  const manualPosFee = n(expenses?.posFee);
+  const posFees = manualPosFee > 0
+    ? manualPosFee
+    : (hasSquare ? n(sales?.squareFees) : 0);
+
+  const totalExpenses =
+    n(expenses?.healthDeptFee) +
+    n(expenses?.eventFee) +
+    additionalFeesTotal +
+    mileageReimbursement +
+    n(expenses?.employeeBonus) +
+    n(expenses?.eventRunnerFees) +
+    laborFees +
+    n(expenses?.coordinatorFee) +
+    posFees;
+
+  const cogs = cogsSalesFees;
+  const grossProfit = netSales - cogs;
+  const netProfit = grossProfit - totalExpenses;
+
+  // Sales tax: informational only, never deducted from profit
+  const taxBase = n(sales?.totalCollected) || netSales;
+  const stateFoodTax = taxBase * taxRate;
+
+  return {
+    posFees,
+    cogs,
+    grossProfit,
+    totalExpenses,
+    netProfit,
+    tips,
+    stateFoodTax,
+    laborFees,
+    additionalFeesTotal,
+    mileageReimbursement,
+  };
+}

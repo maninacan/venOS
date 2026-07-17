@@ -1,0 +1,24 @@
+# Development — GraphQL/REST API. Secrets injected at runtime via Doppler
+# (`doppler run` in api.Dockerfile); set DOPPLER_TOKEN (dev) as a Fly secret.
+app = 'venview-dev-api'
+primary_region = 'dfw'
+
+[build]
+  dockerfile = 'api.Dockerfile'
+
+[env]
+  PORT = '8080'
+  DOPPLER_PROJECT = 'venos'
+  DOPPLER_CONFIG = 'dev'
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1

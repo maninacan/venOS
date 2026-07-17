@@ -1,0 +1,88 @@
+{
+  "heading": "Meu estoque",
+  "subtitle": "Envie seu catálogo de produtos uma vez — o venOS controla o estoque e calcula o CMV automaticamente após cada sincronização com o Square.",
+  "aiImport": "Importar com IA",
+  "analyzing": "Analisando…",
+  "clearAll": "Limpar tudo",
+  "searchPlaceholder": "Buscar itens…",
+  "allCategories": "Todas as categorias",
+  "loading": "Carregando…",
+  "emptyNoItems": "Nenhum item em estoque ainda — adicione um manualmente ou use Importar com IA.",
+  "emptyNoMatch": "Nenhum item corresponde à sua busca.",
+  "addItem": "Adicionar item",
+  "lowStockOnly": "Estoque baixo",
+  "table": {
+    "item": "Item",
+    "category": "Categoria",
+    "unitCost": "Custo unitário",
+    "onHand": "Em estoque",
+    "reorderAt": "Repor em"
+  },
+  "low": "BAIXO",
+  "save": "Salvar",
+  "cancel": "Cancelar",
+  "itemCount_one": "{{count}} item",
+  "itemCount_other": "{{count}} itens",
+  "addModal": {
+    "title": "Adicionar item ao estoque",
+    "name": "Nome",
+    "namePlaceholder": "ex.: Limões",
+    "category": "Categoria",
+    "categoryPlaceholder": "ex.: Hortifrúti",
+    "unitCost": "Custo unitário",
+    "onHand": "Em estoque",
+    "reorderAt": "Repor em",
+    "sku": "SKU",
+    "skuPlaceholder": "Opcional",
+    "duplicateWarning": "Já existe um item com este nome — salvar irá atualizá-lo.",
+    "submit": "Adicionar item",
+    "cancel": "Cancelar"
+  },
+  "deleteModal": {
+    "title": "Excluir item?",
+    "message": "Excluir \"{{name}}\"? Isso não pode ser desfeito.",
+    "confirm": "Excluir"
+  },
+  "clearAllModal": {
+    "title": "Excluir todo o estoque?",
+    "message": "Isso exclui permanentemente todos os {{count}} itens do estoque. É irreversível e não pode ser desfeito.",
+    "typePrompt": "Para confirmar, digite <1>{{word}}</1> abaixo.",
+    "confirmWord": "EXCLUIR",
+    "continue": "Continuar",
+    "confirm": "Excluir tudo",
+    "back": "Voltar"
+  },
+  "streaming": {
+    "parseErrorTitle": "Erro de análise — Saída bruta",
+    "analyzingTitle": "O Claude está analisando seu arquivo…",
+    "largeFileNote": "Isso pode levar alguns minutos para arquivos grandes.",
+    "close": "Fechar"
+  },
+  "review": {
+    "title": "Revisar estoque analisado pela IA",
+    "detected_one": "{{count}} item detectado. Edite ou exclua qualquer um antes de salvar. Itens existentes com o mesmo nome serão atualizados.",
+    "detected_other": "{{count}} itens detectados. Edite ou exclua qualquer um antes de salvar. Itens existentes com o mesmo nome serão atualizados.",
+    "name": "Nome",
+    "category": "Categoria",
+    "unitCost": "Custo unitário",
+    "onHand": "Em estoque",
+    "reorder": "Repor",
+    "sku": "SKU",
+    "namePlaceholder": "Nome do item",
+    "categoryPlaceholder": "Categoria",
+    "skuPlaceholder": "SKU",
+    "approveAll": "Aprovar todos ({{count}})",
+    "discardBatch": "Descartar lote"
+  },
+  "toast": {
+    "saveFailed": "Não foi possível salvar",
+    "cleared": "Estoque limpo",
+    "parseFailed": "Falha na análise do JSON: {{reason}}\n\nA saída acima é o que o Claude retornou. Ela pode estar truncada ou conter texto inesperado.",
+    "noItemsFound": "Nenhum item encontrado nesse arquivo. Tente um arquivo diferente.",
+    "importFailed": "Falha na importação",
+    "uploadFailed": "Falha no upload",
+    "saved_one": "{{count}} item salvo!",
+    "saved_other": "{{count}} itens salvos!",
+    "savedWithFailures": "{{saved}} salvos, mas {{failed}} falharam. Tente novamente os restantes."
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "heading": "My Inventory",
+  "subtitle": "Upload your product catalog once — venOS tracks stock and calculates COGS automatically after every Square sync.",
+  "aiImport": "AI Import",
+  "analyzing": "Analyzing…",
+  "clearAll": "Clear All",
+  "searchPlaceholder": "Search items…",
+  "allCategories": "All Categories",
+  "loading": "Loading…",
+  "emptyNoItems": "No inventory items yet — add one manually or use AI Import.",
+  "emptyNoMatch": "No items match your search.",
+  "addItem": "Add Item",
+  "lowStockOnly": "Low stock",
+  "table": {
+    "item": "Item",
+    "category": "Category",
+    "unitCost": "Unit Cost",
+    "onHand": "On Hand",
+    "reorderAt": "Reorder At"
+  },
+  "low": "LOW",
+  "save": "Save",
+  "cancel": "Cancel",
+  "itemCount_one": "{{count}} item",
+  "itemCount_other": "{{count}} items",
+  "addModal": {
+    "title": "Add inventory item",
+    "name": "Name",
+    "namePlaceholder": "e.g. Lemons",
+    "category": "Category",
+    "categoryPlaceholder": "e.g. Produce",
+    "unitCost": "Unit cost",
+    "onHand": "On hand",
+    "reorderAt": "Reorder at",
+    "sku": "SKU",
+    "skuPlaceholder": "Optional",
+    "duplicateWarning": "An item with this name already exists — saving will update it.",
+    "submit": "Add item",
+    "cancel": "Cancel"
+  },
+  "deleteModal": {
+    "title": "Delete item?",
+    "message": "Delete \"{{name}}\"? This cannot be undone.",
+    "confirm": "Delete"
+  },
+  "clearAllModal": {
+    "title": "Delete all inventory?",
+    "message": "This permanently deletes all {{count}} inventory items. This is irreversible and cannot be undone.",
+    "typePrompt": "To confirm, type <1>{{word}}</1> below.",
+    "confirmWord": "DELETE",
+    "continue": "Continue",
+    "confirm": "Delete all",
+    "back": "Back"
+  },
+  "streaming": {
+    "parseErrorTitle": "Parse Error — Raw Output",
+    "analyzingTitle": "Claude is analyzing your file…",
+    "largeFileNote": "This may take a few minutes for large files.",
+    "close": "Close"
+  },
+  "review": {
+    "title": "Review AI-Parsed Inventory",
+    "detected_one": "{{count}} item detected. Edit or delete any before saving. Existing items with the same name will be updated.",
+    "detected_other": "{{count}} items detected. Edit or delete any before saving. Existing items with the same name will be updated.",
+    "name": "Name",
+    "category": "Category",
+    "unitCost": "Unit Cost",
+    "onHand": "On Hand",
+    "reorder": "Reorder",
+    "sku": "SKU",
+    "namePlaceholder": "Item name",
+    "categoryPlaceholder": "Category",
+    "skuPlaceholder": "SKU",
+    "approveAll": "Approve All ({{count}})",
+    "discardBatch": "Discard Batch"
+  },
+  "toast": {
+    "saveFailed": "Failed to save",
+    "cleared": "Inventory cleared",
+    "parseFailed": "JSON parse failed: {{reason}}\n\nThe output above is what Claude returned. It may be truncated or contain unexpected text.",
+    "noItemsFound": "No items found in that file. Try a different file.",
+    "importFailed": "Import failed",
+    "uploadFailed": "Upload failed",
+    "saved_one": "Saved {{count}} item!",
+    "saved_other": "Saved {{count}} items!",
+    "savedWithFailures": "Saved {{saved}}, but {{failed}} failed. Please retry the rest."
+  }
+}

@@ -1,0 +1,272 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-content">
+      <div class="hero-eyebrow">Now accepting beta vendors</div>
+      <h1>Did your last event actually <em>make money?</em></h1>
+      <p class="hero-sub">
+        Square fees hide in the margins. Labor costs get missed. Refunds distort your totals.
+        venOS pulls every number together so you know exactly where your profit went — after every event.
+      </p>
+
+      <div class="capture-form" id="hero-form">
+        <div class="form-row">
+          <input type="email" id="hero-email" placeholder="your@email.com" autocomplete="email" />
+          <button class="btn-primary" id="hero-submit">Join Waitlist</button>
+        </div>
+        <p class="form-note">Free during beta &nbsp;·&nbsp; No credit card &nbsp;·&nbsp; Be first to know</p>
+        <div class="form-success" id="hero-success"><i class="fa-solid fa-check" aria-hidden="true"></i> You're on the list! We'll be in touch soon.</div>
+        <div class="form-error" id="hero-error">Something went wrong. Please try again.</div>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div style="position:relative;">
+        <div class="badge-float">
+          Profit margin<br /><strong>+23.4%</strong>
+        </div>
+        <div class="dashboard-card">
+          <div class="card-header">
+            <span class="card-title">Event Summary</span>
+            <span class="card-event">Farmers Market · Sat</span>
+          </div>
+          <div class="metric-row">
+            <div class="metric">
+              <div class="metric-label">Gross Sales</div>
+              <div class="metric-value neutral">$1,840</div>
+              <div class="metric-delta up"><i class="fa-solid fa-arrow-up" aria-hidden="true"></i> Square synced</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">True Profit</div>
+              <div class="metric-value positive">$431</div>
+              <div class="metric-delta up"><i class="fa-solid fa-arrow-up" aria-hidden="true"></i> After all costs</div>
+            </div>
+          </div>
+          <div class="cost-breakdown">
+            <div class="cost-row">
+              <span class="cost-name">Square processing fees</span>
+              <span class="cost-amount bad">−$54.20</span>
+            </div>
+            <div class="cost-row">
+              <span class="cost-name">Labor (3 hrs × 2)</span>
+              <span class="cost-amount bad">−$180.00</span>
+            </div>
+            <div class="cost-row">
+              <span class="cost-name">Supplies & materials</span>
+              <span class="cost-amount bad">−$214.00</span>
+            </div>
+            <div class="cost-row">
+              <span class="cost-name">Booth fee</span>
+              <span class="cost-amount bad">−$75.00</span>
+            </div>
+            <div class="cost-row">
+              <span class="cost-name">Refunds issued</span>
+              <span class="cost-amount bad">−$28.00</span>
+            </div>
+          </div>
+          <div class="profit-bar-wrap">
+            <div class="profit-bar" id="profit-bar"></div>
+          </div>
+          <p style="font-size:0.72rem;color:var(--muted);margin-top:6px;text-align:right;">Profit margin: 23.4%</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAIN POINTS -->
+  <section class="pain-section">
+    <div class="pain-inner">
+      <p class="section-label">Sound familiar?</p>
+      <h2>Every vendor asks the same questions after an event.</h2>
+      <div class="pain-grid">
+        <div class="pain-card fade-up">
+          <span class="pain-icon"><i class="fa-solid fa-money-bill-wave" aria-hidden="true"></i></span>
+          <h3>"Did we actually make money?"</h3>
+          <p>Sales numbers look great until you subtract the booth fee, labor, and supplies you forgot to track.</p>
+        </div>
+        <div class="pain-card fade-up">
+          <span class="pain-icon"><i class="fa-solid fa-square" aria-hidden="true"></i></span>
+          <h3>Square fees hidden in the margins</h3>
+          <p>2.6% + 10¢ per swipe adds up fast. It never shows up clearly — until venOS pulls it out for you.</p>
+        </div>
+        <div class="pain-card fade-up">
+          <span class="pain-icon"><i class="fa-solid fa-chart-column" aria-hidden="true"></i></span>
+          <h3>Spreadsheets break when you get busy</h3>
+          <p>Manual tracking works for two events. By event six, the spreadsheet is wrong and you've given up.</p>
+        </div>
+        <div class="pain-card fade-up">
+          <span class="pain-icon"><i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i></span>
+          <h3>Refunds distort your totals</h3>
+          <p>A $40 refund looks small. When you run the real numbers, it wiped out 20 minutes of work.</p>
+        </div>
+        <div class="pain-card fade-up">
+          <span class="pain-icon"><i class="fa-solid fa-receipt" aria-hidden="true"></i></span>
+          <h3>"Was this event worth it?"</h3>
+          <p>You drove 45 minutes, paid a $60 fee, and sold $300. Was it worth it? Without the data, you're guessing.</p>
+        </div>
+        <div class="pain-card fade-up">
+          <span class="pain-icon"><i class="fa-solid fa-trophy" aria-hidden="true"></i></span>
+          <h3>No way to compare events</h3>
+          <p>Which farmers market is actually your best? Which product margins are highest? venOS shows you.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="features-section">
+    <p class="section-label">What venOS does</p>
+    <h2>Every number. One clear picture.</h2>
+    <div class="features-grid">
+      <div class="feature-item fade-up">
+        <div class="feature-dot"><i class="fa-solid fa-link" aria-hidden="true"></i></div>
+        <div>
+          <h3>Square & payment sync</h3>
+          <p>Your sales, fees, and refunds pull in automatically. No manual entry after a long event day.</p>
+        </div>
+      </div>
+      <div class="feature-item fade-up">
+        <div class="feature-dot"><i class="fa-solid fa-helmet-safety" aria-hidden="true"></i></div>
+        <div>
+          <h3>Labor & cost tracking</h3>
+          <p>Log your booth fees, supplies, and hours worked. venOS does the math so you don't have to.</p>
+        </div>
+      </div>
+      <div class="feature-item fade-up">
+        <div class="feature-dot"><i class="fa-solid fa-chart-line" aria-hidden="true"></i></div>
+        <div>
+          <h3>Event-by-event comparison</h3>
+          <p>See which events, markets, and products are actually worth your time — ranked by true profit.</p>
+        </div>
+      </div>
+      <div class="feature-item fade-up">
+        <div class="feature-dot"><i class="fa-solid fa-bolt" aria-hidden="true"></i></div>
+        <div>
+          <h3>Instant profit breakdown</h3>
+          <p>Open venOS after an event and know your real margin in seconds. Confident decisions, fast.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section" id="early-access">
+    <div class="cta-inner">
+      <h2>Be first to know when <span>venOS</span> launches.</h2>
+      <p>Join vendors who are done guessing and ready to make smarter decisions at every event.</p>
+      <div class="cta-form">
+        <input type="email" id="cta-email" placeholder="your@email.com" autocomplete="email" />
+        <button class="btn-primary" id="cta-submit">Get Early Access</button>
+      </div>
+      <p class="cta-note">Free during beta · No spam, ever</p>
+      <div class="form-success" id="cta-success" style="margin-top:12px;text-align:left;"><i class="fa-solid fa-check" aria-hidden="true"></i> You're on the list! We'll be in touch soon.</div>
+      <div class="form-error" id="cta-error" style="margin-top:12px;text-align:left;">Something went wrong. Please try again.</div>
+    </div>
+  </section>
+
+</Layout>
+
+<script>
+  // Profit bar animation
+  setTimeout(() => {
+    const bar = document.getElementById('profit-bar');
+    if (bar) (bar as HTMLElement).style.width = '23.4%';
+  }, 600);
+
+  // Fade-up on scroll
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), i * 80);
+      }
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+  // The marketing site is fully static, so the waitlist POST goes to the
+  // venview-api, resolved from the current host (prod / dev / local).
+  function apiBase(): string {
+    const h = window.location.hostname;
+    if (h === 'venview.io' || h === 'www.venview.io') return 'https://api.venview.io';
+    if (h === 'dev.venview.io') return 'https://api.dev.venview.io';
+    return 'http://localhost:3000';
+  }
+
+  // Email capture
+  async function submitEmail(source: string) {
+    const emailInput = document.getElementById(`${source}-email`) as HTMLInputElement;
+    const successEl  = document.getElementById(`${source}-success`) as HTMLElement;
+    const errorEl    = document.getElementById(`${source}-error`) as HTMLElement;
+    const email = emailInput.value.trim();
+
+    successEl.style.display = 'none';
+    errorEl.style.display   = 'none';
+
+    if (!email || !email.includes('@')) {
+      errorEl.textContent = 'Please enter a valid email address.';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    (window as any).posthog?.capture('waitlist_signup_submitted', { source });
+
+    try {
+      const res = await fetch(apiBase() + '/api/waitlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, source }),
+      });
+
+      if (res.ok) {
+        successEl.style.display = 'block';
+        if (typeof (window as any).gtag !== 'undefined') {
+          (window as any).gtag('event', 'waitlist_signup', {
+            event_category: 'engagement',
+            event_label: source,
+          });
+        }
+        (window as any).posthog?.identify(email);
+        (window as any).posthog?.capture('waitlist_signup_success', { source });
+        emailInput.value = '';
+      } else {
+        const data = await res.json().catch(() => ({}));
+        errorEl.textContent = (data as any).message || 'Something went wrong. Please try again.';
+        errorEl.style.display = 'block';
+        (window as any).posthog?.capture('waitlist_signup_error', { source, error_type: 'server' });
+      }
+    } catch (err) {
+      errorEl.textContent = 'Network error. Please check your connection and try again.';
+      errorEl.style.display = 'block';
+      (window as any).posthog?.captureException(err);
+      (window as any).posthog?.capture('waitlist_signup_error', { source, error_type: 'network' });
+    }
+  }
+
+  document.getElementById('hero-submit')?.addEventListener('click', () => submitEmail('hero'));
+  document.getElementById('cta-submit')?.addEventListener('click',  () => submitEmail('cta'));
+
+  ['hero', 'cta'].forEach(source => {
+    document.getElementById(`${source}-email`)?.addEventListener('keydown', (e) => {
+      if ((e as KeyboardEvent).key === 'Enter') submitEmail(source);
+    });
+  });
+
+  // Track when the bottom CTA section comes into view (once)
+  const ctaSection = document.getElementById('early-access');
+  if (ctaSection) {
+    const ctaObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          (window as any).posthog?.capture('cta_section_viewed');
+          ctaObserver.disconnect();
+        }
+      });
+    }, { threshold: 0.3 });
+    ctaObserver.observe(ctaSection);
+  }
+</script>

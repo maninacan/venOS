@@ -1,0 +1,60 @@
+{
+  "welcomeBack": "Welcome back!",
+  "myCompanies": "My Companies",
+  "subtitle": "Select a company to manage its events, inventory, and recipes.",
+  "createNew": "Create a new company",
+  "requestToJoin": "Request to join a company",
+  "joinCodePlaceholder": "Enter join code (e.g. ABC123)",
+  "requestAccess": "Request access",
+  "cancel": "Cancel",
+  "getStarted": {
+    "stepOf": "Step {{current}} of {{total}}",
+    "languageHeading": "Choose your language",
+    "languageSub": "You can change this anytime in Settings.",
+    "continue": "Continue",
+    "back": "Back",
+    "heading": "Welcome to venOS!",
+    "subheading": "Let's set up your workspace. Choose how you'd like to start:",
+    "createTitle": "Create a company",
+    "createDesc": "Start fresh as the owner — set up events, recipes, inventory, and connect your POS.",
+    "createCta": "Create company",
+    "joinTitle": "Join a company",
+    "joinDesc": "Have a join code from your team? Request access and an owner will approve you.",
+    "joinCta": "Enter join code",
+    "joinSubmit": "Request access"
+  },
+  "create": {
+    "heading": "Register Your Company",
+    "subtitle": "Set up your food truck or vendor business on venOS.",
+    "companyName": "Company Name *",
+    "companyNamePlaceholder": "e.g. Lemon Drip Food Co.",
+    "vendorCategory": "Vendor Category",
+    "vendorCategoryPlaceholder": "e.g. Food Truck, Catering, Farmers Market",
+    "contactName": "Contact Name",
+    "contactNamePlaceholder": "Owner / contact name",
+    "phone": "Phone",
+    "countryCodeLabel": "Country code",
+    "phonePlaceholder": "(555) 555-5555",
+    "email": "Email",
+    "emailPlaceholder": "contact@yourcompany.com",
+    "submit": "Create Company",
+    "cancel": "Cancel"
+  },
+  "toast": {
+    "alreadyMember": "You're already a member of {{name}}.",
+    "accessRequested": "Access requested for {{name}} — pending owner approval.",
+    "invalidJoinCode": "Invalid join code",
+    "created": "Company \"{{name}}\" created!",
+    "createFailed": "Failed to create company",
+    "reminderSent": "Reminder sent to the owner.",
+    "reminderFailed": "Could not send reminder."
+  },
+  "pending": {
+    "badge": "Awaiting approval",
+    "hint": "Your request to join is pending the owner’s approval.",
+    "aria": "{{name}} — awaiting approval",
+    "remind": "Send reminder",
+    "reminding": "Sending…",
+    "remindAgainIn": "Remind again in {{time}}"
+  }
+}

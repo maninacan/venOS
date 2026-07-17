@@ -1,0 +1,57 @@
+{
+  "page": {
+    "defaultTitle": "Inicio",
+    "subtitle": "Esto es en lo que conviene enfocarte ahora."
+  },
+  "banner": {
+    "getSetUp": "Completa la configuración",
+    "nextForEvent": "Siguiente para {{eventName}}",
+    "openEvent": "Abrir evento"
+  },
+  "events": {
+    "heading": "Eventos en curso",
+    "allEvents": "Todos los eventos",
+    "emptyNoEvents": "Aún no hay eventos.",
+    "createFirst": "Crea tu primer evento",
+    "allFinalized": "Todos los eventos están finalizados.",
+    "phaseDone": "Listo"
+  },
+  "profit": {
+    "cardTitle": "Resumen de ganancias del evento",
+    "revenue": "Ingresos",
+    "grossSales": "Ventas brutas",
+    "returns": "Devoluciones",
+    "discounts": "Descuentos",
+    "netSales": "Ventas netas",
+    "cogsTitle": "Costo de los bienes vendidos (COGS) - Costo de insumos",
+    "ingredientCosts": "Costo de ingredientes",
+    "grossProfit": "Ganancia bruta",
+    "operatingExpenses": "Gastos operativos",
+    "healthDeptFee": "Cuota de sanidad",
+    "eventFee": "Cuota del evento",
+    "additionalFees": "Cargos adicionales",
+    "mileageReimbursement": "Reembolso de kilometraje",
+    "employeeBonus": "Bono para empleados",
+    "eventRunnerFees": "Honorarios del encargado del evento",
+    "laborFees": "Costo de mano de obra",
+    "coordinatorFee": "Cuota del coordinador",
+    "posFees": "Comisiones del punto de venta",
+    "totalOperatingExpenses": "Total de gastos operativos",
+    "netProfit": "Ganancia neta",
+    "laborWarning": "Aún no se ha capturado la mano de obra — la ganancia puede cambiar. Agrega la mano de obra en la tarjeta de Mano de obra de arriba.",
+    "forYourRecords": "Para tus registros",
+    "finalizeEvent": "Finalizar evento",
+    "tips": "Propinas (se entregan al personal)",
+    "salesTaxRemitState": "Impuesto sobre ventas — pagar a {{jurisdiction}} ({{rate}})",
+    "salesTaxRemitLocal": "Impuesto sobre ventas — pagar a {{jurisdiction}} ({{rate}})",
+    "stateFallback": "Estado",
+    "localFallback": "Local",
+    "totalSalesTaxCollected": "Total de impuesto sobre ventas recaudado (por pagar)",
+    "taxDisclaimer": "ⓘ El impuesto sobre ventas se recauda en nombre de las autoridades fiscales y se excluye de la ganancia. Los impuestos sobre la renta se calculan anualmente — consulta a tu contador."
+  },
+  "toast": {
+    "eventFinalized": "¡Evento finalizado!",
+    "finalizeLimit": "Actualiza a Pro para finalizar más de 1 evento.",
+    "finalizeFailed": "No se pudo finalizar"
+  }
+}

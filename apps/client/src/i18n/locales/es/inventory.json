@@ -1,0 +1,88 @@
+{
+  "heading": "Mi inventario",
+  "subtitle": "Sube tu catálogo de productos una sola vez — venOS controla las existencias y calcula el costo de ventas automáticamente después de cada sincronización con Square.",
+  "aiImport": "Importar con IA",
+  "analyzing": "Analizando…",
+  "clearAll": "Borrar todo",
+  "searchPlaceholder": "Buscar artículos…",
+  "allCategories": "Todas las categorías",
+  "loading": "Cargando…",
+  "emptyNoItems": "Aún no hay artículos en el inventario — agrega uno manualmente o usa Importar con IA.",
+  "emptyNoMatch": "Ningún artículo coincide con tu búsqueda.",
+  "addItem": "Agregar artículo",
+  "lowStockOnly": "Existencias bajas",
+  "table": {
+    "item": "Artículo",
+    "category": "Categoría",
+    "unitCost": "Costo unitario",
+    "onHand": "Existencias",
+    "reorderAt": "Reabastecer en"
+  },
+  "low": "BAJO",
+  "save": "Guardar",
+  "cancel": "Cancelar",
+  "itemCount_one": "{{count}} artículo",
+  "itemCount_other": "{{count}} artículos",
+  "addModal": {
+    "title": "Agregar artículo al inventario",
+    "name": "Nombre",
+    "namePlaceholder": "p. ej. Limones",
+    "category": "Categoría",
+    "categoryPlaceholder": "p. ej. Frutas y verduras",
+    "unitCost": "Costo unitario",
+    "onHand": "Existencias",
+    "reorderAt": "Reabastecer en",
+    "sku": "SKU",
+    "skuPlaceholder": "Opcional",
+    "duplicateWarning": "Ya existe un artículo con este nombre — al guardar se actualizará.",
+    "submit": "Agregar artículo",
+    "cancel": "Cancelar"
+  },
+  "deleteModal": {
+    "title": "¿Eliminar artículo?",
+    "message": "¿Eliminar \"{{name}}\"? Esto no se puede deshacer.",
+    "confirm": "Eliminar"
+  },
+  "clearAllModal": {
+    "title": "¿Eliminar todo el inventario?",
+    "message": "Esto elimina permanentemente los {{count}} artículos del inventario. Es irreversible y no se puede deshacer.",
+    "typePrompt": "Para confirmar, escribe <1>{{word}}</1> a continuación.",
+    "confirmWord": "ELIMINAR",
+    "continue": "Continuar",
+    "confirm": "Eliminar todo",
+    "back": "Atrás"
+  },
+  "streaming": {
+    "parseErrorTitle": "Error de análisis — Salida sin procesar",
+    "analyzingTitle": "Claude está analizando tu archivo…",
+    "largeFileNote": "Esto puede tardar unos minutos con archivos grandes.",
+    "close": "Cerrar"
+  },
+  "review": {
+    "title": "Revisar inventario analizado por IA",
+    "detected_one": "Se detectó {{count}} artículo. Edita o elimina cualquiera antes de guardar. Los artículos existentes con el mismo nombre se actualizarán.",
+    "detected_other": "Se detectaron {{count}} artículos. Edita o elimina cualquiera antes de guardar. Los artículos existentes con el mismo nombre se actualizarán.",
+    "name": "Nombre",
+    "category": "Categoría",
+    "unitCost": "Costo unitario",
+    "onHand": "Existencias",
+    "reorder": "Reabastecer",
+    "sku": "SKU",
+    "namePlaceholder": "Nombre del artículo",
+    "categoryPlaceholder": "Categoría",
+    "skuPlaceholder": "SKU",
+    "approveAll": "Aprobar todo ({{count}})",
+    "discardBatch": "Descartar lote"
+  },
+  "toast": {
+    "saveFailed": "No se pudo guardar",
+    "cleared": "Inventario borrado",
+    "parseFailed": "Error al analizar el JSON: {{reason}}\n\nLo anterior es lo que devolvió Claude. Puede estar truncado o contener texto inesperado.",
+    "noItemsFound": "No se encontraron artículos en ese archivo. Prueba con otro archivo.",
+    "importFailed": "Error al importar",
+    "uploadFailed": "Error al subir",
+    "saved_one": "¡Se guardó {{count}} artículo!",
+    "saved_other": "¡Se guardaron {{count}} artículos!",
+    "savedWithFailures": "Se guardaron {{saved}}, pero {{failed}} fallaron. Vuelve a intentar con el resto."
+  }
+}

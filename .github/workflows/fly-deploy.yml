@@ -1,0 +1,166 @@
+name: Fly Deploy
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+    inputs:
+      deploy_all:
+        description: 'Deploy all apps (bypass affected check)'
+        type: boolean
+        default: true
+
+# main -> production fly-*.toml + prod Doppler token
+# develop -> development fly-dev-*.toml + dev Doppler token
+jobs:
+  changes:
+    name: Detect Affected Projects
+    if: "!contains(github.event.head_commit.message, '[deploy all]')"
+    runs-on: ubuntu-latest
+    outputs:
+      api: ${{ steps.check.outputs.api }}
+      client: ${{ steps.check.outputs.client }}
+      super-admin-portal: ${{ steps.check.outputs.super-admin-portal }}
+      marketing: ${{ steps.check.outputs.marketing }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --no-audit --no-fund --legacy-peer-deps
+      - name: Determine affected projects
+        id: check
+        # Pass the commit message via env (not ${{ }} string-interpolation) so
+        # messages containing parens/quotes/$ can't break or inject into the script.
+        env:
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+        run: |
+          if [[ "${{ inputs.deploy_all }}" == "true" ]] || echo "$COMMIT_MSG" | grep -q '\[deploy all\]'; then
+            echo "api=true" >> "$GITHUB_OUTPUT"
+            echo "client=true" >> "$GITHUB_OUTPUT"
+            echo "super-admin-portal=true" >> "$GITHUB_OUTPUT"
+            echo "marketing=true" >> "$GITHUB_OUTPUT"
+            echo "Deploy all override enabled"
+            exit 0
+          fi
+          BASE_SHA="${{ github.event.before }}"
+          # Fallback to HEAD~1 for workflow_dispatch where event.before is empty
+          if [[ -z "$BASE_SHA" || "$BASE_SHA" == "0000000000000000000000000000000000000000" ]]; then
+            BASE_SHA="HEAD~1"
+          fi
+          AFFECTED=$(npx nx show projects --affected --base="$BASE_SHA" --head=HEAD)
+          CHANGED_FILES=$(git diff --name-only "$BASE_SHA" HEAD)
+          echo "Affected projects: $AFFECTED"
+          echo "Changed files: $CHANGED_FILES"
+
+          API_AFFECTED=$( echo "$AFFECTED" | grep -q '@org/venview-api' && echo true || echo false )
+          API_FILES_CHANGED=$( echo "$CHANGED_FILES" | grep -qE '^(api\.Dockerfile|fly-api\.toml|fly-dev-api\.toml)$' && echo true || echo false )
+          echo "api=$( [[ "$API_AFFECTED" == "true" || "$API_FILES_CHANGED" == "true" ]] && echo true || echo false )" >> "$GITHUB_OUTPUT"
+
+          CLIENT_AFFECTED=$( echo "$AFFECTED" | grep -q '@org/client' && echo true || echo false )
+          CLIENT_FILES_CHANGED=$( echo "$CHANGED_FILES" | grep -qE '^(client\.Dockerfile|fly-client\.toml|fly-dev-client\.toml|deploy/nginx-spa\.conf)$' && echo true || echo false )
+          echo "client=$( [[ "$CLIENT_AFFECTED" == "true" || "$CLIENT_FILES_CHANGED" == "true" ]] && echo true || echo false )" >> "$GITHUB_OUTPUT"
+
+          SAP_AFFECTED=$( echo "$AFFECTED" | grep -q '@org/super-admin-portal' && echo true || echo false )
+          SAP_FILES_CHANGED=$( echo "$CHANGED_FILES" | grep -qE '^(super-admin-portal\.Dockerfile|fly-super-admin-portal\.toml|fly-dev-super-admin-portal\.toml|deploy/nginx-spa\.conf)$' && echo true || echo false )
+          echo "super-admin-portal=$( [[ "$SAP_AFFECTED" == "true" || "$SAP_FILES_CHANGED" == "true" ]] && echo true || echo false )" >> "$GITHUB_OUTPUT"
+
+          MKT_AFFECTED=$( echo "$AFFECTED" | grep -qE '(^|")marketing("|$)' && echo true || echo false )
+          MKT_FILES_CHANGED=$( echo "$CHANGED_FILES" | grep -qE '^(marketing\.Dockerfile|fly-marketing\.toml|fly-dev-marketing\.toml|deploy/nginx-static\.conf)$' && echo true || echo false )
+          echo "marketing=$( [[ "$MKT_AFFECTED" == "true" || "$MKT_FILES_CHANGED" == "true" ]] && echo true || echo false )" >> "$GITHUB_OUTPUT"
+
+  deploy-api:
+    name: Deploy API
+    needs: changes
+    if: always() && (needs.changes.outputs.api == 'true' || needs.changes.result == 'skipped')
+    runs-on: ubuntu-latest
+    concurrency: api-deploy-group
+    steps:
+      - uses: actions/checkout@v5
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Deploy API
+        # API secrets are injected at runtime via Doppler (DOPPLER_TOKEN is a Fly
+        # secret on the app), so no build args are needed here.
+        run: |
+          if [[ "${GITHUB_REF##*/}" == "main" ]]; then
+            flyctl deploy --remote-only --ha=false --strategy=rolling --config fly-api.toml
+          else
+            flyctl deploy --remote-only --ha=false --strategy=rolling --config fly-dev-api.toml
+          fi
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+  deploy-client:
+    name: Deploy Client
+    needs: changes
+    if: always() && (needs.changes.outputs.client == 'true' || needs.changes.result == 'skipped')
+    runs-on: ubuntu-latest
+    concurrency: client-deploy-group
+    steps:
+      - uses: actions/checkout@v5
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - uses: dopplerhq/cli-action@v4
+      - name: Deploy Client
+        # `doppler run` injects VITE_* into the inner shell; flyctl bakes them
+        # into the static bundle via --build-arg. The token (prod/dev) selects values.
+        run: |
+          CONFIG=$([[ "${GITHUB_REF##*/}" == "main" ]] && echo fly-client.toml || echo fly-dev-client.toml)
+          doppler run -- bash -c 'flyctl deploy --remote-only --config '"$CONFIG"' \
+            --build-arg VITE_API_URL="$VITE_API_URL" \
+            --build-arg VITE_SUPABASE_URL="$VITE_SUPABASE_URL" \
+            --build-arg VITE_SUPABASE_ANON_KEY="$VITE_SUPABASE_ANON_KEY" \
+            --build-arg VITE_MEMBER="$VITE_MEMBER" \
+            --build-arg VITE_POSTHOG_PROJECT_TOKEN="$VITE_POSTHOG_PROJECT_TOKEN" \
+            --build-arg VITE_POSTHOG_HOST="$VITE_POSTHOG_HOST"'
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          DOPPLER_TOKEN: ${{ github.ref == 'refs/heads/main' && secrets.DOPPLER_TOKEN || secrets.DOPPLER_TOKEN_DEV }}
+
+  deploy-super-admin-portal:
+    name: Deploy Super Admin Portal
+    needs: changes
+    if: always() && (needs.changes.outputs['super-admin-portal'] == 'true' || needs.changes.result == 'skipped')
+    runs-on: ubuntu-latest
+    concurrency: super-admin-portal-deploy-group
+    steps:
+      - uses: actions/checkout@v5
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - uses: dopplerhq/cli-action@v4
+      - name: Deploy Super Admin Portal
+        run: |
+          CONFIG=$([[ "${GITHUB_REF##*/}" == "main" ]] && echo fly-super-admin-portal.toml || echo fly-dev-super-admin-portal.toml)
+          doppler run -- bash -c 'flyctl deploy --remote-only --config '"$CONFIG"' \
+            --build-arg VITE_API_URL="$VITE_API_URL" \
+            --build-arg VITE_SUPABASE_URL="$VITE_SUPABASE_URL" \
+            --build-arg VITE_SUPABASE_ANON_KEY="$VITE_SUPABASE_ANON_KEY" \
+            --build-arg VITE_MEMBER="$VITE_MEMBER"'
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          DOPPLER_TOKEN: ${{ github.ref == 'refs/heads/main' && secrets.DOPPLER_TOKEN || secrets.DOPPLER_TOKEN_DEV }}
+
+  deploy-marketing:
+    name: Deploy Marketing
+    needs: changes
+    if: always() && (needs.changes.outputs.marketing == 'true' || needs.changes.result == 'skipped')
+    runs-on: ubuntu-latest
+    concurrency: marketing-deploy-group
+    steps:
+      - uses: actions/checkout@v5
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - uses: dopplerhq/cli-action@v4
+      - name: Deploy Marketing
+        # PUBLIC_ values are compiled into the static Astro bundle via --build-arg
+        # (sourced from Doppler). The token (prod/dev) selects values.
+        run: |
+          CONFIG=$([[ "${GITHUB_REF##*/}" == "main" ]] && echo fly-marketing.toml || echo fly-dev-marketing.toml)
+          doppler run -- bash -c 'flyctl deploy --remote-only --config '"$CONFIG"' \
+            --build-arg PUBLIC_POSTHOG_PROJECT_TOKEN="$PUBLIC_POSTHOG_PROJECT_TOKEN" \
+            --build-arg PUBLIC_POSTHOG_HOST="$PUBLIC_POSTHOG_HOST"'
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          DOPPLER_TOKEN: ${{ github.ref == 'refs/heads/main' && secrets.DOPPLER_TOKEN || secrets.DOPPLER_TOKEN_DEV }}

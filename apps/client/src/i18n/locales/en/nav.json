@@ -1,0 +1,43 @@
+{
+  "brand": {
+    "name": "venOS Events",
+    "tagline": "Vendor Intelligence for Events"
+  },
+  "logoAlt": "venOS",
+  "menu": {
+    "toggle": "Menu",
+    "myCompanies": "My Companies",
+    "companies": "Companies",
+    "home": "Home",
+    "events": "Events",
+    "recipes": "Recipes",
+    "myInventory": "My Inventory",
+    "restock": "Restock"
+  },
+  "account": {
+    "menu": "Account menu",
+    "profile": "Profile",
+    "billing": "Billing",
+    "settings": "Settings",
+    "logout": "Logout"
+  },
+  "alerts": {
+    "label": "Reorder alerts",
+    "title": "Reorder Alerts",
+    "markAllRead": "Mark all read",
+    "close": "Close",
+    "empty": "No reorder alerts.",
+    "lowStock": "<0>{{name}}</0> is low on stock"
+  },
+  "error": {
+    "title": "Something went wrong",
+    "generic": "An unexpected error occurred.",
+    "reload": "Reload",
+    "statusMessage": "{{status}} — {{statusText}}",
+    "tryAgain": "Try Again",
+    "goBack": "Go Back"
+  },
+  "toast": {
+    "signedOut": "Signed out."
+  }
+}

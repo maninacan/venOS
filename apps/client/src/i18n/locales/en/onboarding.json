@@ -1,0 +1,95 @@
+{
+  "steps": {
+    "language": {
+      "label": "Choose your language",
+      "description": "Pick your display language and currency.",
+      "cta": "Choose language"
+    },
+    "company": {
+      "label": "Create your company",
+      "description": "Your workspace for events, recipes, and inventory.",
+      "cta": "Done"
+    },
+    "pos": {
+      "label": "Connect {{pos}}",
+      "description": "Auto-sync sales (and labor) from your POS.",
+      "cta": "Connect {{pos}}",
+      "genericPos": "your POS"
+    },
+    "posItemMapping": {
+      "label": "Map POS items to recipes",
+      "description": "Link each POS product to a recipe so COGS is calculated automatically.",
+      "cta": "Map items"
+    },
+    "posModifierMapping": {
+      "label": "Map POS modifiers",
+      "description": "Link modifiers (add-ons, sizes) to inventory so their cost is counted.",
+      "cta": "Map modifiers"
+    },
+    "recipes": {
+      "label": "Add your recipes",
+      "description": "Define ingredient costs so venOS can calculate COGS.",
+      "cta": "Add recipes"
+    },
+    "inventory": {
+      "label": "Add your inventory",
+      "description": "Import your product catalog to track stock and costs.",
+      "cta": "Add inventory"
+    },
+    "team": {
+      "label": "Invite your team",
+      "description": "Share events, inventory, and recipes with teammates.",
+      "cta": "Invite team"
+    },
+    "firstEvent": {
+      "label": "Create your first event",
+      "description": "Add a market, festival, or pop-up to start tracking profit.",
+      "cta": "Create event"
+    }
+  },
+  "checklist": {
+    "setupComplete": "Setup complete",
+    "gettingStarted": "Getting started",
+    "counter": "{{done}}/{{total}}",
+    "showSetup": "Show setup ▾",
+    "hide": "Hide ▴",
+    "progress": "{{done}} of {{total}} complete",
+    "optional": "optional",
+    "skip": "Skip"
+  },
+  "questions": {
+    "title": "Quick setup",
+    "subtitle": "Two questions so we can tailor venOS to how you work.",
+    "skip": "Skip",
+    "posQuestion": "Do you use a Point of Sale system?",
+    "laborQuestion": "How do you calculate labor?",
+    "soon": " (soon)",
+    "save": "Save & continue",
+    "pos": {
+      "square": "Square",
+      "manual": "No POS / manual",
+      "shopify": "Shopify",
+      "toast": "Toast"
+    },
+    "labor": {
+      "pos": "From my POS system",
+      "other": "Another method (manual entry)",
+      "flatRate": "Flat rate per shift"
+    },
+    "toast": {
+      "answerBoth": "Please answer both questions",
+      "saveFailed": "Failed to save answers"
+    }
+  },
+  "backToSetup": "Back to setup checklist",
+  "banner": {
+    "dismiss": "Dismiss"
+  },
+  "stepper": {
+    "descriptions": {
+      "plan": "Event details & venue",
+      "reconcile": "Capture sales, labor & costs",
+      "finalize": "Review profit & lock it in"
+    }
+  }
+}

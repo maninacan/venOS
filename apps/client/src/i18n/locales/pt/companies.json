@@ -1,0 +1,60 @@
+{
+  "welcomeBack": "Bem-vindo de volta!",
+  "myCompanies": "Minhas empresas",
+  "subtitle": "Selecione uma empresa para gerenciar seus eventos, estoque e receitas.",
+  "createNew": "Criar uma nova empresa",
+  "requestToJoin": "Solicitar acesso a uma empresa",
+  "joinCodePlaceholder": "Digite o código de acesso (ex.: ABC123)",
+  "requestAccess": "Solicitar acesso",
+  "cancel": "Cancelar",
+  "getStarted": {
+    "stepOf": "Etapa {{current}} de {{total}}",
+    "languageHeading": "Escolha seu idioma",
+    "languageSub": "Você pode alterar isso a qualquer momento nas Configurações.",
+    "continue": "Continuar",
+    "back": "Voltar",
+    "heading": "Boas-vindas ao venOS!",
+    "subheading": "Vamos configurar seu espaço de trabalho. Escolha como quer começar:",
+    "createTitle": "Criar uma empresa",
+    "createDesc": "Comece do zero como proprietário: configure eventos, receitas, estoque e conecte seu PDV.",
+    "createCta": "Criar empresa",
+    "joinTitle": "Entrar em uma empresa",
+    "joinDesc": "Tem um código de acesso da sua equipe? Solicite acesso e um proprietário aprovará você.",
+    "joinCta": "Digitar código de acesso",
+    "joinSubmit": "Solicitar acesso"
+  },
+  "create": {
+    "heading": "Cadastre sua empresa",
+    "subtitle": "Configure seu food truck ou negócio de fornecedor no venOS.",
+    "companyName": "Nome da empresa *",
+    "companyNamePlaceholder": "ex.: Lemon Drip Food Co.",
+    "vendorCategory": "Categoria do fornecedor",
+    "vendorCategoryPlaceholder": "ex.: Food Truck, Bufê, Feira de Produtores",
+    "contactName": "Nome do contato",
+    "contactNamePlaceholder": "Nome do proprietário / contato",
+    "phone": "Telefone",
+    "countryCodeLabel": "Código do país",
+    "phonePlaceholder": "(555) 555-5555",
+    "email": "E-mail",
+    "emailPlaceholder": "contato@suaempresa.com",
+    "submit": "Criar empresa",
+    "cancel": "Cancelar"
+  },
+  "toast": {
+    "alreadyMember": "Você já é membro de {{name}}.",
+    "accessRequested": "Acesso solicitado para {{name}} — aguardando aprovação do proprietário.",
+    "invalidJoinCode": "Código de acesso inválido",
+    "created": "Empresa \"{{name}}\" criada!",
+    "createFailed": "Falha ao criar a empresa",
+    "reminderSent": "Lembrete enviado ao proprietário.",
+    "reminderFailed": "Não foi possível enviar o lembrete."
+  },
+  "pending": {
+    "badge": "Aguardando aprovação",
+    "hint": "Sua solicitação de acesso está aguardando a aprovação do proprietário.",
+    "aria": "{{name}} — aguardando aprovação",
+    "remind": "Enviar lembrete",
+    "reminding": "Enviando…",
+    "remindAgainIn": "Lembrar novamente em {{time}}"
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "heading": "Billing",
+  "subtitle": "Manage your venOS subscription and payment details.",
+  "loading": "Loading…",
+  "planPro": "venOS Pro",
+  "planStarter": "venOS Starter",
+  "accessEnds": "Access ends {{date}}",
+  "renews": "Renews {{date}}",
+  "manage": {
+    "eyebrow": "Manage subscription",
+    "description": "Update your payment method, view invoices, or cancel your plan through our secure billing portal.",
+    "button": "Manage subscription"
+  },
+  "upgrade": {
+    "eyebrow": "Upgrade to venOS Pro",
+    "headline": "See every event's true profit.",
+    "subhead": "Track trends over time and make smarter decisions — faster.",
+    "button": "Upgrade to Pro",
+    "secureNote": "Secure checkout powered by Stripe · cancel anytime."
+  },
+  "features": {
+    "reports": {
+      "title": "Post-Event Reports",
+      "detail": "Full profit & loss breakdown, shareable and printable"
+    },
+    "unlimitedEvents": {
+      "title": "Unlimited finalized events",
+      "detail": "Track every market, festival, and pop-up you run"
+    },
+    "pdfExport": {
+      "title": "PDF export",
+      "detail": "Download branded reports for your records or accountant"
+    },
+    "history": {
+      "title": "Full event history",
+      "detail": "Compare events over time to find your most profitable markets"
+    },
+    "squareSync": {
+      "title": "Square POS sync",
+      "detail": "Pull real sales data — fees, refunds, and discounts included"
+    },
+    "customForms": {
+      "title": "Custom form templates",
+      "detail": "Design event forms that match exactly how you work"
+    }
+  },
+  "toast": {
+    "paymentReceived": "Payment received — activating venOS Pro…",
+    "checkoutCancelled": "Checkout cancelled."
+  }
+}

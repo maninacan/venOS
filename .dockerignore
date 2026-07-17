@@ -1,0 +1,9 @@
+node_modules
+dist
+.git
+logs
+*.log
+apps/venview-api/dist
+apps/client/dist
+apps/marketing/dist
+apps/super-admin-portal/dist

@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  build:
+    name: Build affected
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci --no-audit --no-fund --legacy-peer-deps
+      - name: Set Nx affected base/head
+        uses: nrwl/nx-set-shas@v4
+      - name: Build affected projects
+        run: npx nx affected -t build
+      # NOTE: `typecheck` is intentionally omitted — the @org/data lib currently
+      # has a pre-existing typecheck baseline that fails. Add `typecheck` here
+      # (e.g. `npx nx affected -t build typecheck`) once that is resolved.

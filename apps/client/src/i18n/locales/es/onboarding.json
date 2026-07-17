@@ -1,0 +1,95 @@
+{
+  "steps": {
+    "language": {
+      "label": "Elige tu idioma",
+      "description": "Selecciona tu idioma de visualización y moneda.",
+      "cta": "Elegir idioma"
+    },
+    "company": {
+      "label": "Crea tu empresa",
+      "description": "Tu espacio de trabajo para eventos, recetas e inventario.",
+      "cta": "Listo"
+    },
+    "pos": {
+      "label": "Conectar {{pos}}",
+      "description": "Sincroniza automáticamente las ventas (y la mano de obra) desde tu POS.",
+      "cta": "Conectar {{pos}}",
+      "genericPos": "tu POS"
+    },
+    "posItemMapping": {
+      "label": "Asigna los artículos del POS a recetas",
+      "description": "Vincula cada producto del POS con una receta para calcular el costo de ventas automáticamente.",
+      "cta": "Asignar artículos"
+    },
+    "posModifierMapping": {
+      "label": "Asigna los modificadores del POS",
+      "description": "Vincula los modificadores (extras, tamaños) al inventario para incluir su costo.",
+      "cta": "Asignar modificadores"
+    },
+    "recipes": {
+      "label": "Agrega tus recetas",
+      "description": "Define los costos de ingredientes para que venOS calcule el costo de ventas.",
+      "cta": "Agregar recetas"
+    },
+    "inventory": {
+      "label": "Agrega tu inventario",
+      "description": "Importa tu catálogo de productos para controlar existencias y costos.",
+      "cta": "Agregar inventario"
+    },
+    "team": {
+      "label": "Invita a tu equipo",
+      "description": "Comparte eventos, inventario y recetas con tus compañeros.",
+      "cta": "Invitar equipo"
+    },
+    "firstEvent": {
+      "label": "Crea tu primer evento",
+      "description": "Agrega un mercado, festival o pop-up para empezar a rastrear ganancias.",
+      "cta": "Crear evento"
+    }
+  },
+  "checklist": {
+    "setupComplete": "Configuración completa",
+    "gettingStarted": "Primeros pasos",
+    "counter": "{{done}}/{{total}}",
+    "showSetup": "Mostrar configuración ▾",
+    "hide": "Ocultar ▴",
+    "progress": "{{done}} de {{total}} completados",
+    "optional": "opcional",
+    "skip": "Omitir"
+  },
+  "questions": {
+    "title": "Configuración rápida",
+    "subtitle": "Dos preguntas para adaptar venOS a tu forma de trabajar.",
+    "skip": "Omitir",
+    "posQuestion": "¿Usas un sistema de punto de venta?",
+    "laborQuestion": "¿Cómo calculas la mano de obra?",
+    "soon": " (próximamente)",
+    "save": "Guardar y continuar",
+    "pos": {
+      "square": "Square",
+      "manual": "Sin POS / manual",
+      "shopify": "Shopify",
+      "toast": "Toast"
+    },
+    "labor": {
+      "pos": "Desde mi sistema POS",
+      "other": "Otro método (captura manual)",
+      "flatRate": "Tarifa fija por turno"
+    },
+    "toast": {
+      "answerBoth": "Por favor responde ambas preguntas",
+      "saveFailed": "No se pudieron guardar las respuestas"
+    }
+  },
+  "backToSetup": "Volver a la lista de configuración",
+  "banner": {
+    "dismiss": "Descartar"
+  },
+  "stepper": {
+    "descriptions": {
+      "plan": "Detalles del evento y sede",
+      "reconcile": "Captura ventas, mano de obra y costos",
+      "finalize": "Revisa la ganancia y confírmala"
+    }
+  }
+}

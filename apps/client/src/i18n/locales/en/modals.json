@@ -1,0 +1,166 @@
+{
+  "welcome": {
+    "beta": "Beta",
+    "title": "Welcome to venOS!",
+    "intro": "You're helping us build the simplest way for event vendors to know if they actually made money.",
+    "focusPrefix": "This beta version is focused on one thing:",
+    "focusHighlight": "Getting you from event → to true profit in minutes.",
+    "stepsHeading": "Get started in 3 steps",
+    "step1": {
+      "title": "Add a Real Event",
+      "description": "Use a past event from the last 30 days.",
+      "example1": "Farmers Market",
+      "example2": "Catering job",
+      "example3": "School event",
+      "example4": "Festival",
+      "cta": "Create Your First Event"
+    },
+    "step2": {
+      "title": "Connect & Sync Sales",
+      "description": "If you use Square, connect it in Settings. venOS will pull your real sales and tax data automatically.",
+      "descriptionAlt": "If not, enter totals manually.",
+      "cta": "Sync Sales"
+    },
+    "step3": {
+      "title": "Add Your Costs",
+      "description": "Enter labor, supplies, event fees, and food tax. Then open your Profit Summary.",
+      "cta": "View Profit Summary"
+    },
+    "discover": {
+      "heading": "What You'll Discover",
+      "item1": "Your true net profit (after tax + fees)",
+      "item2": "Your real labor cost impact",
+      "item3": "Whether the event was worth it",
+      "item4": "Where you lost margin"
+    },
+    "disclaimer": "This is a beta version. Please report bugs. Financial calculations are based on the data entered or synced. If something looks incorrect, tell us.",
+    "ctaPrimary": "Let's Go — Create My First Event",
+    "ctaExplore": "I'll explore on my own"
+  },
+  "upgrade": {
+    "badge": "venOS Pro",
+    "title": "Unlock the complete picture.",
+    "subtitle": "See every event's true profit, track trends over time, and make smarter decisions — faster.",
+    "contexts": {
+      "report": "Post-Event Reports are a Pro feature.",
+      "finalize": "Starter includes 1 finalized event. Upgrade to track more.",
+      "history": "Viewing finalized event history requires Pro.",
+      "pdf": "PDF export is a Pro feature.",
+      "multiday": "Starter supports up to 2-day events. Upgrade to Pro for longer festivals."
+    },
+    "featuresHeading": "Everything in Pro",
+    "features": {
+      "reports": {
+        "title": "Post-Event Reports",
+        "description": "Full profit & loss breakdown, shareable and printable"
+      },
+      "unlimited": {
+        "title": "Unlimited finalized events",
+        "description": "Track every market, festival, and pop-up you run"
+      },
+      "pdf": {
+        "title": "PDF export",
+        "description": "Download branded reports for your records or accountant"
+      },
+      "history": {
+        "title": "Full event history",
+        "description": "Compare events over time to find your most profitable markets"
+      },
+      "sync": {
+        "title": "Square POS sync",
+        "description": "Pull real sales data — fees, refunds, and discounts included"
+      },
+      "templates": {
+        "title": "Custom form templates",
+        "description": "Design event forms that match exactly how you work"
+      }
+    },
+    "starterNote": "You're on <1>venOS Starter</1> — includes 1 finalized event and basic profit summary.",
+    "ctaUpgrade": "Upgrade to Pro",
+    "secureNote": "Secure checkout powered by Stripe · cancel anytime",
+    "ctaLater": "Maybe later"
+  },
+  "posModifierMapping": {
+    "title": "Match Your POS Modifiers to Your Inventory",
+    "description": "Map each modifier (flavor add-ons, whip, …) to the inventory item it uses and the amount used per drink — venOS adds that cost to every drink the modifier is on, so COGS stays accurate without a separate menu item per flavor. Use a <2>negative amount</2> for removals (e.g. \"No SCM\" = -1). Choose \"No inventory item\" for free modifiers.",
+    "suggestedLegend": "<1>{{count}} modifier(s)</1> were matched by AI — marked <3>suggested</3>. Review before saving.",
+    "unmappedWarning": "<1>{{count}} modifier(s)</1> have no inventory item — their cost won’t be added to COGS.",
+    "empty": "No POS modifiers found. Make sure your POS is connected and has modifiers configured.",
+    "colModifier": "Modifier",
+    "colInventory": "Inventory Item",
+    "colAmount": "Amount / drink",
+    "noInventory": "— No inventory item —",
+    "searchInventory": "Search inventory…",
+    "noMatches": "No matching items",
+    "inventoryOption": "{{name}} (${{cost}}/unit)",
+    "suggestedBadge": "suggested",
+    "cancel": "Cancel",
+    "save": "Save Mappings",
+    "suggestAi": "Suggest with AI",
+    "aiTitle": "Let AI suggest matches for the unmapped modifiers — mapped ones are left untouched",
+    "aiApplied": "AI suggested {{count}} mapping(s). Review and Save.",
+    "aiNone": "No confident AI matches found. Map the modifiers manually.",
+    "aiFailed": "AI suggestion failed. Please try again.",
+    "aiWorkingTitle": "Claude is matching your unmapped modifiers…",
+    "aiWorkingNote": "Analyzing {{count}} unmapped modifier(s) against your inventory — already-mapped modifiers are left untouched. This can take a minute or two.",
+    "aiStep1": "Reading your POS modifiers",
+    "aiStep2": "Comparing modifiers to your inventory",
+    "aiStep3": "Matching ingredient costs",
+    "aiStep4": "Scoring match confidence",
+    "aiStep5": "Finalizing suggestions",
+    "toast": {
+      "saved": "Modifier mappings saved! Cost calculations are now accurate.",
+      "saveFailed": "Failed to save"
+    },
+    "suggestAiUnmapped": "Suggest unmapped with AI",
+    "aiAllMapped": "All modifiers are already mapped — nothing for AI to match.",
+    "newItem": "New",
+    "newItemTitle": "Create a new inventory item and map it here",
+    "newItemHeading": "New inventory item",
+    "invName": "Item name *",
+    "invUnitCost": "Unit cost",
+    "invHint": "This item is added to your inventory and mapped to this modifier. Cost per drink = unit cost × amount.",
+    "invAdd": "Add item",
+    "invNameRequired": "Item name is required",
+    "invAdded": "Inventory item added.",
+    "invAddFailed": "Failed to add item"
+  },
+  "posMapping": {
+    "title": "Match Your POS Menu to Your Recipe Cards",
+    "description": "Map each POS item to the recipe that makes it — venOS uses the recipe’s ingredient cost to calculate COGS automatically every sync. Choose <2>\"No recipe\"</2> for tips, fees, and other non-menu items.",
+    "suggestedLegend": "<1>{{count}} item(s)</1> were matched by AI — marked <3>suggested</3>. Review before saving.",
+    "unmappedWarning": "<1>{{count}} item(s)</1> have no recipe card — COGS will show as $0 for those.",
+    "empty": "No POS catalog items found. Make sure your POS is connected and has items.",
+    "colPosItem": "POS Item",
+    "colInventoryItem": "Your Inventory Item",
+    "notInMenu": "— Not in my menu —",
+    "searchInventory": "Search inventory…",
+    "noInventoryMatches": "No matching items",
+    "inventoryOption": "{{name}} (${{cost}}/unit)",
+    "suggestedBadge": "suggested",
+    "cancel": "Cancel",
+    "save": "Save Mappings",
+    "suggestAi": "Suggest with AI",
+    "aiTitle": "Let AI suggest matches for the unmapped items — mapped items are left untouched",
+    "aiApplied": "AI suggested {{count}} mapping(s). Review and Save.",
+    "aiNone": "No confident AI matches found. Map the items manually.",
+    "aiFailed": "AI suggestion failed. Please try again.",
+    "aiWorkingTitle": "Claude is matching your unmapped POS items…",
+    "aiWorkingNote": "Analyzing {{count}} unmapped item(s) against your recipes — already-mapped items are left untouched. This can take a minute or two.",
+    "aiStep1": "Reading your POS catalog",
+    "aiStep2": "Comparing items to your recipes",
+    "aiStep3": "Matching against inventory",
+    "aiStep4": "Scoring match confidence",
+    "aiStep5": "Finalizing suggestions",
+    "toast": {
+      "saved": "Mappings saved! Cost calculations are now accurate.",
+      "saveFailed": "Failed to save"
+    },
+    "suggestAiUnmapped": "Suggest unmapped with AI",
+    "aiAllMapped": "All items are already mapped — nothing for AI to match.",
+    "newRecipe": "New",
+    "newRecipeTitle": "Create a new recipe and map it here",
+    "sharedBadge": "shared by {{count}} items",
+    "makeSubRecipe": "Make sub-recipe"
+  }
+}

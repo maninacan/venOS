@@ -1,0 +1,3 @@
+setup:
+  project: venos
+  config: dev_personal

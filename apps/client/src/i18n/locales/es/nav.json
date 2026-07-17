@@ -1,0 +1,43 @@
+{
+  "brand": {
+    "name": "venOS Events",
+    "tagline": "Inteligencia para vendedores en eventos"
+  },
+  "logoAlt": "venOS",
+  "menu": {
+    "toggle": "Menú",
+    "myCompanies": "Mis empresas",
+    "companies": "Empresas",
+    "home": "Inicio",
+    "events": "Eventos",
+    "recipes": "Recetas",
+    "myInventory": "Mi inventario",
+    "restock": "Reabastecer"
+  },
+  "account": {
+    "menu": "Menú de cuenta",
+    "profile": "Perfil",
+    "billing": "Facturación",
+    "settings": "Configuración",
+    "logout": "Cerrar sesión"
+  },
+  "alerts": {
+    "label": "Alertas de reabastecimiento",
+    "title": "Alertas de reabastecimiento",
+    "markAllRead": "Marcar todo como leído",
+    "close": "Cerrar",
+    "empty": "No hay alertas de reabastecimiento.",
+    "lowStock": "<0>{{name}}</0> tiene pocas existencias"
+  },
+  "error": {
+    "title": "Algo salió mal",
+    "generic": "Ocurrió un error inesperado.",
+    "reload": "Recargar",
+    "statusMessage": "{{status}} — {{statusText}}",
+    "tryAgain": "Intentar de nuevo",
+    "goBack": "Regresar"
+  },
+  "toast": {
+    "signedOut": "Sesión cerrada."
+  }
+}

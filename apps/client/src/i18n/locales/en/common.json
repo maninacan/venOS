@@ -1,0 +1,33 @@
+{
+  "save": "Save",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "edit": "Edit",
+  "close": "Close",
+  "add": "Add",
+  "remove": "Remove",
+  "back": "Back",
+  "next": "Next",
+  "previous": "Previous",
+  "confirm": "Confirm",
+  "loading": "Loading…",
+  "saving": "Saving…",
+  "search": "Search",
+  "yes": "Yes",
+  "no": "No",
+  "optional": "optional",
+  "required": "required",
+  "skip": "Skip",
+  "done": "Done",
+  "retry": "Retry",
+  "language": "Language",
+  "english": "English",
+  "spanish": "Español",
+  "pagination": {
+    "showing": "Showing",
+    "to": "to",
+    "of": "of",
+    "results": "results",
+    "perPage": "/ page"
+  }
+}

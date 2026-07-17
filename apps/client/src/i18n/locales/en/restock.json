@@ -1,0 +1,23 @@
+{
+  "heading": "Restock List",
+  "subtitle": "Pick an event, then mark items restocked after refilling. Restocking adds quantity back to your warehouse stock.",
+  "event": "Event",
+  "selectEvent": "Select an event…",
+  "refresh": "Refresh",
+  "lowWarning_one": "{{count}} item running low",
+  "lowWarning_other": "{{count}} items running low",
+  "itemsTracked_one": "{{count}} item tracked",
+  "itemsTracked_other": "{{count}} items tracked",
+  "selectPrompt": "Select an event above to see its restock list.",
+  "noInventory": "No truck inventory loaded for this event. Add inventory from the Event Dashboard.",
+  "loaded": "Loaded",
+  "sold": "Sold",
+  "remaining": "Remaining",
+  "restockQty": "Restock qty",
+  "markRestocked": "Mark Restocked",
+  "toast": {
+    "invalidQty": "Enter a valid restock quantity",
+    "restocked": "Restocked {{qty}} units of {{name}}",
+    "restockFailed": "Failed to restock"
+  }
+}

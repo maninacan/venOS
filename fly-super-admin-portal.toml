@@ -1,0 +1,19 @@
+# Production — super-admin portal SPA (nginx). VITE_* values are baked in at
+# build time via --build-arg in the deploy workflow.
+app = 'venview-super-admin-portal'
+primary_region = 'dfw'
+
+[build]
+  dockerfile = 'super-admin-portal.Dockerfile'
+
+[http_service]
+  internal_port = 80
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[vm]]
+  memory = '256mb'
+  cpu_kind = 'shared'
+  cpus = 1

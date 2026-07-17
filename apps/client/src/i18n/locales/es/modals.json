@@ -1,0 +1,166 @@
+{
+  "welcome": {
+    "beta": "Beta",
+    "title": "¡Bienvenido a venOS!",
+    "intro": "Nos estás ayudando a crear la forma más sencilla para que los vendedores de eventos sepan si realmente ganaron dinero.",
+    "focusPrefix": "Esta versión beta se enfoca en una sola cosa:",
+    "focusHighlight": "Llevarte del evento → a tu ganancia real en minutos.",
+    "stepsHeading": "Comienza en 3 pasos",
+    "step1": {
+      "title": "Agrega un evento real",
+      "description": "Usa un evento pasado de los últimos 30 días.",
+      "example1": "Mercado de productores",
+      "example2": "Servicio de banquetes",
+      "example3": "Evento escolar",
+      "example4": "Festival",
+      "cta": "Crea tu primer evento"
+    },
+    "step2": {
+      "title": "Conecta y sincroniza ventas",
+      "description": "Si usas Square, conéctalo en Configuración. venOS extraerá tus datos reales de ventas e impuestos automáticamente.",
+      "descriptionAlt": "Si no, captura los totales manualmente.",
+      "cta": "Sincronizar ventas"
+    },
+    "step3": {
+      "title": "Agrega tus costos",
+      "description": "Captura la mano de obra, insumos, cuotas del evento e impuestos sobre alimentos. Luego abre tu Resumen de ganancias.",
+      "cta": "Ver resumen de ganancias"
+    },
+    "discover": {
+      "heading": "Lo que descubrirás",
+      "item1": "Tu ganancia neta real (después de impuestos y cuotas)",
+      "item2": "El impacto real del costo de mano de obra",
+      "item3": "Si el evento valió la pena",
+      "item4": "Dónde perdiste margen"
+    },
+    "disclaimer": "Esta es una versión beta. Por favor reporta errores. Los cálculos financieros se basan en los datos capturados o sincronizados. Si algo parece incorrecto, avísanos.",
+    "ctaPrimary": "¡Vamos! Crear mi primer evento",
+    "ctaExplore": "Prefiero explorar por mi cuenta"
+  },
+  "upgrade": {
+    "badge": "venOS Pro",
+    "title": "Descubre el panorama completo.",
+    "subtitle": "Consulta la ganancia real de cada evento, sigue las tendencias con el tiempo y toma mejores decisiones, más rápido.",
+    "contexts": {
+      "report": "Los reportes posteriores al evento son una función Pro.",
+      "finalize": "Starter incluye 1 evento finalizado. Mejora tu plan para registrar más.",
+      "history": "Ver el historial de eventos finalizados requiere Pro.",
+      "pdf": "La exportación a PDF es una función Pro.",
+      "multiday": "Starter admite eventos de hasta 2 días. Mejora a Pro para festivales más largos."
+    },
+    "featuresHeading": "Todo lo que incluye Pro",
+    "features": {
+      "reports": {
+        "title": "Reportes posteriores al evento",
+        "description": "Desglose completo de pérdidas y ganancias, listo para compartir e imprimir"
+      },
+      "unlimited": {
+        "title": "Eventos finalizados ilimitados",
+        "description": "Registra cada mercado, festival y pop-up que realices"
+      },
+      "pdf": {
+        "title": "Exportación a PDF",
+        "description": "Descarga reportes con tu marca para tus registros o tu contador"
+      },
+      "history": {
+        "title": "Historial completo de eventos",
+        "description": "Compara eventos con el tiempo para encontrar tus mercados más rentables"
+      },
+      "sync": {
+        "title": "Sincronización con Square POS",
+        "description": "Extrae datos reales de ventas, incluidas comisiones, reembolsos y descuentos"
+      },
+      "templates": {
+        "title": "Plantillas de formulario personalizadas",
+        "description": "Diseña formularios de eventos que coincidan exactamente con tu forma de trabajar"
+      }
+    },
+    "starterNote": "Tienes <1>venOS Starter</1>: incluye 1 evento finalizado y un resumen de ganancias básico.",
+    "ctaUpgrade": "Mejorar a Pro",
+    "secureNote": "Pago seguro con tecnología de Stripe · cancela cuando quieras",
+    "ctaLater": "Quizás más tarde"
+  },
+  "posModifierMapping": {
+    "title": "Vincula los modificadores de tu POS con tu inventario",
+    "description": "Vincula cada modificador (saborizantes, crema, …) con el artículo de inventario que utiliza y la cantidad usada por bebida: venOS suma ese costo a cada bebida que lleva el modificador, para que el COGS siga siendo exacto sin crear un artículo de menú por cada sabor. Usa una <2>cantidad negativa</2> para quitar ingredientes (p. ej. \"Sin LCE\" = -1). Elige \"Sin artículo de inventario\" para modificadores gratuitos.",
+    "suggestedLegend": "<1>{{count}} modificador(es)</1> fueron vinculados por IA — marcados como <3>sugerido</3>. Revísalos antes de guardar.",
+    "unmappedWarning": "<1>{{count}} modificador(es)</1> no tienen artículo de inventario — su costo no se sumará al COGS.",
+    "empty": "No se encontraron modificadores del POS. Asegúrate de que tu POS esté conectado y tenga modificadores configurados.",
+    "colModifier": "Modificador",
+    "colInventory": "Artículo de inventario",
+    "colAmount": "Cantidad / bebida",
+    "noInventory": "— Sin artículo de inventario —",
+    "searchInventory": "Buscar inventario…",
+    "noMatches": "No hay artículos coincidentes",
+    "inventoryOption": "{{name}} (${{cost}}/unidad)",
+    "suggestedBadge": "sugerido",
+    "cancel": "Cancelar",
+    "save": "Guardar asignaciones",
+    "suggestAi": "Sugerir con IA",
+    "aiTitle": "Deja que la IA sugiera coincidencias para los modificadores no asignados — los ya asignados no se tocan",
+    "aiApplied": "La IA sugirió {{count}} asignación(es). Revisa y guarda.",
+    "aiNone": "No se encontraron coincidencias confiables. Vincula los modificadores manualmente.",
+    "aiFailed": "La sugerencia de IA falló. Inténtalo de nuevo.",
+    "aiWorkingTitle": "Claude está emparejando tus modificadores no asignados…",
+    "aiWorkingNote": "Analizando {{count}} modificador(es) no asignado(s) con tu inventario — los ya asignados no se tocan. Esto puede tardar uno o dos minutos.",
+    "aiStep1": "Leyendo tus modificadores del POS",
+    "aiStep2": "Comparando modificadores con tu inventario",
+    "aiStep3": "Cotejando costos de ingredientes",
+    "aiStep4": "Puntuando la confianza de coincidencia",
+    "aiStep5": "Finalizando sugerencias",
+    "toast": {
+      "saved": "¡Asignaciones de modificadores guardadas! Los cálculos de costos ahora son exactos.",
+      "saveFailed": "No se pudo guardar"
+    },
+    "suggestAiUnmapped": "Sugerir no asignados con IA",
+    "aiAllMapped": "Todos los modificadores ya están asignados — nada que la IA deba emparejar.",
+    "newItem": "Nuevo",
+    "newItemTitle": "Crea un artículo de inventario y asígnalo aquí",
+    "newItemHeading": "Nuevo artículo de inventario",
+    "invName": "Nombre del artículo *",
+    "invUnitCost": "Costo unitario",
+    "invHint": "Este artículo se agrega a tu inventario y se asigna a este modificador. Costo por bebida = costo unitario × cantidad.",
+    "invAdd": "Agregar artículo",
+    "invNameRequired": "El nombre del artículo es obligatorio",
+    "invAdded": "Artículo de inventario agregado.",
+    "invAddFailed": "No se pudo agregar el artículo"
+  },
+  "posMapping": {
+    "title": "Vincula el menú de tu POS con tus fichas de receta",
+    "description": "Vincula cada artículo del POS con la receta que lo compone: venOS usa el costo de ingredientes de la receta para calcular el COGS automáticamente en cada sincronización. Elige <2>\"Sin receta\"</2> para propinas, cargos y otros conceptos que no son del menú.",
+    "suggestedLegend": "<1>{{count}} artículo(s)</1> fueron emparejados por IA, marcados como <3>sugerido</3>. Revísalos antes de guardar.",
+    "unmappedWarning": "<1>{{count}} artículo(s)</1> no tienen ficha de receta: el costo de ventas se mostrará como $0 para esos.",
+    "empty": "No se encontraron artículos en el catálogo del POS. Asegúrate de que tu POS esté conectado y tenga artículos.",
+    "colPosItem": "Artículo del POS",
+    "colInventoryItem": "Tu artículo de inventario",
+    "notInMenu": "— No está en mi menú —",
+    "searchInventory": "Buscar inventario…",
+    "noInventoryMatches": "No hay artículos coincidentes",
+    "inventoryOption": "{{name}} (${{cost}}/unidad)",
+    "suggestedBadge": "sugerido",
+    "cancel": "Cancelar",
+    "save": "Guardar vínculos",
+    "suggestAi": "Sugerir con IA",
+    "aiTitle": "Deja que la IA sugiera coincidencias para los artículos no asignados — los ya asignados no se tocan",
+    "aiApplied": "La IA sugirió {{count}} vínculo(s). Revisa y guarda.",
+    "aiNone": "No se encontraron coincidencias de IA confiables. Vincula los artículos manualmente.",
+    "aiFailed": "La sugerencia de IA falló. Inténtalo de nuevo.",
+    "aiWorkingTitle": "Claude está emparejando tus artículos del POS no asignados…",
+    "aiWorkingNote": "Analizando {{count}} artículo(s) no asignado(s) con tus recetas — los ya asignados no se tocan. Esto puede tardar uno o dos minutos.",
+    "aiStep1": "Leyendo el catálogo de tu POS",
+    "aiStep2": "Comparando artículos con tus recetas",
+    "aiStep3": "Buscando coincidencias en el inventario",
+    "aiStep4": "Evaluando la confianza de las coincidencias",
+    "aiStep5": "Finalizando las sugerencias",
+    "toast": {
+      "saved": "¡Vínculos guardados! Los cálculos de costos ahora son precisos.",
+      "saveFailed": "No se pudo guardar"
+    },
+    "suggestAiUnmapped": "Sugerir no asignados con IA",
+    "aiAllMapped": "Todos los artículos ya están asignados — nada que la IA deba emparejar.",
+    "newRecipe": "Nueva",
+    "newRecipeTitle": "Crea una receta nueva y asígnala aquí",
+    "sharedBadge": "compartida por {{count}} artículos",
+    "makeSubRecipe": "Crear sub-receta"
+  }
+}

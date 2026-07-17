@@ -1,0 +1,23 @@
+{
+  "heading": "Profile",
+  "subtitle": "Manage your personal account details.",
+  "loading": "Loading…",
+  "email": "Email",
+  "displayName": "Display name",
+  "displayNamePlaceholder": "Your name",
+  "saveProfile": "Save Profile",
+  "changePassword": "Change password",
+  "newPassword": "New password",
+  "newPasswordPlaceholder": "At least 8 characters",
+  "confirmPassword": "Confirm new password",
+  "confirmPasswordPlaceholder": "Re-enter new password",
+  "changePasswordButton": "Change Password",
+  "toast": {
+    "profileUpdated": "Profile updated!",
+    "profileUpdateFailed": "Failed to update profile",
+    "passwordTooShort": "Password must be at least 8 characters",
+    "passwordsDoNotMatch": "Passwords do not match",
+    "passwordChanged": "Password changed!",
+    "passwordChangeFailed": "Failed to change password"
+  }
+}

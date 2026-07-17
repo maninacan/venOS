@@ -1,0 +1,60 @@
+{
+  "welcomeBack": "¡Bienvenido de nuevo!",
+  "myCompanies": "Mis empresas",
+  "subtitle": "Selecciona una empresa para administrar sus eventos, inventario y recetas.",
+  "createNew": "Crear una nueva empresa",
+  "requestToJoin": "Solicitar unirse a una empresa",
+  "joinCodePlaceholder": "Ingresa el código de acceso (p. ej. ABC123)",
+  "requestAccess": "Solicitar acceso",
+  "cancel": "Cancelar",
+  "getStarted": {
+    "stepOf": "Paso {{current}} de {{total}}",
+    "languageHeading": "Elige tu idioma",
+    "languageSub": "Puedes cambiarlo en cualquier momento en Configuración.",
+    "continue": "Continuar",
+    "back": "Atrás",
+    "heading": "¡Te damos la bienvenida a venOS!",
+    "subheading": "Configuremos tu espacio de trabajo. Elige cómo quieres empezar:",
+    "createTitle": "Crear una empresa",
+    "createDesc": "Empieza desde cero como propietario: configura eventos, recetas, inventario y conecta tu TPV.",
+    "createCta": "Crear empresa",
+    "joinTitle": "Unirse a una empresa",
+    "joinDesc": "¿Tienes un código de acceso de tu equipo? Solicita acceso y un propietario te aprobará.",
+    "joinCta": "Ingresar código de acceso",
+    "joinSubmit": "Solicitar acceso"
+  },
+  "create": {
+    "heading": "Registra tu empresa",
+    "subtitle": "Configura tu food truck o negocio de vendedor en venOS.",
+    "companyName": "Nombre de la empresa *",
+    "companyNamePlaceholder": "p. ej. Lemon Drip Food Co.",
+    "vendorCategory": "Categoría de vendedor",
+    "vendorCategoryPlaceholder": "p. ej. food truck, banquetes, mercado de agricultores",
+    "contactName": "Nombre de contacto",
+    "contactNamePlaceholder": "Nombre del propietario / contacto",
+    "phone": "Teléfono",
+    "countryCodeLabel": "Código de país",
+    "phonePlaceholder": "(555) 555-5555",
+    "email": "Correo electrónico",
+    "emailPlaceholder": "contacto@tuempresa.com",
+    "submit": "Crear empresa",
+    "cancel": "Cancelar"
+  },
+  "toast": {
+    "alreadyMember": "Ya eres miembro de {{name}}.",
+    "accessRequested": "Se solicitó acceso a {{name}}: pendiente de aprobación del propietario.",
+    "invalidJoinCode": "Código de acceso no válido",
+    "created": "¡Empresa \"{{name}}\" creada!",
+    "createFailed": "No se pudo crear la empresa",
+    "reminderSent": "Recordatorio enviado al propietario.",
+    "reminderFailed": "No se pudo enviar el recordatorio."
+  },
+  "pending": {
+    "badge": "Pendiente de aprobación",
+    "hint": "Tu solicitud para unirte está pendiente de la aprobación del propietario.",
+    "aria": "{{name}} — pendiente de aprobación",
+    "remind": "Enviar recordatorio",
+    "reminding": "Enviando…",
+    "remindAgainIn": "Recordar de nuevo en {{time}}"
+  }
+}
