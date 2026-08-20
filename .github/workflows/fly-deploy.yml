@@ -14,6 +14,11 @@ on:
 
 # main -> production fly-*.toml + prod Doppler token
 # develop -> development fly-dev-*.toml + dev Doppler token
+#
+# By default only projects nx reports as affected are deployed. To force all four
+# regardless: put [deploy all] in the commit message, or start the workflow from
+# the Actions tab / `gh workflow run "Fly Deploy" --ref <branch>`, where the
+# deploy_all input defaults to true.
 jobs:
   changes:
     name: Detect Affected Projects
