@@ -1,5 +1,13 @@
 # Production — GraphQL/REST API (venview-api). Secrets injected at runtime via
 # Doppler (`doppler run` in api.Dockerfile); set DOPPLER_TOKEN as a Fly secret.
+#
+# That token must be a Doppler *service* token (dp.st.*) scoped to venos/prd. A
+# personal CLI token works until someone runs `doppler logout`, which revokes it —
+# and nothing breaks until the next restart, because `doppler run` only fetches at
+# process start. A bad token means "Unable to download secrets" and node never
+# runs, so the machine crash-loops to its max restart count and stays stopped.
+# Recovery is `flyctl secrets import` plus an explicit `flyctl machine start`;
+# a machine stopped that way does not come back on a config change alone.
 app = 'venview-api'
 primary_region = 'dfw'
 
