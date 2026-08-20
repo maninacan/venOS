@@ -21,6 +21,11 @@
 // Only after a run reports 0 failures do you set TOKEN_ENCRYPTION_KEY = the new
 // value in that config and redeploy the API.
 //
+// Then run it once more. The live API is still encrypting under the old key while
+// this script works, and square.ts rewrites both tokens on every refresh, so any
+// row touched between the pass and the redeploy is left on the old key and would
+// be stranded by the swap. The re-run catches exactly those.
+//
 // Idempotent: a row already re-encrypted under the new key is detected and skipped,
 // so a re-run (or a run interrupted partway) is safe. --dry-run writes nothing.
 // Token plaintext is never logged.
