@@ -12,6 +12,12 @@
 //   doppler run --project venos --config prd -- node <bundle> --dry-run
 //   doppler run --project venos --config prd -- node <bundle>
 //
+// <bundle> is not produced by `nx build venview-api` — that target only compiles
+// main.ts and its import graph, which never reaches src/scripts. Build it directly:
+//
+//   npx esbuild apps/venview-api/src/scripts/backfillTaxRates.ts --platform=node \
+//     --format=cjs --bundle --external:@supabase/supabase-js --outfile=/tmp/backfill.cjs
+//
 // Idempotent: only touches rows that have no override and a zero/absent state
 // rate, so re-running is a no-op. --dry-run reports what it *would* change and
 // writes nothing.
