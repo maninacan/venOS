@@ -29,6 +29,20 @@ export function getSquareOAuthClient(): SquareClient {
 
 // ── Token retrieval + refresh ─────────────────────────────────────────────────
 
+// Ciphertext written under a previous TOKEN_ENCRYPTION_KEY can never be recovered,
+// so treat it as an auth failure rather than letting Node's opaque "unable to
+// authenticate data" escape. isPosAuthError() matches on UNAUTHORIZED, which flips
+// needsReauth and lets Settings prompt a reconnect — the only actual remedy.
+function decryptStoredToken(ciphertext: string, kind: 'access' | 'refresh'): string {
+  try {
+    return decryptToken(ciphertext);
+  } catch {
+    throw new Error(
+      `UNAUTHORIZED: stored Square ${kind} token could not be decrypted. Please reconnect.`
+    );
+  }
+}
+
 async function refreshSquareToken(companyId: string, row: Record<string, unknown>): Promise<string> {
   const refreshEnc = row['refreshToken'] as string | null;
   if (!refreshEnc) throw new Error('Cannot refresh Square token: no refresh token stored.');
@@ -38,7 +52,7 @@ async function refreshSquareToken(companyId: string, row: Record<string, unknown
     clientId: process.env['SQUARE_APP_ID']!,
     clientSecret: process.env['SQUARE_APP_SECRET']!,
     grantType: 'refresh_token',
-    refreshToken: decryptToken(refreshEnc),
+    refreshToken: decryptStoredToken(refreshEnc, 'refresh'),
   });
 
   const accessToken = tokenResponse.accessToken!;
@@ -82,7 +96,7 @@ export async function getSquareToken(companyId: string): Promise<string> {
     }
   }
 
-  return decryptToken(accessEnc);
+  return decryptStoredToken(accessEnc, 'access');
 }
 
 export async function getSquareClient(companyId: string): Promise<SquareClient> {

@@ -14,6 +14,11 @@ on:
 
 # main -> production fly-*.toml + prod Doppler token
 # develop -> development fly-dev-*.toml + dev Doppler token
+#
+# By default only projects nx reports as affected are deployed. To force all four
+# regardless: put [deploy all] in the commit message, or start the workflow from
+# the Actions tab / `gh workflow run "Fly Deploy" --ref <branch>`, where the
+# deploy_all input defaults to true.
 jobs:
   changes:
     name: Detect Affected Projects
@@ -113,7 +118,7 @@ jobs:
           doppler run -- bash -c 'flyctl deploy --remote-only --config '"$CONFIG"' \
             --build-arg VITE_API_URL="$VITE_API_URL" \
             --build-arg VITE_SUPABASE_URL="$VITE_SUPABASE_URL" \
-            --build-arg VITE_SUPABASE_ANON_KEY="$VITE_SUPABASE_ANON_KEY" \
+            --build-arg VITE_SUPABASE_PUBLISHABLE_KEY="$VITE_SUPABASE_PUBLISHABLE_KEY" \
             --build-arg VITE_MEMBER="$VITE_MEMBER" \
             --build-arg VITE_POSTHOG_PROJECT_TOKEN="$VITE_POSTHOG_PROJECT_TOKEN" \
             --build-arg VITE_POSTHOG_HOST="$VITE_POSTHOG_HOST"'
@@ -137,7 +142,7 @@ jobs:
           doppler run -- bash -c 'flyctl deploy --remote-only --config '"$CONFIG"' \
             --build-arg VITE_API_URL="$VITE_API_URL" \
             --build-arg VITE_SUPABASE_URL="$VITE_SUPABASE_URL" \
-            --build-arg VITE_SUPABASE_ANON_KEY="$VITE_SUPABASE_ANON_KEY" \
+            --build-arg VITE_SUPABASE_PUBLISHABLE_KEY="$VITE_SUPABASE_PUBLISHABLE_KEY" \
             --build-arg VITE_MEMBER="$VITE_MEMBER"'
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

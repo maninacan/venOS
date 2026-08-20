@@ -3,6 +3,12 @@ import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
 // ── AES-256-GCM token encryption ─────────────────────────────────────────────
 // Format: <iv_hex>:<authTag_hex>:<data_hex>. Used for any secret we store at
 // rest (e.g. Square OAuth tokens).
+//
+// There is no key id in the format, so ciphertext is only readable under the
+// exact TOKEN_ENCRYPTION_KEY that produced it. Changing that key without first
+// re-encrypting every stored value (scripts/rotateTokenEncryptionKey.ts) strands
+// the data permanently — a stranded row surfaces as a reconnect prompt via
+// decryptStoredToken() in square.ts, and the owner must reauthorize their POS.
 
 function getEncKey(): Buffer {
   const hex = process.env['TOKEN_ENCRYPTION_KEY'];

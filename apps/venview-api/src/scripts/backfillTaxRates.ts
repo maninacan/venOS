@@ -12,6 +12,12 @@
 //   doppler run --project venos --config prd -- node <bundle> --dry-run
 //   doppler run --project venos --config prd -- node <bundle>
 //
+// <bundle> is not produced by `nx build venview-api` — that target only compiles
+// main.ts and its import graph, which never reaches src/scripts. Build it directly:
+//
+//   npx esbuild apps/venview-api/src/scripts/backfillTaxRates.ts --platform=node \
+//     --format=cjs --bundle --external:@supabase/supabase-js --outfile=/tmp/backfill.cjs
+//
 // Idempotent: only touches rows that have no override and a zero/absent state
 // rate, so re-running is a no-op. --dry-run reports what it *would* change and
 // writes nothing.
@@ -21,8 +27,8 @@ import { lookupStateFallbackRate, type TaxRateLookup } from '../lib/taxRates.js'
 const DRY_RUN = process.argv.includes('--dry-run');
 
 const url = process.env['SUPABASE_URL'];
-const key = process.env['SUPABASE_SERVICE_ROLE_KEY'];
-if (!url || !key) throw new Error('Missing SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY');
+const key = process.env['SUPABASE_SECRET_KEY'];
+if (!url || !key) throw new Error('Missing SUPABASE_URL / SUPABASE_SECRET_KEY');
 const supabase = createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
 
 type Row = Record<string, unknown>;

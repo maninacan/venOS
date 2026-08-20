@@ -6,7 +6,7 @@ WORKDIR /app
 # via --build-arg (sourced from Doppler); changing them rebuilds the app.
 ARG VITE_API_URL
 ARG VITE_SUPABASE_URL
-ARG VITE_SUPABASE_ANON_KEY
+ARG VITE_SUPABASE_PUBLISHABLE_KEY
 ARG VITE_MEMBER
 
 # Copy workspace manifests first so the npm ci layer is cached unless deps change.
@@ -26,7 +26,7 @@ COPY . .
 # npm ci layer above). `nx build` runs `vite build` (production mode by default).
 ENV VITE_API_URL=$VITE_API_URL
 ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
-ENV VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
+ENV VITE_SUPABASE_PUBLISHABLE_KEY=$VITE_SUPABASE_PUBLISHABLE_KEY
 ENV VITE_MEMBER=$VITE_MEMBER
 
 RUN npx nx build super-admin-portal
