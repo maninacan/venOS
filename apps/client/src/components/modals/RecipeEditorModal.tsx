@@ -139,7 +139,16 @@ export function RecipeEditorModal({ recipe, prefill, onSaved, onClose }: Props) 
       }));
     const input = {
       name: name.trim(),
-      ingredients: ingredients.filter(i => i.name.trim()).map(({ id: _id, ...i }) => ({ ...i, quantity: Number(i.quantity), unitCost: Number(i.unitCost) })),
+      // Built field-by-field (like cleanComponents above) rather than spreading the
+      // row. When editing, these come straight from GET_RECIPES and carry __typename,
+      // which RecipeIngredientInput does not accept — spreading leaked it into the
+      // mutation and the server rejected every ingredient.
+      ingredients: ingredients.filter(i => i.name.trim()).map(i => ({
+        name: i.name,
+        quantity: Number(i.quantity),
+        unitCost: Number(i.unitCost),
+        unit: i.unit ?? '',
+      })),
       components: cleanComponents,
     };
     if (input.ingredients.length === 0 && cleanComponents.length === 0) {
