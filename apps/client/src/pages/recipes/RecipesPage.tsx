@@ -404,7 +404,12 @@ export function RecipesPage() {
       name: recipe.name.trim(),
       ingredients: recipe.ingredients
         .filter(i => i.name.trim())
-        .map(({ id: _id, ...i }) => ({ ...i, quantity: num(i.quantity), unitCost: num(i.unitCost) })),
+        .map(i => ({
+          name: i.name,
+          quantity: num(i.quantity),
+          unitCost: num(i.unitCost),
+          unit: i.unit ?? '',
+        })),
     });
 
     // Partition by collision resolution. Empty imports can't be saved (Feature 1

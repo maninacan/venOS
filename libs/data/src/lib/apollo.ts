@@ -1,6 +1,7 @@
 import { ApolloClient, InMemoryCache, createHttpLink, from } from '@apollo/client/core';
 import { setContext } from '@apollo/client/link/context';
 import { onError } from '@apollo/client/link/error';
+import { removeTypenameFromVariables } from '@apollo/client/link/remove-typename';
 import { supabase } from './supabase';
 import { showToast } from './useToast';
 
@@ -39,8 +40,15 @@ const errorLink = onError(({ graphQLErrors, networkError, operation }) => {
   }
 });
 
+// Query results carry __typename, and editors commonly seed their form state
+// straight from a query and post it back. Input types never declare __typename,
+// so the server rejects the whole mutation ("Field \"__typename\" is not defined
+// by type ..."). Strip it from variables centrally rather than relying on every
+// call site to remember.
+const stripTypenameLink = removeTypenameFromVariables();
+
 export const apolloClient = new ApolloClient({
-  link: from([errorLink, authLink, httpLink]),
+  link: from([errorLink, authLink, stripTypenameLink, httpLink]),
   cache: new InMemoryCache(),
   defaultOptions: {
     watchQuery: { fetchPolicy: 'cache-and-network' },
