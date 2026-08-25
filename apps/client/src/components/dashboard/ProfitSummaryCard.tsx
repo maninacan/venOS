@@ -49,6 +49,10 @@ interface ReportSummary {
 }
 
 interface TaxInfo {
+  /** The actual taxes the POS applied. When present these are the source of truth
+   *  and the state/local split below is meaningless — applyTaxRates deliberately
+   *  writes stateTaxRate/localTaxRate as 0 in that case. */
+  lines?: Array<{ name: string; rate: number; amount: number }> | null;
   stateRate?: number | null;
   localRate?: number | null;
   stateTax?: number | null;
@@ -137,6 +141,7 @@ export function ProfitSummaryCard({ eventId, isFinalized, sales, expenses, summa
   const localTax = Number(taxes?.localTax ?? 0);
   const taxCollected = Number(taxes?.taxCollected ?? 0);
   const jName = taxes?.jurisdiction ?? null;
+  const posLines = taxes?.lines ?? [];
   const stateLabel = t('profit.salesTaxRemitState', 'Sales tax — remit to {{jurisdiction}} ({{rate}})', {
     jurisdiction: jName?.state || t('profit.stateFallback', 'State'),
     rate: formatPercent(stateRate),
@@ -200,8 +205,23 @@ export function ProfitSummaryCard({ eventId, isFinalized, sales, expenses, summa
           )}
         </div>
         <LedgerRow label={t('profit.tips', 'Tips (pass-through to staff)')} value={fmt(summary.tips)} info />
-        <LedgerRow label={stateLabel} value={fmt(stateTax)} info />
-        <LedgerRow label={localLabel} value={fmt(localTax)} info />
+        {posLines.length > 0 ? (
+          // Square reported the real per-jurisdiction taxes. Show them as-is; the
+          // computed state/local split would read 0.00% against a real amount.
+          posLines.map((l, i) => (
+            <LedgerRow
+              key={i}
+              label={t('profit.posLine', '{{name}} ({{rate}}%)', { name: l.name, rate: (Number(l.rate) * 100).toFixed(2) })}
+              value={fmt(Number(l.amount))}
+              info
+            />
+          ))
+        ) : (
+          <>
+            <LedgerRow label={stateLabel} value={fmt(stateTax)} info />
+            <LedgerRow label={localLabel} value={fmt(localTax)} info />
+          </>
+        )}
         <LedgerRow label={t('profit.totalSalesTaxCollected', 'Total sales tax collected (to remit)')} value={fmt(taxCollected)} info />
         <p className="text-[0.76rem] text-[#64748b] mt-[7px]">{t('profit.taxDisclaimer', 'ⓘ Sales tax is collected on behalf of the taxing authorities and excluded from profit. Income taxes are calculated annually — consult your accountant.')}</p>
       </div>

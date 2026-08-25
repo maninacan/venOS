@@ -45,7 +45,8 @@
     "stateFallback": "Estadual",
     "localFallback": "Municipal",
     "totalSalesTaxCollected": "Total de imposto sobre vendas arrecadado (a recolher)",
-    "taxDisclaimer": "ⓘ O imposto sobre vendas é arrecadado em nome das autoridades fiscais e excluído do lucro. Os impostos sobre a renda são calculados anualmente — consulte seu contador."
+    "taxDisclaimer": "ⓘ O imposto sobre vendas é arrecadado em nome das autoridades fiscais e excluído do lucro. Os impostos sobre a renda são calculados anualmente — consulte seu contador.",
+    "posLine": "{{name}} ({{rate}}%)"
   },
   "toast": {
     "eventFinalized": "Evento finalizado!",

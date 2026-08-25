@@ -45,7 +45,8 @@
     "stateFallback": "State",
     "localFallback": "Local",
     "totalSalesTaxCollected": "Total sales tax collected (to remit)",
-    "taxDisclaimer": "ⓘ Sales tax is collected on behalf of the taxing authorities and excluded from profit. Income taxes are calculated annually — consult your accountant."
+    "taxDisclaimer": "ⓘ Sales tax is collected on behalf of the taxing authorities and excluded from profit. Income taxes are calculated annually — consult your accountant.",
+    "posLine": "{{name}} ({{rate}}%)"
   },
   "toast": {
     "eventFinalized": "Event finalized!",
