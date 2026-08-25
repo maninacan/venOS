@@ -45,7 +45,8 @@
     "stateFallback": "Estado",
     "localFallback": "Local",
     "totalSalesTaxCollected": "Total de impuesto sobre ventas recaudado (por pagar)",
-    "taxDisclaimer": "ⓘ El impuesto sobre ventas se recauda en nombre de las autoridades fiscales y se excluye de la ganancia. Los impuestos sobre la renta se calculan anualmente — consulta a tu contador."
+    "taxDisclaimer": "ⓘ El impuesto sobre ventas se recauda en nombre de las autoridades fiscales y se excluye de la ganancia. Los impuestos sobre la renta se calculan anualmente — consulta a tu contador.",
+    "posLine": "{{name}} ({{rate}}%)"
   },
   "toast": {
     "eventFinalized": "¡Evento finalizado!",

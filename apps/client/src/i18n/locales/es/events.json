@@ -332,6 +332,7 @@
     "exportPdf": "Exportar a PDF",
     "exportCsv": "Exportar a CSV",
     "print": "Imprimir",
-    "backToDashboard": "Volver al panel"
+    "backToDashboard": "Volver al panel",
+    "posLine": "{{name}} ({{rate}}%)"
   }
 }

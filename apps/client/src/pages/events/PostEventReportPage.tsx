@@ -25,7 +25,7 @@ const GET_REPORT = gql`
         healthDeptFee eventFee mileage mileageRate coordinatorFee
         posFee employeeBonus eventRunnerFees laborFees additionalFees
       }
-      taxes { stateRate localRate stateTax localTax taxCollected jurisdiction }
+      taxes { stateRate localRate stateTax localTax taxCollected jurisdiction lines { name rate amount } }
       summary {
         posFees cogs grossProfit totalExpenses netProfit
         tips stateFoodTax laborFees additionalFeesTotal mileageReimbursement
@@ -123,6 +123,7 @@ export function PostEventReportPage() {
       // Ingredient cost is listed among the operating expenses, so the footer must
       // include it — the server keeps cogs out of totalExpenses (see lib/profit.ts).
       const totalCosts = Number(summary.totalExpenses ?? 0) + Number(summary.cogs ?? 0);
+      const pdfPosLines = (taxes.lines ?? []) as Array<{ name: string; rate: number; amount: number }>;
       const profitColor = netProfit >= 0 ? '#166534' : '#991b1b';
 
       const content: unknown[] = [
@@ -222,8 +223,16 @@ export function PostEventReportPage() {
       content.push(buildTable([
         ['', ''],
         [t('report.tipsPassThrough', 'Tips (pass-through to staff)'), fmt(summary.tips)],
-        [t('report.salesTaxState', 'Sales tax — {{name}} ({{rate}}%)', { name: taxes.jurisdiction?.state ?? t('report.stateFallback', 'State'), rate: (Number(taxes.stateRate ?? 0) * 100).toFixed(2) }), fmt(Number(taxes.stateTax ?? 0))],
-        [t('report.salesTaxLocal', 'Sales tax — {{name}} ({{rate}}%)', { name: taxes.jurisdiction?.city ?? taxes.jurisdiction?.county ?? t('report.localFallback', 'Local'), rate: (Number(taxes.localRate ?? 0) * 100).toFixed(2) }), fmt(Number(taxes.localTax ?? 0))],
+        ...(pdfPosLines.length > 0
+          // Real POS taxes — the computed state/local split reads 0.00% here.
+          ? pdfPosLines.map((l) => [
+              t('report.posLine', '{{name}} ({{rate}}%)', { name: l.name, rate: (Number(l.rate) * 100).toFixed(2) }),
+              fmt(Number(l.amount)),
+            ])
+          : [
+              [t('report.salesTaxState', 'Sales tax — {{name}} ({{rate}}%)', { name: taxes.jurisdiction?.state ?? t('report.stateFallback', 'State'), rate: (Number(taxes.stateRate ?? 0) * 100).toFixed(2) }), fmt(Number(taxes.stateTax ?? 0))],
+              [t('report.salesTaxLocal', 'Sales tax — {{name}} ({{rate}}%)', { name: taxes.jurisdiction?.city ?? taxes.jurisdiction?.county ?? t('report.localFallback', 'Local'), rate: (Number(taxes.localRate ?? 0) * 100).toFixed(2) }), fmt(Number(taxes.localTax ?? 0))],
+            ]),
         [t('report.totalSalesTaxCollected', 'Total sales tax collected (to remit)'), fmt(Number(taxes.taxCollected ?? 0))],
       ]));
 
@@ -287,8 +296,15 @@ export function PostEventReportPage() {
       add('Net Profit', 'Net Profit', n(summary.netProfit).toFixed(2));
 
       add('For Your Records', 'Tips (pass-through to staff)', n(summary.tips).toFixed(2));
-      add('For Your Records', 'State sales tax', n(taxes.stateTax).toFixed(2));
-      add('For Your Records', 'Local sales tax', n(taxes.localTax).toFixed(2));
+      const csvPosLines = (taxes.lines ?? []) as Array<{ name: string; rate: number; amount: number }>;
+      if (csvPosLines.length > 0) {
+        for (const l of csvPosLines) {
+          add('For Your Records', `${l.name} (${(Number(l.rate) * 100).toFixed(2)}%)`, n(l.amount).toFixed(2));
+        }
+      } else {
+        add('For Your Records', 'State sales tax', n(taxes.stateTax).toFixed(2));
+        add('For Your Records', 'Local sales tax', n(taxes.localTax).toFixed(2));
+      }
       add('For Your Records', 'Total sales tax collected (to remit)', n(taxes.taxCollected).toFixed(2));
 
       const esc = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
@@ -317,6 +333,7 @@ export function PostEventReportPage() {
   const netProfit = Number(summary.netProfit ?? 0);
   // See the PDF builder above: cogs is excluded from the server's totalExpenses.
   const totalCosts = Number(summary.totalExpenses ?? 0) + Number(summary.cogs ?? 0);
+  const posLines = (taxes.lines ?? []) as Array<{ name: string; rate: number; amount: number }>;
   const stateRate = Number(taxes.stateRate ?? 0);
   const localRate = Number(taxes.localRate ?? 0);
   const stateTax = Number(taxes.stateTax ?? 0);
@@ -512,8 +529,16 @@ export function PostEventReportPage() {
         {/* For your records */}
         <SectionHeader title={t('report.forYourRecords', 'For Your Records (Informational)')} />
         <Row label={t('report.tipsPassThrough', 'Tips (pass-through to staff)')} value={fmt(summary.tips)} />
-        <Row label={t('report.salesTaxRemitState', 'Sales tax — remit to {{name}} ({{rate}}%)', { name: jur?.state ?? t('report.stateFallback', 'State'), rate: (stateRate * 100).toFixed(2) })} value={fmt(stateTax)} />
-        <Row label={t('report.salesTaxRemitLocal', 'Sales tax — remit to {{name}} ({{rate}}%)', { name: jur?.city ?? jur?.county ?? t('report.localFallback', 'Local'), rate: (localRate * 100).toFixed(2) })} value={fmt(localTax)} />
+        {posLines.length > 0 ? (
+          posLines.map((l, i) => (
+            <Row key={i} label={t('report.posLine', '{{name}} ({{rate}}%)', { name: l.name, rate: (Number(l.rate) * 100).toFixed(2) })} value={fmt(Number(l.amount))} />
+          ))
+        ) : (
+          <>
+            <Row label={t('report.salesTaxRemitState', 'Sales tax — remit to {{name}} ({{rate}}%)', { name: jur?.state ?? t('report.stateFallback', 'State'), rate: (stateRate * 100).toFixed(2) })} value={fmt(stateTax)} />
+            <Row label={t('report.salesTaxRemitLocal', 'Sales tax — remit to {{name}} ({{rate}}%)', { name: jur?.city ?? jur?.county ?? t('report.localFallback', 'Local'), rate: (localRate * 100).toFixed(2) })} value={fmt(localTax)} />
+          </>
+        )}
         <Row label={t('report.totalSalesTaxCollected', 'Total sales tax collected (to remit)')} value={fmt(taxCollected)} />
         <p style={{ fontSize: '0.78rem', color: 'var(--muted)', marginTop: 8 }}>
           {t('report.incomeTaxNote', 'ⓘ Income taxes are calculated annually — consult your accountant.')}
