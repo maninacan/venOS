@@ -110,7 +110,9 @@ export function ProfitSummaryCard({ eventId, isFinalized, sales, expenses, summa
   const { loading, withSpinner } = useSpinner();
 
   const netProfit = Number(summary.netProfit ?? 0);
-  const grossProfit = Number(summary.grossProfit ?? 0);
+  // Ingredient cost is listed as an operating expense here, so the footer has to
+  // include it — the server keeps cogs out of totalExpenses (see lib/profit.ts).
+  const totalCosts = Number(summary.totalExpenses ?? 0) + Number(summary.cogs ?? 0);
 
   async function handleFinalize() {
     await withSpinner(async () => {
@@ -155,13 +157,6 @@ export function ProfitSummaryCard({ eventId, isFinalized, sales, expenses, summa
         <LedgerRow label={t('profit.netSales', 'Net Sales')} value={fmt(sales.netSales)} bold />
         <Divider />
 
-        {/* COGS */}
-        <SectionTitle>{t('profit.cogsTitle', 'Cost of Goods Sold (COGS) - Supply Fees')}</SectionTitle>
-        <LedgerRow label={t('profit.ingredientCosts', 'Ingredient Costs')} value={`-${fmt(summary.cogs)}`} />
-        <Divider />
-        <LedgerRow label={t('profit.grossProfit', 'Gross Profit')} value={fmt(grossProfit)} bold profit={grossProfit >= 0 ? 'positive' : 'negative'} />
-        <Divider />
-
         {/* Operating Expenses */}
         <SectionTitle>{t('profit.operatingExpenses', 'Operating Expenses')}</SectionTitle>
         <LedgerRow label={t('profit.healthDeptFee', 'Health Dept Fee')} value={`-${fmt(expenses.healthDeptFee)}`} />
@@ -173,8 +168,9 @@ export function ProfitSummaryCard({ eventId, isFinalized, sales, expenses, summa
         <LedgerRow label={t('profit.laborFees', 'Labor Fees')} value={`-${fmt(summary.laborFees)}`} />
         <LedgerRow label={t('profit.coordinatorFee', 'Coordinator Fee')} value={`-${fmt(expenses.coordinatorFee)}`} />
         <LedgerRow label={t('profit.posFees', 'POS Fees')} value={`-${fmt(summary.posFees)}`} />
+        <LedgerRow label={t('profit.ingredientCosts', 'Ingredient Costs')} value={`-${fmt(summary.cogs)}`} />
         <Divider />
-        <LedgerRow label={t('profit.totalOperatingExpenses', 'Total Operating Expenses')} value={`-${fmt(summary.totalExpenses)}`} bold />
+        <LedgerRow label={t('profit.totalCosts', 'Total Costs')} value={`-${fmt(totalCosts)}`} bold />
         <Divider />
         <LedgerRow label={t('profit.netProfit', 'Net Profit')} value={fmt(netProfit)} final profit={netProfit >= 0 ? 'positive' : 'negative'} />
 
