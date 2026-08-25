@@ -120,6 +120,9 @@ export function PostEventReportPage() {
       pdfMake.vfs = vfs as Record<string, string>;
 
       const netProfit = Number(summary.netProfit ?? 0);
+      // Ingredient cost is listed among the operating expenses, so the footer must
+      // include it — the server keeps cogs out of totalExpenses (see lib/profit.ts).
+      const totalCosts = Number(summary.totalExpenses ?? 0) + Number(summary.cogs ?? 0);
       const profitColor = netProfit >= 0 ? '#166534' : '#991b1b';
 
       const content: unknown[] = [
@@ -138,13 +141,6 @@ export function PostEventReportPage() {
           [t('report.returns', 'Returns'), `-${fmt(sales.refunds)}`],
           [t('report.discounts', 'Discounts'), `-${fmt(sales.discounts)}`],
           [t('report.netSales', 'Net Sales'), fmt(sales.netSales)],
-        ]),
-
-        { text: t('report.cogsTitle', 'Cost of Goods Sold'), style: 'sectionHeader', margin: [0, 12, 0, 4] },
-        buildTable([
-          ['', ''],
-          [t('report.ingredientCostsCogs', 'Ingredient Costs (COGS)'), `-${fmt(summary.cogs)}`],
-          [t('report.grossProfit', 'Gross Profit'), fmt(summary.grossProfit)],
         ]),
       ];
 
@@ -204,7 +200,8 @@ export function PostEventReportPage() {
         [t('report.coordinatorFee', 'Coordinator Fee'), `-${fmt(expenses.coordinatorFee)}`],
         [t('report.posFees', 'POS Fees'), `-${fmt(summary.posFees)}`],
         [t('report.additionalFees', 'Additional Fees'), `-${fmt(summary.additionalFeesTotal)}`],
-        [t('report.totalOperatingExpenses', 'Total Operating Expenses'), `-${fmt(summary.totalExpenses)}`],
+        [t('report.ingredientCosts', 'Ingredient Costs'), `-${fmt(summary.cogs)}`],
+        [t('report.totalCosts', 'Total Costs'), `-${fmt(totalCosts)}`],
       ]));
 
       // Net Profit
@@ -266,9 +263,6 @@ export function PostEventReportPage() {
       add('Sales Summary', 'Discounts', (-n(sales.discounts)).toFixed(2));
       add('Sales Summary', 'Net Sales', n(sales.netSales).toFixed(2));
 
-      add('Cost of Goods Sold', 'Ingredient Costs (COGS)', (-n(summary.cogs)).toFixed(2));
-      add('Cost of Goods Sold', 'Gross Profit', n(summary.grossProfit).toFixed(2));
-
       for (const r of laborEntries as Array<Record<string, unknown>>) {
         add('Labor', `${String(r['name'] ?? '')} (${n(r['hours']).toFixed(2)}h @ ${n(r['wage']).toFixed(2)}/hr)`, n(r['total']).toFixed(2));
       }
@@ -287,7 +281,8 @@ export function PostEventReportPage() {
       add('Operating Expenses', 'Coordinator Fee', (-n(expenses.coordinatorFee)).toFixed(2));
       add('Operating Expenses', 'POS Fees', (-n(summary.posFees)).toFixed(2));
       add('Operating Expenses', 'Additional Fees', (-n(summary.additionalFeesTotal)).toFixed(2));
-      add('Operating Expenses', 'Total Operating Expenses', (-n(summary.totalExpenses)).toFixed(2));
+      add('Operating Expenses', 'Ingredient Costs', (-n(summary.cogs)).toFixed(2));
+      add('Operating Expenses', 'Total Costs', (-(n(summary.totalExpenses) + n(summary.cogs))).toFixed(2));
 
       add('Net Profit', 'Net Profit', n(summary.netProfit).toFixed(2));
 
@@ -320,6 +315,8 @@ export function PostEventReportPage() {
   }
 
   const netProfit = Number(summary.netProfit ?? 0);
+  // See the PDF builder above: cogs is excluded from the server's totalExpenses.
+  const totalCosts = Number(summary.totalExpenses ?? 0) + Number(summary.cogs ?? 0);
   const stateRate = Number(taxes.stateRate ?? 0);
   const localRate = Number(taxes.localRate ?? 0);
   const stateTax = Number(taxes.stateTax ?? 0);
@@ -409,12 +406,6 @@ export function PostEventReportPage() {
         <Row label={t('report.returns', 'Returns')} value={`-${fmt(sales.refunds)}`} />
         <Row label={t('report.discounts', 'Discounts')} value={`-${fmt(sales.discounts)}`} />
         <Row label={t('report.netSales', 'Net Sales')} value={fmt(sales.netSales)} bold />
-
-        {/* COGS */}
-        <SectionHeader title={t('report.cogsTitleFull', 'Cost of Goods Sold (COGS)')} />
-        <Row label={t('report.ingredientCosts', 'Ingredient Costs')} value={`-${fmt(summary.cogs)}`} />
-        <Row label={t('report.grossProfit', 'Gross Profit')} value={fmt(summary.grossProfit)} bold
-          color={Number(summary.grossProfit ?? 0) >= 0 ? '#166534' : '#991b1b'} />
 
         {/* Labor */}
         {laborEntries.length > 0 && (
@@ -509,7 +500,8 @@ export function PostEventReportPage() {
         {Number(expenses.coordinatorFee ?? 0) > 0 && <Row label={t('report.coordinatorFee', 'Coordinator Fee')} value={`-${fmt(expenses.coordinatorFee)}`} />}
         {Number(summary.posFees ?? 0) > 0 && <Row label={t('report.posFees', 'POS Fees')} value={`-${fmt(summary.posFees)}`} />}
         {Number(summary.additionalFeesTotal ?? 0) !== 0 && <Row label={t('report.additionalFeesDiscounts', 'Additional Fees / Discounts')} value={`-${fmt(summary.additionalFeesTotal)}`} />}
-        <Row label={t('report.totalOperatingExpenses', 'Total Operating Expenses')} value={`-${fmt(summary.totalExpenses)}`} bold />
+        {Number(summary.cogs ?? 0) > 0 && <Row label={t('report.ingredientCosts', 'Ingredient Costs')} value={`-${fmt(summary.cogs)}`} />}
+        <Row label={t('report.totalCosts', 'Total Costs')} value={`-${fmt(totalCosts)}`} bold />
 
         {/* Net Profit */}
         <div style={{ background: netProfit >= 0 ? '#f0fdf4' : '#fef2f2', border: `2px solid ${netProfit >= 0 ? '#bbf7d0' : '#fecaca'}`, borderRadius: 10, padding: '16px 18px', margin: '18px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
