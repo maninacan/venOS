@@ -351,7 +351,7 @@ export const salesResolvers = {
         throw err;
       }
       await markPosNeedsReauth(companyId, provider.key, false);
-      const laborRows = pull.rows.map(r => ({ eventID: eventId, name: r.name, hours: r.hours, wage: r.wage }));
+      const laborRows = pull.rows.map(r => ({ eventID: eventId, name: r.name, hours: r.hours, wage: r.wage, durationSeconds: r.durationSeconds ?? null }));
 
       await supabase.from('EventLabor').delete().eq('eventID', eventId);
       if (laborRows.length > 0) await supabase.from('EventLabor').insert(laborRows);

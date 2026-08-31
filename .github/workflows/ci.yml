@@ -21,8 +21,8 @@ jobs:
       - run: npm ci --no-audit --no-fund --legacy-peer-deps
       - name: Set Nx affected base/head
         uses: nrwl/nx-set-shas@v4
-      - name: Build affected projects
-        run: npx nx affected -t build
+      - name: Build and test affected projects
+        run: npx nx affected -t build test
       # NOTE: `typecheck` is intentionally omitted — the @org/data lib currently
       # has a pre-existing typecheck baseline that fails. Add `typecheck` here
       # (e.g. `npx nx affected -t build typecheck`) once that is resolved.
