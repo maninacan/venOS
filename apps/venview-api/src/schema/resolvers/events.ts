@@ -4,6 +4,9 @@ import { supabase } from '../../lib/supabase.js';
 import { computeProfit } from '../../lib/profit.js';
 import { applyTaxRates } from './sales.js';
 import { zipToTimeZone } from '../../lib/timeZone.js';
+import { buildEventCalendar, calendarFileName, type CalendarDayInput } from '../../lib/calendar.js';
+import { sendEventInviteEmail, EMAIL_FROM } from '../../lib/email.js';
+import logger from '../../lib/logger.js';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -462,6 +465,90 @@ export const eventResolvers = {
       if ('zipCode' in eventFields) await applyTaxRates(id).catch(() => undefined);
 
       return rowToEvent(data as Record<string, unknown>);
+    },
+
+    /**
+     * Email the event to the company's active members as a calendar invitation.
+     *
+     * One .ics covering every event day, sent with METHOD:REQUEST so it lands as a
+     * real invitation rather than an attachment to import. Members without a
+     * resolvable email are counted as skipped rather than failing the whole send.
+     */
+    sendEventCalendarInvites: async (
+      _: unknown,
+      { eventId }: { eventId: string },
+      ctx: AppContext
+    ) => {
+      requireAuth(ctx);
+      await assertEventAccess(eventId, ctx);
+
+      const { data: ev } = await supabase
+        .from('EventInfo')
+        .select('eventID, companyId, eventName, eventDate, endDate, numDays, eventLocation, zipCode, country, timeZone, eventHost, coordinator, notes')
+        .eq('eventID', eventId)
+        .single();
+      if (!ev) throw new Error('Event not found');
+      const row = ev as Record<string, unknown>;
+
+      const { data: dayRows } = await supabase
+        .from('EventDays')
+        .select('dayNumber, eventDate, startTime, endTime')
+        .eq('eventID', eventId)
+        .order('dayNumber', { ascending: true });
+
+      const { data: memberRows } = await supabase
+        .from('CompanyMembers')
+        .select('userId')
+        .eq('companyId', row['companyId'])
+        .eq('status', 'active');
+
+      const members = (memberRows ?? []) as Array<{ userId: string }>;
+      const recipients: Array<{ email: string }> = [];
+      let skipped = 0;
+      for (const m of members) {
+        const { data: u } = await supabase.auth.admin.getUserById(m.userId);
+        const email = u?.user?.email;
+        if (email) recipients.push({ email });
+        else skipped++;
+      }
+      if (recipients.length === 0) return { sent: 0, skipped };
+
+      const clientUrl = process.env['CLIENT_URL'] ?? 'http://localhost:4200';
+      const eventUrl = `${clientUrl}/companies/${row['companyId']}/events/${eventId}`;
+      const organizerEmail = /<([^>]+)>/.exec(EMAIL_FROM)?.[1] ?? EMAIL_FROM;
+
+      const ics = buildEventCalendar(
+        row as unknown as Parameters<typeof buildEventCalendar>[0],
+        (dayRows ?? []) as CalendarDayInput[],
+        {
+          method: 'REQUEST',
+          eventUrl,
+          organizer: { name: 'venOS', email: organizerEmail },
+          attendees: recipients,
+        },
+      );
+
+      const days = (dayRows ?? []) as CalendarDayInput[];
+      const first = days[0]?.eventDate ?? (row['eventDate'] as string | null);
+      const last = days[days.length - 1]?.eventDate ?? (row['endDate'] as string | null) ?? first;
+      const whenLabel = first && last && first !== last ? `${first} – ${last}` : (first ?? 'Date TBC');
+      const locationLabel = [row['eventLocation'], row['zipCode']].filter(Boolean).join(', ') || null;
+
+      let sent = 0;
+      for (const r of recipients) {
+        const ok = await sendEventInviteEmail(r.email, {
+          eventName: String(row['eventName'] ?? 'Event'),
+          whenLabel,
+          locationLabel,
+          eventUrl,
+          ics,
+          icsFileName: calendarFileName(String(row['eventName'] ?? '')),
+        });
+        if (ok) sent++;
+        else skipped++;
+      }
+      logger.info('sendEventCalendarInvites: done', { eventId, sent, skipped });
+      return { sent, skipped };
     },
 
     deleteEvent: async (_: unknown, { id }: { id: string }, ctx: AppContext) => {

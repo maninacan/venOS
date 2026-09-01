@@ -230,3 +230,73 @@ export function calendarFileName(eventName: string): string {
   const safe = (eventName || 'event').replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '').slice(0, 60);
   return `${safe || 'event'}.ics`;
 }
+
+/**
+ * Deep links for the web calendars that accept a pre-filled compose URL.
+ *
+ * These are generated here, not in the browser, so the timezone conversion has a
+ * single implementation. Note the deliberate difference from the .ics: a deep
+ * link can only express ONE entry, so a multi-day event becomes a single block
+ * spanning first day to last. The .ics remains the higher-fidelity option with
+ * one entry per day, which is why it stays the primary action.
+ */
+export function buildProviderLinks(
+  event: CalendarEventInput,
+  days: CalendarDayInput[],
+  opts: { eventUrl?: string } = {},
+): { google: string; outlook: string } | null {
+  const list = resolveDays(event, days);
+  if (list.length === 0) return null;
+
+  const zone = resolveEventTimeZone(event);
+  const firstDay = list[0];
+  const lastDay = list[list.length - 1];
+  const start = parseTime(firstDay.startTime);
+  const end = parseTime(lastDay.endTime);
+
+  const title = event.eventName ?? 'Event';
+  const location = buildLocation(event);
+  const details = buildDescription(event, opts.eventUrl);
+
+  let googleDates: string;
+  let outlookStart: string;
+  let outlookEnd: string;
+  let allDay = false;
+
+  if (zone && start && end) {
+    const s = DateTime.fromObject({ ...dateParts(firstDay.eventDate as string), ...start }, { zone });
+    let e = DateTime.fromObject({ ...dateParts(lastDay.eventDate as string), ...end }, { zone });
+    if (e <= s) e = e.plus({ days: 1 });
+    const fmt = (d: DateTime) => d.toUTC().toFormat("yyyyLLdd'T'HHmmss'Z'");
+    googleDates = `${fmt(s)}/${fmt(e)}`;
+    outlookStart = s.toUTC().toISO() ?? '';
+    outlookEnd = e.toUTC().toISO() ?? '';
+  } else {
+    allDay = true;
+    const endExclusive = addDaysISO(lastDay.eventDate as string, 1);
+    googleDates = `${dateOnly(firstDay.eventDate as string)}/${dateOnly(endExclusive)}`;
+    outlookStart = firstDay.eventDate as string;
+    outlookEnd = endExclusive;
+  }
+
+  const google = 'https://calendar.google.com/calendar/render?' + new URLSearchParams({
+    action: 'TEMPLATE',
+    text: title,
+    dates: googleDates,
+    ...(details ? { details } : {}),
+    ...(location ? { location } : {}),
+  }).toString();
+
+  const outlook = 'https://outlook.live.com/calendar/0/deeplink/compose?' + new URLSearchParams({
+    path: '/calendar/action/compose',
+    rru: 'addevent',
+    subject: title,
+    startdt: outlookStart,
+    enddt: outlookEnd,
+    ...(allDay ? { allday: 'true' } : {}),
+    ...(details ? { body: details } : {}),
+    ...(location ? { location } : {}),
+  }).toString();
+
+  return { google, outlook };
+}

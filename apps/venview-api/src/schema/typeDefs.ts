@@ -269,6 +269,13 @@ export const typeDefs = `#graphql
     additionalFees: [AdditionalFee!]!
   }
 
+  "Result of emailing an event to the crew as a calendar invitation."
+  type EventInviteResult {
+    sent: Int!
+    "Members skipped because we have no email address for them."
+    skipped: Int!
+  }
+
   type EventKpi {
     totalEvents: Int!
     finalizedCount: Int!
@@ -815,6 +822,8 @@ export const typeDefs = `#graphql
     "Clone an event's setup into a fresh, non-finalized event."
     duplicateEvent(id: ID!): Event!
     deleteEvent(id: ID!): Boolean!
+    "Email the event to active company members as a calendar invitation (.ics, METHOD:REQUEST)."
+    sendEventCalendarInvites(eventId: ID!): EventInviteResult!
     finalizeEvent(id: ID!): Event!
     claimUnownedEvents(companyId: ID!): Int!
 

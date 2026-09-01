@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  buildEventCalendar, escapeText, foldLine, parseTime, resolveDays, calendarFileName,
+  buildEventCalendar, buildProviderLinks, escapeText, foldLine, parseTime, resolveDays, calendarFileName,
   type CalendarEventInput, type CalendarDayInput,
 } from './calendar.js';
 
@@ -172,5 +172,41 @@ describe('calendarFileName', () => {
   it('sanitizes the event name', () => {
     expect(calendarFileName('Farmers Market / Sat!')).toBe('Farmers_Market_Sat.ics');
     expect(calendarFileName('')).toBe('event.ics');
+  });
+});
+
+describe('buildProviderLinks', () => {
+  const build = (ev: Partial<CalendarEventInput>, days: CalendarDayInput[] = []) =>
+    buildProviderLinks({ ...base, ...ev }, days, { eventUrl: 'https://app.venview.io/e/1' });
+
+  it('returns null when there is nothing to link', () => {
+    expect(build({ eventDate: null, numDays: null })).toBeNull();
+  });
+
+  it('builds a timed Google link in UTC', () => {
+    const links = build({}, [{ dayNumber: 1, eventDate: '2026-09-12', startTime: '10:00', endTime: '18:00' }])!;
+    expect(links.google).toContain('dates=20260912T160000Z%2F20260913T000000Z');
+    expect(links.google).toContain('action=TEMPLATE');
+  });
+
+  it('builds an all-day link when no zone or times are usable', () => {
+    const links = build({ timeZone: null, zipCode: null })!;
+    expect(links.google).toContain('dates=20260912%2F20260913');
+    expect(links.outlook).toContain('allday=true');
+  });
+
+  // A deep link can only carry one entry, unlike the per-day .ics.
+  it('spans first day to last for a multi-day event', () => {
+    const links = build({}, [
+      { dayNumber: 1, eventDate: '2026-09-12', startTime: '10:00', endTime: '18:00' },
+      { dayNumber: 2, eventDate: '2026-09-13', startTime: '10:00', endTime: '16:00' },
+    ])!;
+    expect(links.google).toContain('dates=20260912T160000Z%2F20260913T220000Z');
+  });
+
+  it('url-encodes the title and location', () => {
+    const links = build({ eventName: 'Market & Fair' })!;
+    expect(links.google).toContain('text=Market+%26+Fair');
+    expect(links.outlook).toContain('Patriot+Park');
   });
 });

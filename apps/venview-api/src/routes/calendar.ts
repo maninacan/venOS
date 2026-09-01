@@ -2,7 +2,7 @@ import { Router, type IRouter } from 'express';
 import type { Request, Response } from 'express';
 import { supabase } from '../lib/supabase.js';
 import { createContext } from '../context/index.js';
-import { buildEventCalendar, calendarFileName, type CalendarDayInput } from '../lib/calendar.js';
+import { buildEventCalendar, buildProviderLinks, calendarFileName, type CalendarDayInput } from '../lib/calendar.js';
 import logger from '../lib/logger.js';
 
 const router: IRouter = Router();
@@ -48,11 +48,23 @@ router.get('/events/:eventId/calendar.ics', async (req: Request, res: Response) 
       .order('dayNumber', { ascending: true });
 
     const clientUrl = process.env['CLIENT_URL'] ?? 'http://localhost:4200';
+
     const ics = buildEventCalendar(
       row as unknown as Parameters<typeof buildEventCalendar>[0],
       (dayRows ?? []) as CalendarDayInput[],
       { eventUrl: `${clientUrl}/companies/${row['companyId']}/events/${eventId}` },
     );
+
+    // ?format=links returns provider deep links instead of the file. Same data,
+    // same timezone conversion — generated here so the browser never re-derives it.
+    if (req.query['format'] === 'links') {
+      const links = buildProviderLinks(
+        row as unknown as Parameters<typeof buildProviderLinks>[0],
+        (dayRows ?? []) as CalendarDayInput[],
+        { eventUrl: `${clientUrl}/companies/${row['companyId']}/events/${eventId}` },
+      );
+      return void res.json({ links, fileName: calendarFileName(String(row['eventName'] ?? '')) });
+    }
 
     res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="${calendarFileName(String(row['eventName'] ?? ''))}"`);

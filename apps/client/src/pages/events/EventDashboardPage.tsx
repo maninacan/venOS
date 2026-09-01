@@ -50,6 +50,11 @@ const DUPLICATE_EVENT = gql`
 const DELETE_EVENT = gql`
   mutation DeleteEvent($id: ID!) { deleteEvent(id: $id) }
 `;
+const SEND_CALENDAR_INVITES = gql`
+  mutation SendEventCalendarInvites($eventId: ID!) {
+    sendEventCalendarInvites(eventId: $eventId) { sent skipped }
+  }
+`;
 
 // Which POS providers support labor sync (mirrors the server registry
 // capabilities). Shopify is sales-only; Square and Toast also do labor.
@@ -71,6 +76,13 @@ function formatDateRange(start: string | null | undefined, numDays: number | nul
   return t('dashboard.dateRange', '{{start}} – {{end}}', { start: s, end: formatDate(end, SHORT_DATE) });
 }
 
+const menuItem: React.CSSProperties = {
+  display: 'flex', alignItems: 'center', gap: 8, width: '100%',
+  background: 'none', border: 'none', textAlign: 'left',
+  padding: '8px 10px', borderRadius: 8, cursor: 'pointer',
+  fontSize: '0.86rem', color: 'var(--vv-navy, #0B2A4A)', textDecoration: 'none',
+};
+
 export function EventDashboardPage() {
   const { t } = useTranslation('events');
   const { fmt } = useCurrency();
@@ -84,6 +96,7 @@ export function EventDashboardPage() {
   });
 
   const [deleteEvent] = useMutation(DELETE_EVENT);
+  const [sendCalendarInvites] = useMutation(SEND_CALENDAR_INVITES);
   const [duplicateEvent, { loading: duplicating }] = useMutation(DUPLICATE_EVENT);
   const [syncSalesMut] = useMutation(gql`mutation AutoSyncSales($eventId: ID!) { syncSales(eventId: $eventId) { success } }`);
   const [syncLaborMut] = useMutation(gql`mutation AutoSyncLabor($eventId: ID!) { syncLabor(eventId: $eventId) { success } }`);
@@ -133,13 +146,49 @@ export function EventDashboardPage() {
   // Apple and everything else, which is why there are no per-provider links: the
   // date and timezone maths stays on the server, in one place.
   const [calendarBusy, setCalendarBusy] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [calendarLinks, setCalendarLinks] = useState<{ google: string; outlook: string } | null>(null);
+  const [invitesBusy, setInvitesBusy] = useState(false);
+
+  async function authHeaders() {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token ? { authorization: `Bearer ${session.access_token}` } : {};
+  }
+
+  // Provider deep links come from the server so the timezone conversion has one
+  // implementation. Fetched lazily when the menu is first opened.
+  async function openCalendarMenu() {
+    setCalendarOpen(o => !o);
+    if (calendarLinks) return;
+    try {
+      const res = await fetch(`${API_URL}/api/events/${eventId}/calendar.ics?format=links`, { headers: await authHeaders() });
+      if (res.ok) setCalendarLinks((await res.json()).links ?? null);
+    } catch { /* the .ics download still works without them */ }
+  }
+
+  async function handleSendInvites() {
+    setInvitesBusy(true);
+    try {
+      const { data: r } = await sendCalendarInvites({ variables: { eventId } });
+      const { sent, skipped } = r.sendEventCalendarInvites;
+      showToast(
+        skipped > 0
+          ? t('toast.invitesSentSkipped', 'Invitations sent to {{sent}} — {{skipped}} skipped', { sent, skipped })
+          : t('toast.invitesSent', 'Invitations sent to {{sent}}', { sent }),
+        sent > 0 ? 'success' : 'warning',
+      );
+      setCalendarOpen(false);
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : t('toast.invitesFailed', 'Could not send invitations'), 'error');
+    } finally {
+      setInvitesBusy(false);
+    }
+  }
+
   async function handleAddToCalendar() {
     setCalendarBusy(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch(`${API_URL}/api/events/${eventId}/calendar.ics`, {
-        headers: session?.access_token ? { authorization: `Bearer ${session.access_token}` } : {},
-      });
+      const res = await fetch(`${API_URL}/api/events/${eventId}/calendar.ics`, { headers: await authHeaders() });
       if (!res.ok) throw new Error(`${res.status}`);
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -415,10 +464,35 @@ export function EventDashboardPage() {
             {salesSourceButtons}
             <Link to={`/companies/${companyId}/events/${eventId}/edit`} className="btn-secondary"><i className="fa-solid fa-pen-to-square" /> {t('dashboard.editEvent', 'Edit Event')}</Link>
             <Link to={`/companies/${companyId}/events/${eventId}/report`} className="btn-secondary"><i className="fa-solid fa-chart-bar" /> {t('dashboard.postEventReport', 'Post-Event Report')}</Link>
-            <button className="btn-secondary" onClick={handleAddToCalendar} disabled={calendarBusy}>
-              {calendarBusy && <span className="spinner" />}
-              <i className="fa-solid fa-calendar-plus" /> {t('dashboard.addToCalendar', 'Add to Calendar')}
-            </button>
+            <div style={{ position: 'relative', display: 'inline-block' }}>
+              <button className="btn-secondary" onClick={openCalendarMenu} disabled={calendarBusy}>
+                {calendarBusy && <span className="spinner" />}
+                <i className="fa-solid fa-calendar-plus" /> {t('dashboard.addToCalendar', 'Add to Calendar')}
+                <i className="fa-solid fa-chevron-down" style={{ marginLeft: 6, fontSize: '0.72rem' }} />
+              </button>
+              {calendarOpen && (
+                <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: 4, background: '#fff', border: '1px solid var(--vv-border, #dde3f0)', borderRadius: 10, boxShadow: '0 8px 24px rgba(11,42,74,0.14)', zIndex: 50, minWidth: 230, padding: 6 }}>
+                  <button className="btn-secondary" style={menuItem} onClick={() => { setCalendarOpen(false); handleAddToCalendar(); }}>
+                    <i className="fa-solid fa-download" /> {t('dashboard.calendarDownload', 'Download .ics (any calendar)')}
+                  </button>
+                  {calendarLinks && (
+                    <>
+                      <a href={calendarLinks.google} target="_blank" rel="noreferrer" style={menuItem} onClick={() => setCalendarOpen(false)}>
+                        <i className="fa-solid fa-g" /> {t('dashboard.calendarGoogle', 'Google Calendar')}
+                      </a>
+                      <a href={calendarLinks.outlook} target="_blank" rel="noreferrer" style={menuItem} onClick={() => setCalendarOpen(false)}>
+                        <i className="fa-solid fa-envelope" /> {t('dashboard.calendarOutlook', 'Outlook')}
+                      </a>
+                    </>
+                  )}
+                  <div style={{ borderTop: '1px solid #f1f5f9', margin: '4px 0' }} />
+                  <button className="btn-secondary" style={menuItem} onClick={handleSendInvites} disabled={invitesBusy}>
+                    {invitesBusy && <span className="spinner" />}
+                    <i className="fa-solid fa-paper-plane" /> {t('dashboard.calendarInviteCrew', 'Email invite to the crew')}
+                  </button>
+                </div>
+              )}
+            </div>
             <button className="btn-secondary" onClick={handleDuplicate} disabled={duplicating}>
               {duplicating ? <span className="spinner" /> : <i className="fa-solid fa-copy" />} {t('dashboard.duplicateEvent', 'Duplicate Event')}
             </button>

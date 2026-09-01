@@ -22,6 +22,13 @@ export interface SendEmailArgs {
   html: string;
   text?: string;
   replyTo?: string;
+  attachments?: Array<{
+    filename: string;
+    /** Raw file contents; base64-encoded for transport. */
+    content: string | Buffer;
+    /** e.g. 'text/calendar; charset=utf-8; method=REQUEST' for an invitation. */
+    contentType?: string;
+  }>;
 }
 
 /**
@@ -42,6 +49,15 @@ export async function sendEmail(args: SendEmailArgs): Promise<boolean> {
       html: args.html,
       ...(args.text ? { text: args.text } : {}),
       ...(args.replyTo ? { replyTo: args.replyTo } : {}),
+      ...(args.attachments?.length
+        ? {
+            attachments: args.attachments.map(a => ({
+              filename: a.filename,
+              content: Buffer.isBuffer(a.content) ? a.content.toString('base64') : Buffer.from(a.content, 'utf8').toString('base64'),
+              ...(a.contentType ? { contentType: a.contentType } : {}),
+            })),
+          }
+        : {}),
     });
     if (error) {
       logger.error('sendEmail: Resend returned an error', { error: error.message, subject: args.subject });
@@ -152,4 +168,54 @@ export async function sendJoinRequestEmail(
     : `New request to join ${opts.companyName}`;
   const text = `${opts.requesterEmail ?? 'Someone'} is waiting to join ${opts.companyName} on venOS.\n\nReview the request (approve or deny) here: ${teamUrl}`;
   return sendEmail({ to, subject, html, text });
+}
+
+/**
+ * Sends an event as a calendar invitation to the crew working it.
+ *
+ * The .ics is attached with METHOD:REQUEST so it arrives as a real invitation the
+ * recipient can accept or decline, rather than a file they have to import. Best
+ * effort per the module contract: a failed send never breaks the caller.
+ */
+export async function sendEventInviteEmail(
+  to: string | string[],
+  opts: {
+    eventName: string;
+    whenLabel: string;
+    locationLabel?: string | null;
+    eventUrl: string;
+    ics: string;
+    icsFileName: string;
+  }
+): Promise<boolean> {
+  const name = escapeHtml(opts.eventName);
+  const when = escapeHtml(opts.whenLabel);
+  const where = opts.locationLabel ? escapeHtml(opts.locationLabel) : null;
+
+  const html = shell(
+    heading(`You're on the schedule: ${name}`) +
+    para(`<strong>When:</strong> ${when}`) +
+    (where ? para(`<strong>Where:</strong> ${where}`) : '') +
+    para('Accept the invitation to add it to your calendar. Details may change — check venOS for the latest.') +
+    brandButton(opts.eventUrl, 'View event')
+  );
+  const text = [
+    `You're on the schedule: ${opts.eventName}`,
+    `When: ${opts.whenLabel}`,
+    opts.locationLabel ? `Where: ${opts.locationLabel}` : null,
+    '',
+    `View event: ${opts.eventUrl}`,
+  ].filter(Boolean).join('\n');
+
+  return sendEmail({
+    to,
+    subject: `Event: ${opts.eventName} — ${opts.whenLabel}`,
+    html,
+    text,
+    attachments: [{
+      filename: opts.icsFileName,
+      content: opts.ics,
+      contentType: 'text/calendar; charset=utf-8; method=REQUEST',
+    }],
+  });
 }

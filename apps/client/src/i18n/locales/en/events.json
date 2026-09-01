@@ -151,7 +151,10 @@
     "csvDownloaded": "CSV downloaded!",
     "csvFailed": "CSV export failed: {{error}}",
     "calendarDownloaded": "Calendar file downloaded",
-    "calendarFailed": "Could not build the calendar file"
+    "calendarFailed": "Could not build the calendar file",
+    "invitesSent": "Invitations sent to {{sent}}",
+    "invitesSentSkipped": "Invitations sent to {{sent}} — {{skipped}} skipped",
+    "invitesFailed": "Could not send invitations"
   },
   "dashboard": {
     "dateRange": "{{start}} – {{end}}",
@@ -271,7 +274,11 @@
       "save": "Save Expenses"
     },
     "duplicateEvent": "Duplicate Event",
-    "addToCalendar": "Add to Calendar"
+    "addToCalendar": "Add to Calendar",
+    "calendarDownload": "Download .ics (any calendar)",
+    "calendarGoogle": "Google Calendar",
+    "calendarOutlook": "Outlook",
+    "calendarInviteCrew": "Email invite to the crew"
   },
   "report": {
     "dateRange": "{{start}} – {{end}}",
