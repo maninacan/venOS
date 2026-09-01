@@ -41,6 +41,7 @@ async function upsertRosterFromLabor(companyId: string, rows: Array<{ name: stri
   }
 }
 import logger from '../../lib/logger.js';
+import { safeError } from '../../lib/safeError.js';
 
 // Resolve the POS provider a company has chosen (null for manual / unset).
 async function companyProvider(companyId: string) {
@@ -391,7 +392,7 @@ export const salesResolvers = {
         // A revoked/expired token surfaces here as an auth error — flag reauth so
         // the UI prompts a reconnect instead of silently showing zero locations.
         if (isPosAuthError(err)) await markPosNeedsReauth(companyId, provider.key, true);
-        logger.error('posLocations: failed to fetch locations', { companyId, error: err });
+        logger.error('posLocations: failed to fetch locations', { companyId, error: safeError(err) });
         return [];
       }
     },
@@ -407,7 +408,7 @@ export const salesResolvers = {
         return catalog;
       } catch (err) {
         if (isPosAuthError(err)) await markPosNeedsReauth(companyId, provider.key, true);
-        logger.error('posCatalog: failed to fetch catalog', { companyId, error: err });
+        logger.error('posCatalog: failed to fetch catalog', { companyId, error: safeError(err) });
         return [];
       }
     },
@@ -425,7 +426,7 @@ export const salesResolvers = {
 
       let catalog;
       try { catalog = await provider.listCatalog(companyId); } catch (err) {
-        logger.error('posMappingRecommendations: failed to fetch catalog', { companyId, error: err });
+        logger.error('posMappingRecommendations: failed to fetch catalog', { companyId, error: safeError(err) });
         return [];
       }
 
@@ -460,7 +461,7 @@ export const salesResolvers = {
         return await suggestMappings(catalog, recipes, inventory);
       } catch (err) {
         const detail = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
-        logger.error('posMappingRecommendations: AI suggestion failed', { companyId, detail, error: err });
+        logger.error('posMappingRecommendations: AI suggestion failed', { companyId, detail, error: safeError(err) });
         throw new Error('Could not generate AI suggestions. Please try again.');
       }
     },
@@ -471,7 +472,7 @@ export const salesResolvers = {
       const provider = await companyProvider(companyId);
       if (!provider || !provider.implemented) return [];
       try { return await provider.listModifierCatalog(companyId); } catch (err) {
-        logger.error('posModifierCatalog: failed to fetch modifier catalog', { companyId, error: err });
+        logger.error('posModifierCatalog: failed to fetch modifier catalog', { companyId, error: safeError(err) });
         return [];
       }
     },
@@ -490,7 +491,7 @@ export const salesResolvers = {
 
       let modifiers;
       try { modifiers = await provider.listModifierCatalog(companyId); } catch (err) {
-        logger.error('posModifierMappingRecommendations: failed to fetch modifier catalog', { companyId, error: err });
+        logger.error('posModifierMappingRecommendations: failed to fetch modifier catalog', { companyId, error: safeError(err) });
         return [];
       }
 
@@ -528,7 +529,7 @@ export const salesResolvers = {
         }));
       } catch (err) {
         const detail = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
-        logger.error('posModifierMappingRecommendations: AI suggestion failed', { companyId, detail, error: err });
+        logger.error('posModifierMappingRecommendations: AI suggestion failed', { companyId, detail, error: safeError(err) });
         throw new Error('Could not generate AI suggestions. Please try again.');
       }
     },

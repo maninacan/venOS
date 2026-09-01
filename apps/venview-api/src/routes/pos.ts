@@ -7,6 +7,7 @@ import { getProvider } from '../lib/pos/index.js';
 import { getToastRestaurantName } from '../lib/toast.js';
 import { createContext } from '../context/index.js';
 import logger from '../lib/logger.js';
+import { safeError } from '../lib/safeError.js';
 
 const router: IRouter = Router();
 
@@ -40,7 +41,7 @@ router.get('/pos/:provider/oauth/start', async (req: Request, res: Response) => 
     const url = await adapter.getAuthUrl(companyId, state);
     res.json({ url });
   } catch (err) {
-    logger.error('pos.oauth.start: error', { error: err });
+    logger.error('pos.oauth.start: error', { error: safeError(err) });
     res.status(500).json({ error: 'Failed to start OAuth' });
   }
 });
@@ -85,7 +86,7 @@ router.post('/pos/toast/connect', async (req: Request, res: Response) => {
 
     res.json({ success: true, locationName });
   } catch (err) {
-    logger.error('pos.toast.connect: error', { error: err });
+    logger.error('pos.toast.connect: error', { error: safeError(err) });
     res.status(500).json({ error: 'Failed to connect Toast' });
   }
 });
@@ -136,7 +137,7 @@ async function handleCallback(req: Request, res: Response, providerOverride?: st
 
     res.redirect(`${clientUrl}/companies/${companyId}/settings?pos=connected`);
   } catch (err) {
-    logger.error('pos.oauth.callback: exchange failed', { companyId, provider, error: err });
+    logger.error('pos.oauth.callback: exchange failed', { companyId, provider, error: safeError(err) });
     res.redirect(`${clientUrl}/companies/${companyId}/settings?pos=error`);
   }
 }
@@ -162,7 +163,7 @@ router.delete('/pos/:provider/disconnect/:companyId', async (req: Request, res: 
     await supabase.from('PosConnection').delete().eq('companyId', companyId).eq('provider', provider);
     res.json({ success: true });
   } catch (err) {
-    logger.error('pos.disconnect: error', { error: err });
+    logger.error('pos.disconnect: error', { error: safeError(err) });
     res.status(500).json({ error: 'Failed to disconnect' });
   }
 });
