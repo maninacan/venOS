@@ -149,7 +149,9 @@
     "pdfFailed": "Falló la exportación de PDF: {{error}}",
     "unknownError": "error desconocido",
     "csvDownloaded": "¡CSV descargado!",
-    "csvFailed": "Falló la exportación de CSV: {{error}}"
+    "csvFailed": "Falló la exportación de CSV: {{error}}",
+    "calendarDownloaded": "Archivo de calendario descargado",
+    "calendarFailed": "No se pudo crear el archivo de calendario"
   },
   "dashboard": {
     "dateRange": "{{start}} – {{end}}",
@@ -268,7 +270,8 @@
       "eventRunnerFees": "Cuotas del organizador del evento",
       "save": "Guardar gastos"
     },
-    "duplicateEvent": "Duplicar evento"
+    "duplicateEvent": "Duplicar evento",
+    "addToCalendar": "Agregar al calendario"
   },
   "report": {
     "dateRange": "{{start}} – {{end}}",

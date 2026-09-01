@@ -149,7 +149,9 @@
     "pdfFailed": "PDF export failed: {{error}}",
     "unknownError": "unknown error",
     "csvDownloaded": "CSV downloaded!",
-    "csvFailed": "CSV export failed: {{error}}"
+    "csvFailed": "CSV export failed: {{error}}",
+    "calendarDownloaded": "Calendar file downloaded",
+    "calendarFailed": "Could not build the calendar file"
   },
   "dashboard": {
     "dateRange": "{{start}} – {{end}}",
@@ -268,7 +270,8 @@
       "eventRunnerFees": "Event Runner Fees",
       "save": "Save Expenses"
     },
-    "duplicateEvent": "Duplicate Event"
+    "duplicateEvent": "Duplicate Event",
+    "addToCalendar": "Add to Calendar"
   },
   "report": {
     "dateRange": "{{start}} – {{end}}",

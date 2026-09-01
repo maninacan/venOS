@@ -3,6 +3,7 @@ import { requireAuth, requireCompanyMember } from '../../context/index.js';
 import { supabase } from '../../lib/supabase.js';
 import { computeProfit } from '../../lib/profit.js';
 import { applyTaxRates } from './sales.js';
+import { zipToTimeZone } from '../../lib/timeZone.js';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -165,7 +166,7 @@ async function buildEventReport(eventId: string) {
 // Strip DB-only columns not in the GraphQL Event type
 const EVENT_SCHEMA_FIELDS = new Set([
   'id', 'companyId', 'eventName', 'eventDate', 'endDate', 'status', 'eventType',
-  'eventHost', 'eventLocation', 'coordinator', 'notes', 'zipCode', 'country', 'posLocationId',
+  'eventHost', 'eventLocation', 'coordinator', 'notes', 'zipCode', 'country', 'timeZone', 'posLocationId',
   'time', 'applicationDate', 'eventRating', 'permits', 'employees', 'customFields', 'numDays',
   'isFinalized', 'finalizedDate', 'days', 'netProfit',
   // joined sub-objects used for inline computation (stripped below)
@@ -326,6 +327,15 @@ export const eventResolvers = {
 
       const { days, ...eventFields } = input;
 
+      // Derive the IANA zone from the ZIP unless one was supplied. Calendar export
+      // needs it, and a wrong hour is much harder to notice than a wrong day — so
+      // when it can't be resolved we leave it null and fall back to all-day
+      // entries rather than guessing an offset.
+      if (!eventFields['timeZone'] && eventFields['zipCode']) {
+        const tz = zipToTimeZone(eventFields['zipCode'] as string);
+        if (tz) eventFields['timeZone'] = tz;
+      }
+
       // Default the event's country to the company's default when the client
       // didn't supply one (per-event override still wins).
       if (eventFields['country'] == null) {
@@ -420,6 +430,15 @@ export const eventResolvers = {
       await assertEventAccess(id, ctx);
 
       const { days, ...eventFields } = input;
+
+      // Derive the IANA zone from the ZIP unless one was supplied. Calendar export
+      // needs it, and a wrong hour is much harder to notice than a wrong day — so
+      // when it can't be resolved we leave it null and fall back to all-day
+      // entries rather than guessing an offset.
+      if (!eventFields['timeZone'] && eventFields['zipCode']) {
+        const tz = zipToTimeZone(eventFields['zipCode'] as string);
+        if (tz) eventFields['timeZone'] = tz;
+      }
 
       const { data, error } = await supabase
         .from('EventInfo')

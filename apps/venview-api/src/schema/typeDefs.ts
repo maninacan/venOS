@@ -113,6 +113,8 @@ export const typeDefs = `#graphql
     zipCode: String
     "ISO 3166-1 alpha-2 country code (e.g. 'US'). Defaults from the company on create."
     country: String
+    "IANA time zone (e.g. 'America/Denver'). Derived from zipCode on save; null when unresolved."
+    timeZone: String
     posLocationId: String
     time: String
     applicationDate: String
@@ -294,6 +296,8 @@ export const typeDefs = `#graphql
     zipCode: String
     "ISO 3166-1 alpha-2 country code (e.g. 'US'). Defaults from the company on create."
     country: String
+    "IANA time zone. Omit to derive it from zipCode."
+    timeZone: String
     posLocationId: String
     time: String
     applicationDate: String
@@ -325,6 +329,8 @@ export const typeDefs = `#graphql
     zipCode: String
     "ISO 3166-1 alpha-2 country code (e.g. 'US'). Defaults from the company on create."
     country: String
+    "IANA time zone. Omit to derive it from zipCode."
+    timeZone: String
     posLocationId: String
     time: String
     applicationDate: String

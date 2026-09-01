@@ -11,7 +11,9 @@ import { ProfitSummaryCard } from '../../components/dashboard/ProfitSummaryCard'
 import { EventStageStepper } from '../../components/guidance/EventStageStepper';
 import { NextStepBanner } from '../../components/guidance/NextStepBanner';
 import { deriveEventStage, deriveEventTiming, hasSales, PHASE_LABELS } from '../../lib/eventStage';
-import { showToast } from '@org/data';
+import { showToast, supabase } from '@org/data';
+
+const API_URL = (import.meta.env['VITE_API_URL'] as string) || 'http://localhost:3000';
 
 const GET_REPORT = gql`
   query GetEventReport($id: ID!) {
@@ -125,6 +127,37 @@ export function EventDashboardPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [event?.id, company?.posStatus?.connected, eventId]);
+
+  // The .ics route requires auth, so an <a href> would 401. Fetch it with the
+  // session token and hand the browser a blob. One .ics covers Google, Outlook,
+  // Apple and everything else, which is why there are no per-provider links: the
+  // date and timezone maths stays on the server, in one place.
+  const [calendarBusy, setCalendarBusy] = useState(false);
+  async function handleAddToCalendar() {
+    setCalendarBusy(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`${API_URL}/api/events/${eventId}/calendar.ics`, {
+        headers: session?.access_token ? { authorization: `Bearer ${session.access_token}` } : {},
+      });
+      if (!res.ok) throw new Error(`${res.status}`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${(event?.eventName ?? 'event').replace(/[^a-z0-9]+/gi, '_')}.ics`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      showToast(t('toast.calendarDownloaded', 'Calendar file downloaded'), 'success');
+    } catch (err) {
+      showToast(t('toast.calendarFailed', 'Could not build the calendar file'), 'error');
+      console.error('[calendar]', err);
+    } finally {
+      setCalendarBusy(false);
+    }
+  }
 
   async function handleDelete() {
     if (!confirm(t('dashboard.deleteConfirm', 'Delete "{{name}}"? This cannot be undone.', { name: event?.eventName }))) return;
@@ -382,6 +415,10 @@ export function EventDashboardPage() {
             {salesSourceButtons}
             <Link to={`/companies/${companyId}/events/${eventId}/edit`} className="btn-secondary"><i className="fa-solid fa-pen-to-square" /> {t('dashboard.editEvent', 'Edit Event')}</Link>
             <Link to={`/companies/${companyId}/events/${eventId}/report`} className="btn-secondary"><i className="fa-solid fa-chart-bar" /> {t('dashboard.postEventReport', 'Post-Event Report')}</Link>
+            <button className="btn-secondary" onClick={handleAddToCalendar} disabled={calendarBusy}>
+              {calendarBusy && <span className="spinner" />}
+              <i className="fa-solid fa-calendar-plus" /> {t('dashboard.addToCalendar', 'Add to Calendar')}
+            </button>
             <button className="btn-secondary" onClick={handleDuplicate} disabled={duplicating}>
               {duplicating ? <span className="spinner" /> : <i className="fa-solid fa-copy" />} {t('dashboard.duplicateEvent', 'Duplicate Event')}
             </button>
