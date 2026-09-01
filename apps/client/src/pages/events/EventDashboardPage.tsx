@@ -76,6 +76,11 @@ function formatDateRange(start: string | null | undefined, numDays: number | nul
   return t('dashboard.dateRange', '{{start}} – {{end}}', { start: s, end: formatDate(end, SHORT_DATE) });
 }
 
+// Calendar export is built and tested end to end (ICS endpoint, provider deep
+// links, crew invitations) but the UI is hidden for now. Flip to true to expose
+// the "Add to Calendar" menu on the event page — nothing else needs changing.
+const CALENDAR_UI_ENABLED = false;
+
 const menuItem: React.CSSProperties = {
   display: 'flex', alignItems: 'center', gap: 8, width: '100%',
   background: 'none', border: 'none', textAlign: 'left',
@@ -464,7 +469,7 @@ export function EventDashboardPage() {
             {salesSourceButtons}
             <Link to={`/companies/${companyId}/events/${eventId}/edit`} className="btn-secondary"><i className="fa-solid fa-pen-to-square" /> {t('dashboard.editEvent', 'Edit Event')}</Link>
             <Link to={`/companies/${companyId}/events/${eventId}/report`} className="btn-secondary"><i className="fa-solid fa-chart-bar" /> {t('dashboard.postEventReport', 'Post-Event Report')}</Link>
-            <div style={{ position: 'relative', display: 'inline-block' }}>
+            {CALENDAR_UI_ENABLED && <div style={{ position: 'relative', display: 'inline-block' }}>
               <button className="btn-secondary" onClick={openCalendarMenu} disabled={calendarBusy}>
                 {calendarBusy && <span className="spinner" />}
                 <i className="fa-solid fa-calendar-plus" /> {t('dashboard.addToCalendar', 'Add to Calendar')}
@@ -492,7 +497,7 @@ export function EventDashboardPage() {
                   </button>
                 </div>
               )}
-            </div>
+            </div>}
             <button className="btn-secondary" onClick={handleDuplicate} disabled={duplicating}>
               {duplicating ? <span className="spinner" /> : <i className="fa-solid fa-copy" />} {t('dashboard.duplicateEvent', 'Duplicate Event')}
             </button>
