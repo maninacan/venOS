@@ -1,0 +1,171 @@
+---
+import LegalLayout from '../layouts/LegalLayout.astro';
+
+// TODO before publishing: confirm the legal entity name, mailing address and the
+// contact address below with counsel. Everything else describes what the product
+// actually does today.
+const ENTITY = 'venOS';
+const CONTACT = 'hello@venos.app';
+const UPDATED = 'September 1, 2026';
+---
+
+<LegalLayout
+  title="Privacy Policy — venOS"
+  description="How venOS collects, uses and protects your data."
+  heading="Privacy Policy"
+  updated={UPDATED}
+>
+  <p>
+    This policy explains what {ENTITY} collects when you use our website and the venOS
+    application, why we collect it, and what control you have over it. It applies to
+    venview.io and to the venOS app.
+  </p>
+
+  <h2>Who we are</h2>
+  <p>
+    {ENTITY} provides software that helps food and beverage vendors understand the
+    profitability of the events they work. You can reach us at
+    <a href={`mailto:${CONTACT}`}>{CONTACT}</a>.
+  </p>
+
+  <h2>What we collect</h2>
+
+  <h3>Information you give us</h3>
+  <ul>
+    <li><strong>Account details</strong> — your email address and password. Passwords are hashed by our authentication provider; we never see or store them in readable form.</li>
+    <li><strong>Company and event information</strong> — company name, contact details, and the events, venues, recipes, inventory, supplies, expenses and staffing you enter.</li>
+    <li><strong>Correspondence</strong> — messages you send us, including support requests and waitlist signups.</li>
+  </ul>
+
+  <h3>Information from services you connect</h3>
+  <p>
+    If you connect a point-of-sale system such as Square, we retrieve the data needed to
+    calculate your event profit. That includes completed order and payment totals,
+    processing fees, refunds, discounts, tips, applied sales taxes, item and modifier
+    catalogs, business locations, and timecards with the associated wage rates and staff
+    names. We request read-only access and never initiate charges or modify anything in
+    your POS account.
+  </p>
+  <p>
+    You can disconnect a point-of-sale integration at any time from Settings, which
+    revokes our access.
+  </p>
+
+  <h3>Information collected automatically</h3>
+  <ul>
+    <li><strong>Usage analytics</strong> — pages viewed, features used, approximate location derived from IP address, browser and device type.</li>
+    <li><strong>Log data</strong> — technical records generated when the application runs, used to diagnose errors and abuse.</li>
+  </ul>
+
+  <h2>How we use it</h2>
+  <ul>
+    <li>To provide the service — calculating event profit, costs, labor and tax figures from the data you and your connected systems supply.</li>
+    <li>To operate your account, including authentication and billing.</li>
+    <li>To send transactional email such as confirmations, password resets and notifications about your account.</li>
+    <li>To improve the product by understanding which features are used and where people encounter problems.</li>
+    <li>To protect the service against fraud, abuse and security incidents.</li>
+    <li>To meet legal obligations.</li>
+  </ul>
+  <p>
+    We do not sell your personal information, and we do not use your business or sales
+    data to train machine learning models for other customers.
+  </p>
+
+  <h2>Who we share it with</h2>
+  <p>
+    We share data only with service providers that make the product work, and only to the
+    extent each needs to do its job:
+  </p>
+  <table>
+    <thead><tr><th>Provider</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td>Supabase</td><td>Database hosting and user authentication</td></tr>
+      <tr><td>Fly.io</td><td>Application hosting</td></tr>
+      <tr><td>Square</td><td>Point-of-sale integration, when you connect one</td></tr>
+      <tr><td>Stripe</td><td>Subscription billing and payment processing</td></tr>
+      <tr><td>Resend</td><td>Transactional email delivery</td></tr>
+      <tr><td>PostHog, Google Analytics, Contentsquare</td><td>Product and website analytics</td></tr>
+      <tr><td>Anthropic</td><td>AI features such as recipe import and cost mapping suggestions</td></tr>
+    </tbody>
+  </table>
+  <p>
+    We may also disclose information if required by law, or in connection with a merger or
+    acquisition — in which case we will give you notice before your data becomes subject
+    to a different policy.
+  </p>
+
+  <h2>Payments</h2>
+  <p>
+    Subscription payments are processed by Stripe. Card numbers are submitted directly to
+    Stripe and never reach our servers. We retain only the subscription status and billing
+    metadata needed to run your account.
+  </p>
+
+  <h2>How we protect it</h2>
+  <ul>
+    <li>Data is encrypted in transit using TLS.</li>
+    <li>Point-of-sale access tokens are encrypted at rest using AES-256-GCM before being stored.</li>
+    <li>Access to company data is restricted to members of that company, enforced at the database level.</li>
+    <li>Access to production systems is limited to personnel who need it.</li>
+  </ul>
+  <p>
+    No system is perfectly secure, and we cannot guarantee absolute security. If we become
+    aware of a breach affecting your personal information, we will notify you as required
+    by applicable law.
+  </p>
+
+  <h2>How long we keep it</h2>
+  <p>
+    We keep your account and business data for as long as your account is active. If you
+    delete your company or close your account, we delete the associated data, except where
+    we are required to retain records — for example billing history for tax and accounting
+    purposes. Backups and system logs are retained on a rolling basis and expire in the
+    ordinary course.
+  </p>
+
+  <h2>Your rights</h2>
+  <p>
+    Depending on where you live, you may have the right to access, correct, export or
+    delete your personal information, to object to or restrict certain processing, and to
+    withdraw consent. Residents of California may request disclosure of the categories of
+    personal information collected and may opt out of any sale or sharing of personal
+    information — we do not sell personal information. Residents of the European Economic
+    Area and the United Kingdom have corresponding rights under the GDPR.
+  </p>
+  <p>
+    To exercise any of these, email <a href={`mailto:${CONTACT}`}>{CONTACT}</a>. We will
+    not discriminate against you for making a request.
+  </p>
+
+  <h2>Cookies and tracking</h2>
+  <p>
+    We use cookies and similar technologies to keep you signed in, remember preferences,
+    and understand how the product is used. You can block cookies in your browser, though
+    parts of the application will not work without them. We honor Global Privacy Control
+    signals where required.
+  </p>
+
+  <h2>Children</h2>
+  <p>
+    venOS is a business tool and is not directed at children. We do not knowingly collect
+    personal information from anyone under 16.
+  </p>
+
+  <h2>International transfers</h2>
+  <p>
+    Our service providers may process data in the United States and other countries. Where
+    data is transferred out of the EEA or UK, we rely on appropriate safeguards such as
+    standard contractual clauses.
+  </p>
+
+  <h2>Changes</h2>
+  <p>
+    We may update this policy as the product changes. We will update the date at the top,
+    and for material changes we will give notice through the application or by email.
+  </p>
+
+  <h2>Contact</h2>
+  <p>
+    Questions about this policy or your data: <a href={`mailto:${CONTACT}`}>{CONTACT}</a>.
+  </p>
+</LegalLayout>

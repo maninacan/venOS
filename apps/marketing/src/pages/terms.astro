@@ -1,0 +1,157 @@
+---
+import LegalLayout from '../layouts/LegalLayout.astro';
+
+// TODO before publishing: confirm the legal entity name, governing law / venue and
+// the contact address below with counsel. GOVERNING_LAW is a placeholder.
+const ENTITY = 'venOS';
+const CONTACT = 'hello@venos.app';
+const GOVERNING_LAW = 'the State of Utah, United States';
+const UPDATED = 'September 1, 2026';
+---
+
+<LegalLayout
+  title="Terms of Use — venOS"
+  description="The terms that govern your use of venOS."
+  heading="Terms of Use"
+  updated={UPDATED}
+>
+  <p>
+    These terms govern your use of the venOS website and application. By creating an
+    account or using the service, you agree to them. If you are agreeing on behalf of a
+    business, you confirm you have authority to bind that business.
+  </p>
+
+  <h2>The service</h2>
+  <p>
+    venOS helps vendors track the profitability of events. It aggregates figures you enter
+    together with data retrieved from systems you connect, such as your point-of-sale, and
+    presents calculated results including revenue, cost of goods, labor, expenses, profit
+    and sales-tax figures.
+  </p>
+
+  <div class="callout">
+    <strong>venOS is not a substitute for professional advice.</strong> The figures the
+    service produces — including profit, cost and any tax-related amounts or estimates —
+    are calculated from the data available to it and are provided for your information
+    only. They are not tax, accounting, legal or financial advice, and your actual
+    liability depends on your full financial picture. Always confirm with a qualified
+    accountant or tax professional before relying on any figure for filing, remittance or
+    other decisions.
+  </div>
+
+  <h2>Beta service</h2>
+  <p>
+    venOS is offered during a beta period. Features may change, break or be removed, and
+    the service may be unavailable at times. We do not guarantee that any calculation,
+    integration or figure will be complete or accurate during the beta, and you should
+    verify results independently before relying on them.
+  </p>
+
+  <h2>Your account</h2>
+  <ul>
+    <li>You must be at least 18 and provide accurate registration information.</li>
+    <li>You are responsible for keeping your credentials secure and for activity under your account.</li>
+    <li>You are responsible for the members you invite to your company and for their access.</li>
+    <li>Tell us promptly at <a href={`mailto:${CONTACT}`}>{CONTACT}</a> if you suspect unauthorized use.</li>
+  </ul>
+
+  <h2>Acceptable use</h2>
+  <p>You agree not to:</p>
+  <ul>
+    <li>Use the service unlawfully, or to store or transmit unlawful content.</li>
+    <li>Attempt to access accounts, data or systems that are not yours.</li>
+    <li>Probe, scan or test the security of the service, or interfere with its operation.</li>
+    <li>Reverse engineer, scrape or copy the service except as permitted by law.</li>
+    <li>Resell or provide the service to third parties without our written agreement.</li>
+  </ul>
+
+  <h2>Your data</h2>
+  <p>
+    You keep ownership of the data you enter and the data retrieved from systems you
+    connect. You grant us the license needed to host, process and display that data in
+    order to operate the service for you. We handle it as described in our
+    <a href="/privacy">Privacy Policy</a>.
+  </p>
+  <p>
+    You are responsible for having the right to provide the data you submit, including any
+    information about your staff, such as names, hours and wage rates.
+  </p>
+
+  <h2>Connected services</h2>
+  <p>
+    When you connect a third-party service such as Square, you authorize us to access it
+    on your behalf. Your use of that service remains governed by its own terms, and we are
+    not responsible for its availability, accuracy or actions. If a provider changes or
+    withdraws its API, features that depend on it may stop working.
+  </p>
+
+  <h2>Fees</h2>
+  <p>
+    Paid plans are billed in advance through Stripe on a recurring basis until cancelled.
+    You authorize us to charge your payment method for the applicable fees. Fees are
+    non-refundable except where required by law. We may change pricing on notice, effective
+    at your next billing period. Free and beta access may be modified or ended at any time.
+  </p>
+
+  <h2>Cancellation and termination</h2>
+  <p>
+    You may cancel at any time from your account settings; access continues to the end of
+    the paid period. We may suspend or terminate an account that violates these terms or
+    creates risk for the service or other users. On termination, your right to use the
+    service ends and we will delete or return your data as described in the Privacy Policy.
+  </p>
+
+  <h2>Intellectual property</h2>
+  <p>
+    The service, including its software, design and content, belongs to {ENTITY} and its
+    licensors. These terms grant you a limited, non-exclusive, non-transferable right to
+    use the service, and nothing more.
+  </p>
+
+  <h2>Disclaimer of warranties</h2>
+  <p>
+    The service is provided "as is" and "as available", without warranties of any kind,
+    express or implied, including merchantability, fitness for a particular purpose and
+    non-infringement. We do not warrant that the service will be uninterrupted, error-free,
+    or that any figure it produces will be accurate or complete.
+  </p>
+
+  <h2>Limitation of liability</h2>
+  <p>
+    To the maximum extent permitted by law, {ENTITY} will not be liable for indirect,
+    incidental, special, consequential or punitive damages, or for lost profits, revenue,
+    data or goodwill, arising from your use of the service — including reliance on any
+    figure it produces. Our total liability for any claim relating to the service is
+    limited to the greater of the amounts you paid us in the twelve months before the claim
+    or one hundred US dollars.
+  </p>
+  <p>
+    Some jurisdictions do not allow certain limitations, so parts of this section may not
+    apply to you.
+  </p>
+
+  <h2>Indemnity</h2>
+  <p>
+    You agree to indemnify {ENTITY} against claims arising from your data, your use of the
+    service, or your violation of these terms or of applicable law.
+  </p>
+
+  <h2>Governing law</h2>
+  <p>
+    These terms are governed by the laws of {GOVERNING_LAW}, without regard to conflict of
+    law rules. Disputes will be brought in the courts located there, and you consent to
+    that jurisdiction.
+  </p>
+
+  <h2>Changes</h2>
+  <p>
+    We may update these terms as the service changes. We will update the date at the top,
+    and for material changes we will give notice through the application or by email.
+    Continuing to use the service after a change means you accept the revised terms.
+  </p>
+
+  <h2>Contact</h2>
+  <p>
+    Questions about these terms: <a href={`mailto:${CONTACT}`}>{CONTACT}</a>.
+  </p>
+</LegalLayout>
