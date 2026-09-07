@@ -94,7 +94,7 @@ export function useCompanyJourney(companyId: string | null) {
       ctaLabel: t('steps.pos.cta', 'Connect {{pos}}', { pos: posName }), to: `/companies/${companyId}/settings?setup=1`, done: posConnected, optional: true,
     },
     {
-      key: 'recipes', label: t('steps.recipes.label', 'Add your recipes'), description: t('steps.recipes.description', 'Define ingredient costs so venOS can calculate COGS.'),
+      key: 'recipes', label: t('steps.recipes.label', 'Add your recipes'), description: t('steps.recipes.description', 'Define ingredient costs so Venview can calculate COGS.'),
       ctaLabel: t('steps.recipes.cta', 'Add recipes'), to: `/companies/${companyId}/recipes?setup=1`, done: recipeCount > 0, optional: true,
     },
     {

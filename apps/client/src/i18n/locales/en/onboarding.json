@@ -28,7 +28,7 @@
     },
     "recipes": {
       "label": "Add your recipes",
-      "description": "Define ingredient costs so venOS can calculate COGS.",
+      "description": "Define ingredient costs so Venview can calculate COGS.",
       "cta": "Add recipes"
     },
     "inventory": {
@@ -59,7 +59,7 @@
   },
   "questions": {
     "title": "Quick setup",
-    "subtitle": "Two questions so we can tailor venOS to how you work.",
+    "subtitle": "Two questions so we can tailor Venview to how you work.",
     "skip": "Skip",
     "posQuestion": "Do you use a Point of Sale system?",
     "laborQuestion": "How do you calculate labor?",

@@ -58,7 +58,7 @@ export function OnboardingQuestions({ companyId, onSaved, onSkip }: {
       <div className="flex items-start justify-between gap-3 mb-3">
         <div>
           <h3 className="m-0 text-[1.05rem] font-bold text-[#0B2A4A]">{t('questions.title', 'Quick setup')}</h3>
-          <p className="m-0 text-[0.84rem] text-[#64748b]">{t('questions.subtitle', 'Two questions so we can tailor venOS to how you work.')}</p>
+          <p className="m-0 text-[0.84rem] text-[#64748b]">{t('questions.subtitle', 'Two questions so we can tailor Venview to how you work.')}</p>
         </div>
         <button onClick={onSkip} className="text-[0.78rem] text-[#64748b] bg-transparent border-0 cursor-pointer shrink-0">{t('questions.skip', 'Skip')}</button>
       </div>

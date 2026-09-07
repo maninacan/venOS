@@ -149,7 +149,12 @@
     "pdfFailed": "Falha na exportação do PDF: {{error}}",
     "unknownError": "erro desconhecido",
     "csvDownloaded": "CSV baixado!",
-    "csvFailed": "Falha na exportação do CSV: {{error}}"
+    "csvFailed": "Falha na exportação do CSV: {{error}}",
+    "calendarDownloaded": "Arquivo de calendário baixado",
+    "calendarFailed": "Não foi possível criar o arquivo de calendário",
+    "invitesSent": "Convites enviados para {{sent}}",
+    "invitesSentSkipped": "Convites enviados para {{sent}} — {{skipped}} ignorados",
+    "invitesFailed": "Não foi possível enviar os convites"
   },
   "dashboard": {
     "dateRange": "{{start}} – {{end}}",
@@ -268,7 +273,12 @@
       "eventRunnerFees": "Taxas do organizador do evento",
       "save": "Salvar despesas"
     },
-    "duplicateEvent": "Duplicar evento"
+    "duplicateEvent": "Duplicar evento",
+    "addToCalendar": "Adicionar ao calendário",
+    "calendarDownload": "Baixar .ics (qualquer calendário)",
+    "calendarGoogle": "Google Calendar",
+    "calendarOutlook": "Outlook",
+    "calendarInviteCrew": "Enviar convite para a equipe"
   },
   "report": {
     "dateRange": "{{start}} – {{end}}",

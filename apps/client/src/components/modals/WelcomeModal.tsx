@@ -27,7 +27,7 @@ export function WelcomeModal({ companyId, onClose }: Props) {
       <div className="bg-white rounded-[20px] w-full max-w-[640px] max-h-[90vh] overflow-y-auto">
         <div className="px-8 pb-[18px] pt-7 text-center">
           <div className="inline-block bg-[#fef3c7] text-[#92400e] text-[0.75rem] font-bold px-2.5 py-[3px] rounded-full mb-2.5"><i className="fa-solid fa-flask" aria-hidden="true" /> {t('welcome.beta', 'Beta')}</div>
-          <h2 className="text-[#0B2A4A] mt-0 mb-1.5 text-[1.4rem]">{t('welcome.title', 'Welcome to venOS!')}</h2>
+          <h2 className="text-[#0B2A4A] mt-0 mb-1.5 text-[1.4rem]">{t('welcome.title', 'Welcome to Venview!')}</h2>
           <p className="text-[#64748b] text-[0.88rem] mt-0 mb-2">{t('welcome.intro', "You're helping us build the simplest way for event vendors to know if they actually made money.")}</p>
           <p className="text-[0.84rem] mt-0 mb-1.5">{t('welcome.focusPrefix', 'This beta version is focused on one thing:')}<br /><strong>{t('welcome.focusHighlight', 'Getting you from event → to true profit in minutes.')}</strong></p>
         </div>
@@ -51,7 +51,7 @@ export function WelcomeModal({ companyId, onClose }: Props) {
             <div className="bg-[#f8fafc] rounded-xl p-4">
               <div className={stepNum}>2</div>
               <h3 className="mt-0 mb-1.5 text-[0.93rem] font-bold">{t('welcome.step2.title', 'Connect & Sync Sales')}</h3>
-              <p className="mt-0 mb-2.5 text-[0.83rem] text-[#64748b]">{t('welcome.step2.description', 'If you use Square, connect it in Settings. venOS will pull your real sales and tax data automatically.')}</p>
+              <p className="mt-0 mb-2.5 text-[0.83rem] text-[#64748b]">{t('welcome.step2.description', 'If you use Square, connect it in Settings. Venview will pull your real sales and tax data automatically.')}</p>
               <p className="mt-0 mb-2.5 text-[0.83rem] text-[#64748b]">{t('welcome.step2.descriptionAlt', 'If not, enter totals manually.')}</p>
               <button className="btn-secondary w-full justify-center text-[0.82rem] py-[7px] mt-1" onClick={goManageEvents}>{t('welcome.step2.cta', 'Sync Sales')}</button>
             </div>

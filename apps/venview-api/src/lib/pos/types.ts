@@ -61,7 +61,10 @@ export interface PosSalesPull {
 }
 
 export interface PosLaborPull {
-  rows: Array<{ name: string; hours: number; wage: number }>;
+  /** `durationSeconds` is the exact timecard length and is authoritative; `hours`
+   *  is the 2-decimal display figure derived from it. Providers that cannot supply
+   *  an exact duration may omit it, in which case `hours` is all there is. */
+  rows: Array<{ name: string; hours: number; wage: number; durationSeconds?: number | null }>;
 }
 
 // The event shape the adapters need to scope a date window.

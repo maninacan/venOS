@@ -2,7 +2,7 @@ import { useState, useEffect, type FormEvent } from 'react';
 import { useTranslation, Trans } from 'react-i18next';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { supabase } from '@org/data';
-import venviewLogo from '../../assets/venOS-logo.jpg';
+import venviewLogo from '../../assets/venview-logo.jpg';
 
 type AuthMode = 'signin' | 'signup';
 
@@ -147,10 +147,10 @@ export function AuthPage() {
       {/* Header — matches the main app header */}
       <header className="bg-white px-5 h-[70px] flex items-center justify-between border-b border-[#dde3f0] shadow-[0_2px_6px_rgba(0,0,0,0.08)]">
         <Link to="/auth" className="flex items-center gap-2.5 no-underline">
-          <img src={venviewLogo} alt={t('logoAlt', 'venOS')} className="h-[50px] w-auto" />
+          <img src={venviewLogo} alt={t('logoAlt', 'Venview')} className="h-[50px] w-auto" />
           <div>
             <span className="block text-[1.05rem] font-bold leading-tight" style={{ color: '#2E7D32' }}>
-              {t('brand', 'venOS Events')}
+              {t('brand', 'Venview Events')}
             </span>
             <span className="block text-[0.68rem] text-[#666]">{t('tagline', 'Vendor Intelligence for Events')}</span>
           </div>
@@ -162,7 +162,7 @@ export function AuthPage() {
       <div className="w-full max-w-[420px]">
         <div className="bg-white rounded-[20px] p-10 shadow-[0_12px_30px_rgba(11,42,74,0.12)] border border-[rgba(11,42,74,0.12)]">
           <div className="text-center mb-7">
-            <span className="block text-[1.4rem] font-semibold" style={{ color: '#2E7D32' }}>{t('brand', 'venOS Events')}</span>
+            <span className="block text-[1.4rem] font-semibold" style={{ color: '#2E7D32' }}>{t('brand', 'Venview Events')}</span>
             <span className="block text-[0.8rem] text-[#64748b] mt-0.5">{t('tagline', 'Vendor Intelligence for Events')}</span>
           </div>
 

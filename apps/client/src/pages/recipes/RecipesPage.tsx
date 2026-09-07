@@ -478,7 +478,7 @@ export function RecipesPage() {
           <div>
             <h2 style={{ margin: '0 0 4px', color: 'var(--vv-navy)' }}><i className="fa-solid fa-lemon" aria-hidden="true" /> {t('heading', 'Recipes')}{!loading && recipes.length > 0 && <span style={{ color: 'var(--muted)', fontWeight: 400 }}> ({recipes.length})</span>}</h2>
             <p style={{ margin: 0, color: 'var(--muted)', fontSize: '0.86rem' }}>
-              {t('subtitle', 'Define ingredient costs for each dish. venOS uses these to calculate COGS automatically when you sync Square sales.')}
+              {t('subtitle', 'Define ingredient costs for each dish. Venview uses these to calculate COGS automatically when you sync Square sales.')}
             </p>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
