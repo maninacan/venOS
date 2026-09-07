@@ -90,7 +90,7 @@ export function AuthPage() {
               className="block text-[1.7rem] text-[#0B2A4A] font-normal"
               style={{ fontFamily: "'DM Serif Display', serif" }}
             >
-              venOS Super Admin
+              Venview Super Admin
             </span>
             <span className="block text-[0.8rem] text-[#64748b] mt-0.5">Super admin access only</span>
           </div>

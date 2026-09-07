@@ -8,7 +8,9 @@ import logger from './logger.js';
 const apiKey = process.env['RESEND_API_KEY'];
 
 // "Name <address>" — address must be on a Resend-verified domain.
-export const EMAIL_FROM = process.env['EMAIL_FROM'] ?? 'venOS <no-reply@mail.venview.io>';
+export const EMAIL_FROM = process.env['EMAIL_FROM'] ?? 'Venview <no-reply@mail.venview.io>';
+// Replies to no-reply emails should land in the monitored contact inbox.
+export const EMAIL_REPLY_TO = process.env['EMAIL_REPLY_TO'] ?? 'contact@venview.io';
 
 const resend = apiKey ? new Resend(apiKey) : null;
 
@@ -48,7 +50,7 @@ export async function sendEmail(args: SendEmailArgs): Promise<boolean> {
       subject: args.subject,
       html: args.html,
       ...(args.text ? { text: args.text } : {}),
-      ...(args.replyTo ? { replyTo: args.replyTo } : {}),
+      replyTo: args.replyTo ?? EMAIL_REPLY_TO,
       ...(args.attachments?.length
         ? {
             attachments: args.attachments.map(a => ({
@@ -80,7 +82,9 @@ function escapeHtml(s: string): string {
 }
 
 // ── Branded email shell (VenView logo + green/lime theme) ─────────────────────
-const LOGO_URL = 'https://dxiiblpaduuzgmxodexj.supabase.co/storage/v1/object/public/assets/venOS-logo.jpg';
+// Served from the marketing site (apps/marketing/public/venview-logo.jpg) so the
+// email logo lives on the brand domain rather than coupled to a Supabase project.
+const LOGO_URL = 'https://venview.io/venview-logo.jpg';
 const GREEN = '#1e8a3e';
 const GREEN_DARK = '#14632c';
 const LIME = '#a5d610';
@@ -95,14 +99,14 @@ function shell(inner: string): string {
         <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="width:480px;max-width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 8px 24px rgba(20,99,44,0.10);">
           <tr><td style="height:5px;line-height:5px;font-size:0;background:${GREEN};background:linear-gradient(90deg,${GREEN},${LIME});">&nbsp;</td></tr>
           <tr><td align="center" style="background:#ffffff;padding:26px 32px 20px;border-bottom:1px solid #eef2f7;">
-            <img src="${LOGO_URL}" alt="venOS" width="120" height="94" style="display:block;width:120px;height:auto;border:0;outline:none;text-decoration:none;" />
+            <img src="${LOGO_URL}" alt="Venview" width="120" height="94" style="display:block;width:120px;height:auto;border:0;outline:none;text-decoration:none;" />
           </td></tr>
           <tr><td style="padding:32px;">
             ${inner}
           </td></tr>
           <tr><td style="padding:0 32px 32px;">
             <hr style="border:none;border-top:1px solid #e2e8f0;margin:0 0 16px;" />
-            <p style="margin:0;font-size:12px;line-height:1.6;color:#94a3b8;">venOS — profit tracking for event vendors. If this wasn't you, you can safely ignore this email.</p>
+            <p style="margin:0;font-size:12px;line-height:1.6;color:#94a3b8;">Venview — profit tracking for event vendors. If this wasn't you, you can safely ignore this email.</p>
           </td></tr>
         </table>
       </td></tr>
@@ -132,13 +136,13 @@ export async function sendWelcomeEmail(to: string, companyName: string, companyI
   const companyUrl = `${clientUrl}/companies/${companyId}`;
   const company = escapeHtml(companyName);
   const html = shell(
-    heading('Welcome to venOS! 🎉') +
-    para(`Your company <strong>${company}</strong> is ready. venOS helps event vendors know if they actually made money — track sales, costs, and true profit for every market, festival, and pop-up.`) +
+    heading('Welcome to Venview! 🎉') +
+    para(`Your company <strong>${company}</strong> is ready. Venview helps event vendors know if they actually made money — track sales, costs, and true profit for every market, festival, and pop-up.`) +
     para('The fastest way to see it in action: add a recent event and open its Profit Summary.') +
-    brandButton(companyUrl, 'Open venOS')
+    brandButton(companyUrl, 'Open Venview')
   );
-  const text = `Welcome to venOS!\n\nYour company ${companyName} is ready. venOS helps event vendors track sales, costs, and true profit for every event.\n\nOpen venOS: ${companyUrl}`;
-  return sendEmail({ to, subject: 'Welcome to venOS 🎉', html, text });
+  const text = `Welcome to Venview!\n\nYour company ${companyName} is ready. Venview helps event vendors track sales, costs, and true profit for every event.\n\nOpen Venview: ${companyUrl}`;
+  return sendEmail({ to, subject: 'Welcome to Venview 🎉', html, text });
 }
 
 /**
@@ -155,8 +159,8 @@ export async function sendJoinRequestEmail(
   const requester = opts.requesterEmail ? escapeHtml(opts.requesterEmail) : 'Someone';
   const title = opts.reminder ? `Reminder: request to join ${company}` : `New request to join ${company}`;
   const intro = opts.reminder
-    ? `Just a reminder — <strong>${requester}</strong> is still waiting to join your company on venOS. Approve or deny the request from your team settings.`
-    : `<strong>${requester}</strong> has requested to join your company on venOS. Review the request and approve or deny it from your team settings.`;
+    ? `Just a reminder — <strong>${requester}</strong> is still waiting to join your company on Venview. Approve or deny the request from your team settings.`
+    : `<strong>${requester}</strong> has requested to join your company on Venview. Review the request and approve or deny it from your team settings.`;
   const html = shell(
     heading(title) +
     para(intro) +
@@ -166,7 +170,7 @@ export async function sendJoinRequestEmail(
   const subject = opts.reminder
     ? `Reminder: request to join ${opts.companyName}`
     : `New request to join ${opts.companyName}`;
-  const text = `${opts.requesterEmail ?? 'Someone'} is waiting to join ${opts.companyName} on venOS.\n\nReview the request (approve or deny) here: ${teamUrl}`;
+  const text = `${opts.requesterEmail ?? 'Someone'} is waiting to join ${opts.companyName} on Venview.\n\nReview the request (approve or deny) here: ${teamUrl}`;
   return sendEmail({ to, subject, html, text });
 }
 
@@ -196,7 +200,7 @@ export async function sendEventInviteEmail(
     heading(`You're on the schedule: ${name}`) +
     para(`<strong>When:</strong> ${when}`) +
     (where ? para(`<strong>Where:</strong> ${where}`) : '') +
-    para('Accept the invitation to add it to your calendar. Details may change — check venOS for the latest.') +
+    para('Accept the invitation to add it to your calendar. Details may change — check Venview for the latest.') +
     brandButton(opts.eventUrl, 'View event')
   );
   const text = [

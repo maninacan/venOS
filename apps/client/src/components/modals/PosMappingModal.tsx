@@ -224,7 +224,7 @@ export function PosMappingModal({ companyId, onClose }: Props) {
             {t('posMapping.title', 'Match Your POS Menu to Your Recipe Cards')}
           </h2>
           <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--muted)', lineHeight: 1.5 }}>
-            <Trans t={t} i18nKey="posMapping.description" defaults='Map each POS item to the recipe that makes it — venOS uses the recipe’s ingredient cost to calculate COGS automatically every sync. Choose <2>"No recipe"</2> for tips, fees, and other non-menu items.' components={{ 2: <em /> }} />
+            <Trans t={t} i18nKey="posMapping.description" defaults='Map each POS item to the recipe that makes it — Venview uses the recipe’s ingredient cost to calculate COGS automatically every sync. Choose <2>"No recipe"</2> for tips, fees, and other non-menu items.' components={{ 2: <em /> }} />
           </p>
         </div>
 

@@ -1,0 +1,14 @@
+{
+  "name": "Venview",
+  "short_name": "Venview",
+  "description": "Profit tracking for event vendors — know your real margin after every market, festival, and pop-up.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0B2A4A",
+  "icons": [
+    { "src": "/venview-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/venview-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

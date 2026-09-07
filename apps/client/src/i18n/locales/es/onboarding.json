@@ -28,7 +28,7 @@
     },
     "recipes": {
       "label": "Agrega tus recetas",
-      "description": "Define los costos de ingredientes para que venOS calcule el costo de ventas.",
+      "description": "Define los costos de ingredientes para que Venview calcule el costo de ventas.",
       "cta": "Agregar recetas"
     },
     "inventory": {
@@ -59,7 +59,7 @@
   },
   "questions": {
     "title": "Configuración rápida",
-    "subtitle": "Dos preguntas para adaptar venOS a tu forma de trabajar.",
+    "subtitle": "Dos preguntas para adaptar Venview a tu forma de trabajar.",
     "skip": "Omitir",
     "posQuestion": "¿Usas un sistema de punto de venta?",
     "laborQuestion": "¿Cómo calculas la mano de obra?",

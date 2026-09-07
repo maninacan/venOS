@@ -1,31 +1,29 @@
 ---
 import LegalLayout from '../layouts/LegalLayout.astro';
 
-// TODO before publishing: confirm the legal entity name, mailing address and the
-// contact address below with counsel. Everything else describes what the product
-// actually does today.
-const ENTITY = 'venOS';
-const CONTACT = 'hello@venos.app';
+const ENTITY = 'Lemon Drip LLC';
+const ADDRESS = '1186 N 500 W, American Fork, UT 84003';
+const CONTACT = 'contact@venview.io';
 const UPDATED = 'September 1, 2026';
 ---
 
 <LegalLayout
-  title="Privacy Policy — venOS"
-  description="How venOS collects, uses and protects your data."
+  title="Privacy Policy — Venview"
+  description="How Venview collects, uses and protects your data."
   heading="Privacy Policy"
   updated={UPDATED}
 >
   <p>
-    This policy explains what {ENTITY} collects when you use our website and the venOS
+    This policy explains what {ENTITY} collects when you use our website and the Venview
     application, why we collect it, and what control you have over it. It applies to
-    venview.io and to the venOS app.
+    venview.io and to the Venview app.
   </p>
 
   <h2>Who we are</h2>
   <p>
-    {ENTITY} provides software that helps food and beverage vendors understand the
-    profitability of the events they work. You can reach us at
-    <a href={`mailto:${CONTACT}`}>{CONTACT}</a>.
+    Venview is a product of {ENTITY}, which provides software that helps food and
+    beverage vendors understand the profitability of the events they work. You can
+    reach us at <a href={`mailto:${CONTACT}`}>{CONTACT}</a> or by mail at {ADDRESS}.
   </p>
 
   <h2>What we collect</h2>
@@ -147,7 +145,7 @@ const UPDATED = 'September 1, 2026';
 
   <h2>Children</h2>
   <p>
-    venOS is a business tool and is not directed at children. We do not knowingly collect
+    Venview is a business tool and is not directed at children. We do not knowingly collect
     personal information from anyone under 16.
   </p>
 
@@ -168,4 +166,5 @@ const UPDATED = 'September 1, 2026';
   <p>
     Questions about this policy or your data: <a href={`mailto:${CONTACT}`}>{CONTACT}</a>.
   </p>
+  <p>{ENTITY}<br />{ADDRESS}</p>
 </LegalLayout>

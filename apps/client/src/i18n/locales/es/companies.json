@@ -13,7 +13,7 @@
     "languageSub": "Puedes cambiarlo en cualquier momento en Configuración.",
     "continue": "Continuar",
     "back": "Atrás",
-    "heading": "¡Te damos la bienvenida a venOS!",
+    "heading": "¡Te damos la bienvenida a Venview!",
     "subheading": "Configuremos tu espacio de trabajo. Elige cómo quieres empezar:",
     "createTitle": "Crear una empresa",
     "createDesc": "Empieza desde cero como propietario: configura eventos, recetas, inventario y conecta tu TPV.",
@@ -25,7 +25,7 @@
   },
   "create": {
     "heading": "Registra tu empresa",
-    "subtitle": "Configura tu food truck o negocio de vendedor en venOS.",
+    "subtitle": "Configura tu food truck o negocio de vendedor en Venview.",
     "companyName": "Nombre de la empresa *",
     "companyNamePlaceholder": "p. ej. Lemon Drip Food Co.",
     "vendorCategory": "Categoría de vendedor",

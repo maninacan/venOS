@@ -28,7 +28,7 @@
     },
     "recipes": {
       "label": "Adicione suas receitas",
-      "description": "Defina os custos dos ingredientes para que o venOS calcule o Custo dos Produtos Vendidos (CMV).",
+      "description": "Defina os custos dos ingredientes para que o Venview calcule o Custo dos Produtos Vendidos (CMV).",
       "cta": "Adicionar receitas"
     },
     "inventory": {
@@ -59,7 +59,7 @@
   },
   "questions": {
     "title": "Configuração rápida",
-    "subtitle": "Duas perguntas para adaptarmos o venOS à sua forma de trabalhar.",
+    "subtitle": "Duas perguntas para adaptarmos o Venview à sua forma de trabalhar.",
     "skip": "Pular",
     "posQuestion": "Você usa um sistema de ponto de venda?",
     "laborQuestion": "Como você calcula a mão de obra?",
