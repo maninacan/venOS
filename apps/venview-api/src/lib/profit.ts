@@ -29,6 +29,19 @@ export interface LaborRow {
   hours?: number | null;
   wage?: number | null;
   total?: number | null;
+  /** Exact shift length from the POS timecard. Authoritative over `hours`. */
+  durationSeconds?: number | null;
+  /** Fixed amount for the shift; already an exact cent figure. */
+  flatRate?: number | null;
+}
+
+/** A shift's pay at full precision — no rounding. Prefers a flat rate, then the
+ *  exact duration, then the 2-decimal hours figure (manual entry / legacy rows). */
+export function shiftPayExact(r: LaborRow): number {
+  const n = (v: number | null | undefined) => Number(v ?? 0);
+  if (r.flatRate != null) return n(r.flatRate);
+  if (r.durationSeconds != null) return (n(r.durationSeconds) / 3600) * n(r.wage);
+  return n(r.hours) * n(r.wage);
 }
 
 export type FeeCalcType = 'flat' | 'per_unit' | 'percentage';
@@ -96,11 +109,11 @@ export function computeProfit(
   const squareTips = n(sales?.tips);
   const tips = squareTips;
 
-  // Labor: sum from actual shift rows (ceiling per shift, matching client Labor Card)
-  const laborFees = laborRows.reduce((sum, r) => {
-    const shiftTotal = n(r.total) || (n(r.hours) * n(r.wage));
-    return sum + Math.ceil(shiftTotal * 100) / 100;
-  }, 0);
+  // Labor: sum every shift at full precision, then round to cents ONCE. Rounding
+  // per shift (the old Math.ceil) both compounded drift and, because x*100 is not
+  // exact in binary floating point, added a phantom penny to ~4.6% of exact cent
+  // values — $1.10 became $1.11.
+  const laborFees = Math.round(laborRows.reduce((sum, r) => sum + shiftPayExact(r), 0) * 100) / 100;
 
   // Additional fees / custom expenses (flat, per-unit, or percentage-based; discounts subtract)
   const additionalFeesTotal = additionalFees.reduce(

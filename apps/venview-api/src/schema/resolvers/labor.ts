@@ -1,6 +1,7 @@
 import type { AppContext } from '../../context/index.js';
 import { requireAuth, requireCompanyMember } from '../../context/index.js';
 import { supabase } from '../../lib/supabase.js';
+import { shiftPayExact } from '../../lib/profit.js';
 
 async function assertEventAccess(eventId: string, ctx: AppContext) {
   requireAuth(ctx);
@@ -9,17 +10,18 @@ async function assertEventAccess(eventId: string, ctx: AppContext) {
   await requireCompanyMember((data as Record<string, unknown>)['companyId'] as string, ctx.user!.id);
 }
 
-// Recompute and store laborFees total in EventExpenses (ceiling per shift, matching client Labor Card)
+// Recompute and store laborFees in EventExpenses. Must use the same single-rounding
+// rule as computeProfit, or the denormalized figure drifts from the report.
 async function syncLaborFees(eventId: string) {
   const { data: rows } = await supabase
     .from('EventLabor')
-    .select('hours, wage, total')
+    .select('hours, wage, total, durationSeconds, flatRate')
     .eq('eventID', eventId);
 
-  const laborFees = (rows ?? []).reduce((sum: number, r: Record<string, unknown>) => {
-    const shiftTotal = Number(r['total'] ?? 0) || (Number(r['hours'] ?? 0) * Number(r['wage'] ?? 0));
-    return sum + Math.ceil(shiftTotal * 100) / 100;
-  }, 0);
+  const laborFees = Math.round((rows ?? []).reduce(
+    (sum: number, r: Record<string, unknown>) => sum + shiftPayExact(r as Parameters<typeof shiftPayExact>[0]),
+    0,
+  ) * 100) / 100;
 
   // Upsert EventExpenses row if it doesn't exist
   const { data: existing } = await supabase

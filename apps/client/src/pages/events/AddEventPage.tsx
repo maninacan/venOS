@@ -82,17 +82,36 @@ function fmtRange(startISO: string, numDays: number, t: TFunction): string {
   });
 }
 
-const TIME_OPTIONS: string[] = (() => {
-  const out: string[] = [];
+// EventDays.startTime/endTime are real `time` columns. Store canonical 24-hour
+// HH:MM and show a friendly 12-hour label — the previous "10:00 AM" strings were
+// only storable while the columns were free text.
+const TIME_OPTIONS: Array<{ value: string; label: string }> = (() => {
+  const out: Array<{ value: string; label: string }> = [];
   for (let h = 0; h < 24; h++) {
     for (const m of [0, 30]) {
       const ampm = h < 12 ? 'AM' : 'PM';
       const hh = ((h + 11) % 12) + 1;
-      out.push(`${hh}:${String(m).padStart(2, '0')} ${ampm}`);
+      const mm = String(m).padStart(2, '0');
+      out.push({ value: `${String(h).padStart(2, '0')}:${mm}`, label: `${hh}:${mm} ${ampm}` });
     }
   }
   return out;
 })();
+
+/** Accepts "10:00", "10:00:00" and legacy "10:00 AM" so saved events still load. */
+function toTimeValue(raw: string | null | undefined): string {
+  if (!raw) return '';
+  const s = String(raw).trim();
+  const m24 = /^(\d{1,2}):(\d{2})(?::\d{2})?$/.exec(s);
+  if (m24) return `${m24[1].padStart(2, '0')}:${m24[2]}`;
+  const m12 = /^(\d{1,2}):(\d{2})\s*([AaPp])[Mm]$/.exec(s);
+  if (m12) {
+    let h = Number(m12[1]) % 12;
+    if (m12[3].toLowerCase() === 'p') h += 12;
+    return `${String(h).padStart(2, '0')}:${m12[2]}`;
+  }
+  return '';
+}
 
 interface DayRow { dayNumber: number; eventDate: string; startTime: string; endTime: string; }
 
@@ -160,7 +179,7 @@ export function AddEventPage() {
     });
     setNumDays(ev.numDays ?? 1);
     setDays((ev.days ?? []).map((d: { dayNumber: number; date: string; startTime: string; endTime: string }) => ({
-      dayNumber: d.dayNumber, eventDate: d.date ?? '', startTime: d.startTime ?? '', endTime: d.endTime ?? '',
+      dayNumber: d.dayNumber, eventDate: d.date ?? '', startTime: toTimeValue(d.startTime), endTime: toTimeValue(d.endTime),
     })));
     // A zero rate means "not set" → show blank so blank consistently reads as
     // "auto-calculate from ZIP". Non-zero rates are stored as decimals.
@@ -536,7 +555,7 @@ function TimeSelect({ value, onChange, t }: { value: string; onChange: (v: strin
   return (
     <select value={value} onChange={e => onChange(e.target.value)} style={{ width: 120 }}>
       <option value="">{t('form.timePlaceholder', '-- Time --')}</option>
-      {TIME_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+      {TIME_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
     </select>
   );
 }

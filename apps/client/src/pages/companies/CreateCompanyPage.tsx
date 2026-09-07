@@ -72,7 +72,7 @@ export function CreateCompanyPage() {
           {t('create.heading', 'Register Your Company')}
         </h1>
         <p style={{ color: 'var(--muted)', fontSize: '0.88rem', marginBottom: 24 }}>
-          {t('create.subtitle', 'Set up your food truck or vendor business on venOS.')}
+          {t('create.subtitle', 'Set up your food truck or vendor business on Venview.')}
         </p>
 
         <div className="card">

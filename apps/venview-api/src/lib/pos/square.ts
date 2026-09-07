@@ -312,12 +312,15 @@ export const squareProvider: PosProvider = {
       const endStr = tc['endAt'] as string | null;
       const start = startStr ? new Date(startStr) : null;
       const end = endStr ? new Date(endStr) : null;
-      const hours = start && end && !isNaN(start.getTime()) && !isNaN(end.getTime())
-        ? Math.max(0, Math.round((end.getTime() - start.getTime()) / 36000) / 100)
-        : 0;
+      // Keep the exact duration. Collapsing straight to 2-decimal hours quantizes
+      // to 36-second buckets, which is worth up to ~$0.10 per shift and compounds
+      // across an event. `hours` is still derived for display.
+      const valid = start && end && !isNaN(start.getTime()) && !isNaN(end.getTime());
+      const durationSeconds = valid ? Math.max(0, Math.round((end!.getTime() - start!.getTime()) / 1000)) : 0;
+      const hours = Math.round((durationSeconds / 3600) * 100) / 100;
       const hourly = (tc['wage'] as { hourlyRate?: { amount?: bigint } } | null)?.hourlyRate;
       const wage = hourly ? Number(hourly.amount ?? 0) / 100 : 0;
-      return { name: nameMap.get(memberId) ?? memberId, hours, wage };
+      return { name: nameMap.get(memberId) ?? memberId, hours, wage, durationSeconds };
     });
 
     return { rows };

@@ -12,6 +12,7 @@ import posRouter from './routes/pos.js';
 import uploadsRouter from './routes/uploads.js';
 import billingRouter from './routes/billing.js';
 import waitlistRouter from './routes/waitlist.js';
+import calendarRouter from './routes/calendar.js';
 import logger from './lib/logger.js';
 
 const host = process.env['HOST'] ?? '0.0.0.0';
@@ -78,6 +79,7 @@ async function main() {
   app.use('/api', uploadsRouter);
   app.use('/api', billingRouter);
   app.use('/api', waitlistRouter);
+  app.use('/api', calendarRouter);
 
   // GraphQL endpoint
   app.use(

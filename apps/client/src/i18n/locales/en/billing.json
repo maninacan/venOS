@@ -1,9 +1,9 @@
 {
   "heading": "Billing",
-  "subtitle": "Manage your venOS subscription and payment details.",
+  "subtitle": "Manage your Venview subscription and payment details.",
   "loading": "Loading…",
-  "planPro": "venOS Pro",
-  "planStarter": "venOS Starter",
+  "planPro": "Venview Pro",
+  "planStarter": "Venview Starter",
   "accessEnds": "Access ends {{date}}",
   "renews": "Renews {{date}}",
   "manage": {
@@ -12,7 +12,7 @@
     "button": "Manage subscription"
   },
   "upgrade": {
-    "eyebrow": "Upgrade to venOS Pro",
+    "eyebrow": "Upgrade to Venview Pro",
     "headline": "See every event's true profit.",
     "subhead": "Track trends over time and make smarter decisions — faster.",
     "button": "Upgrade to Pro",
@@ -45,7 +45,7 @@
     }
   },
   "toast": {
-    "paymentReceived": "Payment received — activating venOS Pro…",
+    "paymentReceived": "Payment received — activating Venview Pro…",
     "checkoutCancelled": "Checkout cancelled."
   }
 }

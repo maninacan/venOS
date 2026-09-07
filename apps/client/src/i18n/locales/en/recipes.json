@@ -1,6 +1,6 @@
 {
   "heading": "Recipes",
-  "subtitle": "Define ingredient costs for each dish. venOS uses these to calculate COGS automatically when you sync Square sales.",
+  "subtitle": "Define ingredient costs for each dish. Venview uses these to calculate COGS automatically when you sync Square sales.",
   "aiImport": "AI Import",
   "analyzing": "Analyzing…",
   "newRecipe": "+ New Recipe",

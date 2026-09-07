@@ -77,7 +77,7 @@ export function GetStartedEmptyState({ onJoin, joining }: Props) {
         <div>
           <div className="text-center mb-6">
             <h1 className="text-[1.5rem] font-bold text-[#0B2A4A] mt-0 mb-1.5">
-              {t('getStarted.heading', 'Welcome to venOS!')}
+              {t('getStarted.heading', 'Welcome to Venview!')}
             </h1>
             <p className="text-[#64748b] text-[0.9rem] m-0">
               {t('getStarted.subheading', "Let's set up your workspace. Choose how you'd like to start:")}

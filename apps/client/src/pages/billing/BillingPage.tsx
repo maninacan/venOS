@@ -52,7 +52,7 @@ export function BillingPage() {
     const billing = searchParams.get('billing');
     if (!billing) return;
     if (billing === 'success') {
-      showToast(t('toast.paymentReceived', 'Payment received — activating venOS Pro…'), 'success', 5000);
+      showToast(t('toast.paymentReceived', 'Payment received — activating Venview Pro…'), 'success', 5000);
       // Self-heal: reconcile from Stripe in case the webhook was missed, then refetch.
       if (companyId) refresh(companyId).finally(() => refetch());
       else setTimeout(() => refetch(), 1500);
@@ -74,7 +74,7 @@ export function BillingPage() {
       <div className="card">
         <div className="mb-4">
           <h2 className="mt-0 mb-1 text-[#0B2A4A]"><i className="fa-solid fa-credit-card" aria-hidden="true" /> {t('heading', 'Billing')}</h2>
-          <p className="text-[#64748b] text-[0.86rem] m-0">{t('subtitle', 'Manage your venOS subscription and payment details.')}</p>
+          <p className="text-[#64748b] text-[0.86rem] m-0">{t('subtitle', 'Manage your Venview subscription and payment details.')}</p>
         </div>
 
         {loading && <p className="text-[#64748b] text-[0.88rem]">{t('loading', 'Loading…')}</p>}
@@ -82,7 +82,7 @@ export function BillingPage() {
         {!loading && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             <span className={`inline-flex items-center gap-1.5 text-[0.9rem] font-semibold px-[14px] py-1 rounded-full ${isPro ? 'bg-[#fef3c7] text-[#92400e]' : 'bg-[#f1f5f9] text-[#64748b]'}`}>
-              {isPro ? <><i className="fa-solid fa-bolt" /> {t('planPro', 'venOS Pro')}</> : <><i className="fa-solid fa-clipboard-list" /> {t('planStarter', 'venOS Starter')}</>}
+              {isPro ? <><i className="fa-solid fa-bolt" /> {t('planPro', 'Venview Pro')}</> : <><i className="fa-solid fa-clipboard-list" /> {t('planStarter', 'Venview Starter')}</>}
             </span>
             {isPro && company?.subscriptionStatus && company.subscriptionStatus !== 'active' && (
               <span className="text-[0.82rem] font-semibold text-[#b45309] capitalize">{company.subscriptionStatus.replace(/_/g, ' ')}</span>
@@ -110,7 +110,7 @@ export function BillingPage() {
 
       {!loading && !isPro && (
         <div className="card">
-          <p style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 12px' }}>{t('upgrade.eyebrow', 'Upgrade to venOS Pro')}</p>
+          <p style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 12px' }}>{t('upgrade.eyebrow', 'Upgrade to Venview Pro')}</p>
           <p className="text-[#0B2A4A] text-[0.95rem] font-semibold mt-0 mb-1">{t('upgrade.headline', "See every event's true profit.")}</p>
           <p className="text-[#64748b] text-[0.86rem] mt-0 mb-4">{t('upgrade.subhead', 'Track trends over time and make smarter decisions — faster.')}</p>
 

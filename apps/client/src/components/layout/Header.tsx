@@ -3,7 +3,7 @@ import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase, showToast, useAuth } from '@org/data';
 import { AlertsBell } from './AlertsBell';
-import venviewLogo from '../../assets/venOS-logo.jpg';
+import venviewLogo from '../../assets/venview-logo.jpg';
 
 interface Props {
   companyId?: string;
@@ -68,13 +68,13 @@ export function Header({ companyId, companyName }: Props) {
         className="flex items-center gap-2.5 no-underline flex-shrink-0"
         onClick={closeMenu}
       >
-        <img src={venviewLogo} alt={t('logoAlt', 'venOS')} className="h-[50px] w-auto" />
+        <img src={venviewLogo} alt={t('logoAlt', 'Venview')} className="h-[50px] w-auto" />
         <div>
           <span
             className="block text-[1.05rem] leading-tight font-bold"
             style={{ color: '#2E7D32' }}
           >
-            {t('brand.name', 'venOS Events')}
+            {t('brand.name', 'Venview Events')}
           </span>
           <span className="block text-[0.68rem] text-[#666]">
             {companyName ?? t('brand.tagline', 'Vendor Intelligence for Events')}

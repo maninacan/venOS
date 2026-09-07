@@ -1,0 +1,92 @@
+---
+import Layout from './Layout.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  heading: string;
+  updated: string;
+}
+
+const { title, description, heading, updated } = Astro.props;
+---
+
+<Layout title={title} description={description}>
+  <article class="legal">
+    <h1>{heading}</h1>
+    <p class="legal-updated">Last updated: {updated}</p>
+    <slot />
+  </article>
+</Layout>
+
+<style is:global>
+  /* Long-form prose for the legal pages. The site's global styles are tuned for
+     the marketing landing page, which has no body-copy scale of its own. */
+  .legal {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 56px 24px 80px;
+  }
+  .legal h1 {
+    font-family: var(--font-head);
+    font-size: clamp(1.9rem, 4vw, 2.6rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--navy);
+    margin-bottom: 8px;
+  }
+  .legal-updated {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 36px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .legal h2 {
+    font-family: var(--font-head);
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--navy);
+    margin: 36px 0 12px;
+  }
+  .legal h3 {
+    font-family: var(--font-head);
+    font-size: 0.98rem;
+    font-weight: 700;
+    color: var(--navy);
+    margin: 22px 0 8px;
+  }
+  .legal p { margin-bottom: 14px; color: var(--ink2); font-size: 0.95rem; }
+  .legal ul { margin: 0 0 16px 22px; }
+  .legal li { margin-bottom: 8px; color: var(--ink2); font-size: 0.95rem; }
+  .legal a { color: var(--cyan2); }
+  .legal strong { color: var(--ink); }
+  .legal table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8px 0 20px;
+    font-size: 0.88rem;
+  }
+  .legal th, .legal td {
+    text-align: left;
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+  .legal th { color: var(--navy); font-weight: 700; background: var(--white); }
+  .legal td { color: var(--ink2); }
+  .legal .callout {
+    background: #FFF6D6;
+    border-left: 3px solid var(--lemon2);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 20px 0;
+    font-size: 0.92rem;
+    color: #6b5200;
+  }
+  .legal .callout strong { color: #55420a; }
+  @media (max-width: 768px) {
+    .legal { padding: 36px 20px 56px; }
+  }
+</style>

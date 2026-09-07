@@ -84,7 +84,7 @@ export function CompaniesPage() {
       </div>
 
       <div className="grid grid-cols-[repeat(auto-fill,minmax(230px,1fr))] gap-[18px] mt-6">
-        {loading && [0, 1, 2].map(i => <CompanyCardSkeleton key={i} />)}
+        {loading && <CompanyCardSkeleton />}
 
         {!loading && companies.map((c: Parameters<typeof CompanyCard>[0]['company']) => (
           <CompanyCard key={c.id} company={c} />
