@@ -61,8 +61,8 @@
   },
   "subscription": {
     "eyebrow": "Assinatura",
-    "planPro": "venOS Pro",
-    "planStarter": "venOS Starter",
+    "planPro": "Venview Pro",
+    "planStarter": "Venview Starter",
     "starterIncludes": "Inclui 1 evento finalizado e um resumo básico de lucro."
   },
   "danger": {

@@ -523,7 +523,7 @@ export const eventResolvers = {
         {
           method: 'REQUEST',
           eventUrl,
-          organizer: { name: 'venOS', email: organizerEmail },
+          organizer: { name: 'Venview', email: organizerEmail },
           attendees: recipients,
         },
       );

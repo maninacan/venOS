@@ -141,11 +141,11 @@ describe('buildEventCalendar', () => {
   it('supports invitations with an organizer and attendees', () => {
     const ics = build({}, [], {
       method: 'REQUEST',
-      organizer: { name: 'venOS', email: 'no-reply@mail.venview.io' },
+      organizer: { name: 'Venview', email: 'no-reply@mail.venview.io' },
       attendees: [{ name: 'Ana', email: 'ana@example.com' }, { email: 'ben@example.com' }],
     });
     expect(ics).toContain('METHOD:REQUEST');
-    expect(unfold(ics)).toContain('ORGANIZER;CN=venOS:mailto:no-reply@mail.venview.io');
+    expect(unfold(ics)).toContain('ORGANIZER;CN=Venview:mailto:no-reply@mail.venview.io');
     expect(unfold(ics)).toContain('RSVP=TRUE;CN=Ana:mailto:ana@example.com');
     expect(unfold(ics)).toContain('RSVP=TRUE:mailto:ben@example.com');
   });

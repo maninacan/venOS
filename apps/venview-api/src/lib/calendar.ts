@@ -61,7 +61,7 @@ export interface CalendarOptions {
   now?: Date;
 }
 
-const PRODID = '-//venOS//Event Calendar//EN';
+const PRODID = '-//Venview//Event Calendar//EN';
 const UID_DOMAIN = 'venview.io';
 
 /** RFC 5545 text escaping: backslash, semicolon, comma and newline. */
@@ -138,7 +138,7 @@ function buildDescription(event: CalendarEventInput, eventUrl?: string): string 
   if (event.eventHost) lines.push(`Host: ${event.eventHost}`);
   if (event.coordinator) lines.push(`Coordinator: ${event.coordinator}`);
   if (event.notes) lines.push(`Notes: ${event.notes}`);
-  if (eventUrl) lines.push(`View in venOS: ${eventUrl}`);
+  if (eventUrl) lines.push(`View in Venview: ${eventUrl}`);
   return lines.join('\n');
 }
 

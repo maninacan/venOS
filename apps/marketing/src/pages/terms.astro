@@ -1,36 +1,36 @@
 ---
 import LegalLayout from '../layouts/LegalLayout.astro';
 
-// TODO before publishing: confirm the legal entity name, governing law / venue and
-// the contact address below with counsel. GOVERNING_LAW is a placeholder.
-const ENTITY = 'venOS';
-const CONTACT = 'hello@venos.app';
+const ENTITY = 'Lemon Drip LLC';
+const ADDRESS = '1186 N 500 W, American Fork, UT 84003';
+const CONTACT = 'contact@venview.io';
 const GOVERNING_LAW = 'the State of Utah, United States';
 const UPDATED = 'September 1, 2026';
 ---
 
 <LegalLayout
-  title="Terms of Use — venOS"
-  description="The terms that govern your use of venOS."
+  title="Terms of Use — Venview"
+  description="The terms that govern your use of Venview."
   heading="Terms of Use"
   updated={UPDATED}
 >
   <p>
-    These terms govern your use of the venOS website and application. By creating an
-    account or using the service, you agree to them. If you are agreeing on behalf of a
-    business, you confirm you have authority to bind that business.
+    These terms govern your use of the Venview website and application, operated by
+    {ENTITY} ({ADDRESS}). By creating an account or using the service, you agree to them.
+    If you are agreeing on behalf of a business, you confirm you have authority to bind
+    that business.
   </p>
 
   <h2>The service</h2>
   <p>
-    venOS helps vendors track the profitability of events. It aggregates figures you enter
+    Venview helps vendors track the profitability of events. It aggregates figures you enter
     together with data retrieved from systems you connect, such as your point-of-sale, and
     presents calculated results including revenue, cost of goods, labor, expenses, profit
     and sales-tax figures.
   </p>
 
   <div class="callout">
-    <strong>venOS is not a substitute for professional advice.</strong> The figures the
+    <strong>Venview is not a substitute for professional advice.</strong> The figures the
     service produces — including profit, cost and any tax-related amounts or estimates —
     are calculated from the data available to it and are provided for your information
     only. They are not tax, accounting, legal or financial advice, and your actual
@@ -41,7 +41,7 @@ const UPDATED = 'September 1, 2026';
 
   <h2>Beta service</h2>
   <p>
-    venOS is offered during a beta period. Features may change, break or be removed, and
+    Venview is offered during a beta period. Features may change, break or be removed, and
     the service may be unavailable at times. We do not guarantee that any calculation,
     integration or figure will be complete or accurate during the beta, and you should
     verify results independently before relying on them.
@@ -154,4 +154,5 @@ const UPDATED = 'September 1, 2026';
   <p>
     Questions about these terms: <a href={`mailto:${CONTACT}`}>{CONTACT}</a>.
   </p>
+  <p>{ENTITY}<br />{ADDRESS}</p>
 </LegalLayout>

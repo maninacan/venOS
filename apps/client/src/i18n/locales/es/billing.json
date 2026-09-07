@@ -1,9 +1,9 @@
 {
   "heading": "Facturación",
-  "subtitle": "Administra tu suscripción de venOS y los datos de pago.",
+  "subtitle": "Administra tu suscripción de Venview y los datos de pago.",
   "loading": "Cargando…",
-  "planPro": "venOS Pro",
-  "planStarter": "venOS Starter",
+  "planPro": "Venview Pro",
+  "planStarter": "Venview Starter",
   "accessEnds": "El acceso termina el {{date}}",
   "renews": "Se renueva el {{date}}",
   "manage": {
@@ -12,7 +12,7 @@
     "button": "Administrar suscripción"
   },
   "upgrade": {
-    "eyebrow": "Mejora a venOS Pro",
+    "eyebrow": "Mejora a Venview Pro",
     "headline": "Conoce la ganancia real de cada evento.",
     "subhead": "Da seguimiento a las tendencias con el tiempo y toma decisiones más inteligentes, más rápido.",
     "button": "Mejorar a Pro",
@@ -45,7 +45,7 @@
     }
   },
   "toast": {
-    "paymentReceived": "Pago recibido: activando venOS Pro…",
+    "paymentReceived": "Pago recibido: activando Venview Pro…",
     "checkoutCancelled": "Pago cancelado."
   }
 }

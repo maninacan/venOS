@@ -7,7 +7,7 @@ import { useCurrentCompany } from '../../hooks/useCurrentCompany';
 import { useCurrency } from '../../i18n/useCurrency';
 import { formatDate } from '../../i18n/format';
 import { showToast } from '@org/data';
-import venviewLogo from '../../assets/venOS-logo.jpg';
+import venviewLogo from '../../assets/venview-logo.jpg';
 
 const GET_REPORT = gql`
   query GetPostEventReport($id: ID!) {
@@ -399,7 +399,7 @@ export function PostEventReportPage() {
             <h1 style={{ margin: '0 0 4px', fontSize: '1.6rem', color: 'var(--vv-navy)', fontFamily: 'DM Serif Display, serif' }}>
               <i className="fa-solid fa-chart-bar" /> {t('report.title', 'Post-Event Report')}
             </h1>
-            <img src={venviewLogo} alt={t('report.logoAlt', 'venOS')} style={{ height: 48, width: 'auto', flexShrink: 0 }} />
+            <img src={venviewLogo} alt={t('report.logoAlt', 'Venview')} style={{ height: 48, width: 'auto', flexShrink: 0 }} />
           </div>
           <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--vv-navy)', marginBottom: 2 }}>
             {event?.eventName}

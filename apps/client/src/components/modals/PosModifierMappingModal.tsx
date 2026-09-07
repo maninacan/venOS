@@ -253,7 +253,7 @@ export function PosModifierMappingModal({ companyId, onClose }: Props) {
             {t('posModifierMapping.title', 'Match Your POS Modifiers to Your Inventory')}
           </h2>
           <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--muted)', lineHeight: 1.5 }}>
-            <Trans t={t} i18nKey="posModifierMapping.description" defaults='Map each modifier (flavor add-ons, whip, …) to the inventory item it uses and the amount used per drink — venOS adds that cost to every drink the modifier is on, so COGS stays accurate without a separate menu item per flavor. Use a <2>negative amount</2> for removals (e.g. "No SCM" = -1). Choose "No inventory item" for free modifiers.' components={{ 2: <em /> }} />
+            <Trans t={t} i18nKey="posModifierMapping.description" defaults='Map each modifier (flavor add-ons, whip, …) to the inventory item it uses and the amount used per drink — Venview adds that cost to every drink the modifier is on, so COGS stays accurate without a separate menu item per flavor. Use a <2>negative amount</2> for removals (e.g. "No SCM" = -1). Choose "No inventory item" for free modifiers.' components={{ 2: <em /> }} />
           </p>
         </div>
 

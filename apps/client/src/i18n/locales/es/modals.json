@@ -1,7 +1,7 @@
 {
   "welcome": {
     "beta": "Beta",
-    "title": "¡Bienvenido a venOS!",
+    "title": "¡Bienvenido a Venview!",
     "intro": "Nos estás ayudando a crear la forma más sencilla para que los vendedores de eventos sepan si realmente ganaron dinero.",
     "focusPrefix": "Esta versión beta se enfoca en una sola cosa:",
     "focusHighlight": "Llevarte del evento → a tu ganancia real en minutos.",
@@ -17,7 +17,7 @@
     },
     "step2": {
       "title": "Conecta y sincroniza ventas",
-      "description": "Si usas Square, conéctalo en Configuración. venOS extraerá tus datos reales de ventas e impuestos automáticamente.",
+      "description": "Si usas Square, conéctalo en Configuración. Venview extraerá tus datos reales de ventas e impuestos automáticamente.",
       "descriptionAlt": "Si no, captura los totales manualmente.",
       "cta": "Sincronizar ventas"
     },
@@ -38,7 +38,7 @@
     "ctaExplore": "Prefiero explorar por mi cuenta"
   },
   "upgrade": {
-    "badge": "venOS Pro",
+    "badge": "Venview Pro",
     "title": "Descubre el panorama completo.",
     "subtitle": "Consulta la ganancia real de cada evento, sigue las tendencias con el tiempo y toma mejores decisiones, más rápido.",
     "contexts": {
@@ -75,14 +75,14 @@
         "description": "Diseña formularios de eventos que coincidan exactamente con tu forma de trabajar"
       }
     },
-    "starterNote": "Tienes <1>venOS Starter</1>: incluye 1 evento finalizado y un resumen de ganancias básico.",
+    "starterNote": "Tienes <1>Venview Starter</1>: incluye 1 evento finalizado y un resumen de ganancias básico.",
     "ctaUpgrade": "Mejorar a Pro",
     "secureNote": "Pago seguro con tecnología de Stripe · cancela cuando quieras",
     "ctaLater": "Quizás más tarde"
   },
   "posModifierMapping": {
     "title": "Vincula los modificadores de tu POS con tu inventario",
-    "description": "Vincula cada modificador (saborizantes, crema, …) con el artículo de inventario que utiliza y la cantidad usada por bebida: venOS suma ese costo a cada bebida que lleva el modificador, para que el COGS siga siendo exacto sin crear un artículo de menú por cada sabor. Usa una <2>cantidad negativa</2> para quitar ingredientes (p. ej. \"Sin LCE\" = -1). Elige \"Sin artículo de inventario\" para modificadores gratuitos.",
+    "description": "Vincula cada modificador (saborizantes, crema, …) con el artículo de inventario que utiliza y la cantidad usada por bebida: Venview suma ese costo a cada bebida que lleva el modificador, para que el COGS siga siendo exacto sin crear un artículo de menú por cada sabor. Usa una <2>cantidad negativa</2> para quitar ingredientes (p. ej. \"Sin LCE\" = -1). Elige \"Sin artículo de inventario\" para modificadores gratuitos.",
     "suggestedLegend": "<1>{{count}} modificador(es)</1> fueron vinculados por IA — marcados como <3>sugerido</3>. Revísalos antes de guardar.",
     "unmappedWarning": "<1>{{count}} modificador(es)</1> no tienen artículo de inventario — su costo no se sumará al COGS.",
     "empty": "No se encontraron modificadores del POS. Asegúrate de que tu POS esté conectado y tenga modificadores configurados.",
@@ -127,7 +127,7 @@
   },
   "posMapping": {
     "title": "Vincula el menú de tu POS con tus fichas de receta",
-    "description": "Vincula cada artículo del POS con la receta que lo compone: venOS usa el costo de ingredientes de la receta para calcular el COGS automáticamente en cada sincronización. Elige <2>\"Sin receta\"</2> para propinas, cargos y otros conceptos que no son del menú.",
+    "description": "Vincula cada artículo del POS con la receta que lo compone: Venview usa el costo de ingredientes de la receta para calcular el COGS automáticamente en cada sincronización. Elige <2>\"Sin receta\"</2> para propinas, cargos y otros conceptos que no son del menú.",
     "suggestedLegend": "<1>{{count}} artículo(s)</1> fueron emparejados por IA, marcados como <3>sugerido</3>. Revísalos antes de guardar.",
     "unmappedWarning": "<1>{{count}} artículo(s)</1> no tienen ficha de receta: el costo de ventas se mostrará como $0 para esos.",
     "empty": "No se encontraron artículos en el catálogo del POS. Asegúrate de que tu POS esté conectado y tenga artículos.",

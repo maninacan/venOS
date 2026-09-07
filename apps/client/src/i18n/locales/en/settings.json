@@ -61,8 +61,8 @@
   },
   "subscription": {
     "eyebrow": "Subscription",
-    "planPro": "venOS Pro",
-    "planStarter": "venOS Starter",
+    "planPro": "Venview Pro",
+    "planStarter": "Venview Starter",
     "starterIncludes": "Includes 1 finalized event and basic profit summary."
   },
   "danger": {
